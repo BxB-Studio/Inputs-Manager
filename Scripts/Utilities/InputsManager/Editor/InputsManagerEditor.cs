@@ -288,9 +288,12 @@ namespace Utilities.Inputs
 			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
-				fixedWidth = 28f,
+				fixedWidth = 28f
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = 15f
+#endif
 			};
 
 			#endregion
@@ -547,97 +550,138 @@ namespace Utilities.Inputs
 			float miniButtonSmallWidth = 16f;
 			float miniButtonWidth = 20f;
 			float miniButtonWideWidth = 25f;
+#if !UNITY_2019_3_OR_NEWER
 			float miniButtonHeight = 15f;
+#endif
 
 			GUIStyle unstretchableMiniButtonSmall = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonSmallWidth,
+				fixedWidth = miniButtonSmallWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButton = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWidth,
+				fixedWidth = miniButtonWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonNormal = new GUIStyle(EditorStyles.miniButton)
 			{
-				stretchWidth = false,
+				stretchWidth = false
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWideWidth,
+				fixedWidth = miniButtonWideWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonLeftSmall = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonSmallWidth,
+				fixedWidth = miniButtonSmallWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonLeft = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWidth,
+				fixedWidth = miniButtonWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonLeftWide = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWideWidth,
+				fixedWidth = miniButtonWideWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonMiddleSmall = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonSmallWidth,
+				fixedWidth = miniButtonSmallWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonMiddle = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWidth,
+				fixedWidth = miniButtonWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonMiddleWide = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWideWidth,
+				fixedWidth = miniButtonWideWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonRightSmall = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonSmallWidth,
+				fixedWidth = miniButtonSmallWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonRight = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWidth,
+				fixedWidth = miniButtonWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 			GUIStyle unstretchableMiniButtonRightWide = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
-				fixedWidth = miniButtonWideWidth,
+				fixedWidth = miniButtonWideWidth
+#if !UNITY_2019_3_OR_NEWER
+				,
 				stretchHeight = false,
 				fixedHeight = miniButtonHeight
+#endif
 			};
 
 			#endregion

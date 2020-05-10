@@ -22,12 +22,12 @@ Will be available soon...
 Note: Joysticks compatibility will be added soon...
 
 <b>Release Notes</b>
+- 0.1-preview.1
+  - Fixed some compatibility issues
 - 0.1-preview (First Commit)<br/>
   - Add, remove, duplicate inputs
   - Bind keys in editor
   - Json preset importer
-- 0.1-preview.1
-  - Fixed some compatibility issues
 
 <b>Compatibility:</b> Unity 2018.4 or later
 

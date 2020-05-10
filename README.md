@@ -20,8 +20,8 @@ Will be available soon...
 - Editor ready Json presets
 - Runtime bouble press and hold binding
 - Wide range of settings
-- Secured data saving<br/>
-Note: Joysticks compatibility will be added soon...
+- Secured data saving
+- Joysticks compatibility (Will be added soon...)
 
 <b>Compatibility</b><br/>
 - Unity 2018.4 or later<br/>
@@ -48,5 +48,6 @@ Note: Joysticks compatibility will be added soon...
 	- Json preset importer
 
 <b>Important Notes!</b><br/>
+The Inputs Manager requires an API Compatibility Level of .NET 4.x or later (If available).<br/>
 This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.<br/>
 Please do not changes the destination of the existing files under the `Resources` directory. Doing so may cause some internal errors!

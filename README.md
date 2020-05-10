@@ -1,8 +1,6 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System
 
-<b>Important!</b> This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.
-
 This packages uses some additional utilities from the following repository: https://www.github.com/mediamax07/Unity-CSharp-Utilities
 
 <b>Start-up Tutorial</b><br/>
@@ -48,3 +46,7 @@ Note: Joysticks compatibility will be added soon...
 	- Add, remove, duplicate inputs
 	- Bind keys in editor
 	- Json preset importer
+
+<b>Important Notes!</b><br/>
+This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.
+Please do not changes the destination of the existing files under the `Resources` directory. Doing so may cause some internal errors!

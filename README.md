@@ -26,6 +26,10 @@ Will be available soon...
 Note: Joysticks compatibility will be added soon...
 
 <b>Release Notes</b>
+- 0.1-preview.3
+	- Fixed the Editor compatibility for Unity 2019.3
+- 0.1-preview.2
+	- Added some meta files for the Editor icons
 - 0.1-preview.1
 	- Fixed some compatibility issues
 - 0.1-preview (First Commit)<br/>

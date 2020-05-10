@@ -3,6 +3,8 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages uses some additional utilities from the following repository: https://www.github.com/mediamax07/Unity-CSharp-Utilities
 
+<b>Version</b>: 0.1-preview.3
+
 <b>Start-up Tutorial</b><br/>
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.
 You can access the Inputs Manager from the `Utilities.Inputs` namespace

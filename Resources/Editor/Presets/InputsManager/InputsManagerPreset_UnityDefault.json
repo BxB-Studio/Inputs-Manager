@@ -1,0 +1,164 @@
+{
+    "items": [
+        {
+            "name": "Vertical",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 3,
+                "positive": 63,
+                "negative": 64
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 37,
+                "negative": 33
+            },
+            "type": 0
+        },
+        {
+            "name": "Horizontal",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 3,
+                "positive": 62,
+                "negative": 61
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 18,
+                "negative": 15
+            },
+            "type": 0
+        },
+        {
+            "name": "Fire1",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 55,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Fire2",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 53,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Fire3",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 51,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Jump",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 1,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Submit",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 2,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 77,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Cancel",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 60,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        }
+    ]
+}

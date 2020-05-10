@@ -1,0 +1,64 @@
+{
+    "items": [
+        {
+            "name": "Change Camera",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 17,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Camera Forward",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 3,
+                "positive": 92,
+                "negative": 86
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 0
+        },
+        {
+            "name": "Camera Sideways",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 3,
+                "positive": 90,
+                "negative": 88
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 0
+        }
+    ]
+}

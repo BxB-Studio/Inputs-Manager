@@ -1,0 +1,184 @@
+{
+    "items": [
+        {
+            "name": "Steering Wheel",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 3,
+                "positive": 62,
+                "negative": 61
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 18,
+                "negative": 15
+            },
+            "type": 0
+        },
+        {
+            "name": "Fuel Pedal",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 63,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 37,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Brake Pedal",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 64,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 33,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Clutch Pedal",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 38,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Handbrake",
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 1,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Start Engine",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 19,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Gear Shift Up",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 51,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 52,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "Gear Shift Down",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 55,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 56,
+                "negative": 0
+            },
+            "type": 1
+        },
+        {
+            "name": "NOS Button",
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false,
+            "main": {
+                "strongSide": 0,
+                "positive": 53,
+                "negative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 54,
+                "negative": 0
+            },
+            "type": 1
+        }
+    ]
+}

@@ -26,7 +26,7 @@ Will be available soon...
 Note: Joysticks compatibility will be added soon...
 
 <b>Compatibility</b><br/>
-- Unity 2018.4 or later
+- Unity 2018.4 or later<br/>
 <b>Note</b>: Not tested for Unity 2020.1 Beta yet
 
 <b>Dependencies</b>

@@ -26,7 +26,9 @@ Note: Joysticks compatibility will be added soon...
   - Add, remove, duplicate inputs
   - Bind keys in editor
   - Json preset importer
-  
+- 0.1-preview.1
+  - Fixed some compatibility issues
+
 <b>Compatibility:</b> Unity 2018.4 or later
 
 <b>Dependencies</b>

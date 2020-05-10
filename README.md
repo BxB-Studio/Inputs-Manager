@@ -48,5 +48,5 @@ Note: Joysticks compatibility will be added soon...
 	- Json preset importer
 
 <b>Important Notes!</b><br/>
-This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.
+This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.<br/>
 Please do not changes the destination of the existing files under the `Resources` directory. Doing so may cause some internal errors!

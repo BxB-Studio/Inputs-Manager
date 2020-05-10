@@ -5,6 +5,10 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages uses some additional utilities from the following repository: https://www.github.com/mediamax07/Unity-CSharp-Utilities
 
+<b>Start-up Tutorial</b><br/>
+The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.
+You can access the Inputs Manager from the `Utilities.Input` namespace
+
 <b>Documentation</b><br/>
 Will be available soon...
 
@@ -23,18 +27,18 @@ Note: Joysticks compatibility will be added soon...
 
 <b>Release Notes</b>
 - 0.1-preview.1
-  - Fixed some compatibility issues
+	- Fixed some compatibility issues
 - 0.1-preview (First Commit)<br/>
-  - Add, remove, duplicate inputs
-  - Bind keys in editor
-  - Json preset importer
+	- Add, remove, duplicate inputs
+	- Bind keys in editor
+	- Json preset importer
 
 <b>Compatibility:</b> Unity 2018.4 or later
 
 <b>Dependencies</b>
 - Unity 2019.1 or later
-  - Input System: 1.0.0-preview or later
-  - Vector Graphics: Any version
+	- Input System: 1.0.0-preview or later
+	- Vector Graphics: Any version
 - Unity 2018.1 to 2018.4
-  - Input System: 0.2.1-preview or older
-  - Vector Graphics: Any version
+	- Input System: 0.2.1-preview or older
+	- Vector Graphics: Any version

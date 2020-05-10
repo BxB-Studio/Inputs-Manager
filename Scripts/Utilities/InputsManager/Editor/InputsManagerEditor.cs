@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
-#if UNITY_2019_OR_NEWER
+#if UNITY_2019_1_OR_NEWER
 using UnityEngine.InputSystem;
 #else
 using UnityEngine.Experimental.Input;

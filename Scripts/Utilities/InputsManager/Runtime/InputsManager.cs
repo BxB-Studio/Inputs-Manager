@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_2019_OR_NEWER
+#if UNITY_2019_1_OR_NEWER
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 #else

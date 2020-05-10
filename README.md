@@ -33,7 +33,7 @@ Will be available soon...
 - Unity 2019.1 or later
 	- Input System: 1.0.0-preview or later
 	- Vector Graphics: Any version
-- Unity 2018.1 to 2018.4
+- Unity 2018.4
 	- Input System: 0.2.1-preview or older
 	- Vector Graphics: Any version
 

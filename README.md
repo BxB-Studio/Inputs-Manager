@@ -20,7 +20,7 @@ Will be available soon...
 - Dynamic editor window
 - Save and import presets
 - Editor ready Json presets
-- Runtime bouble press and hold binding
+- Runtime double press and hold binding
 - Wide range of settings
 - Secured data saving
 - Joysticks compatibility (Will be added soon...)

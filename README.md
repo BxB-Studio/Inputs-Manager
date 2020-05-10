@@ -25,6 +25,18 @@ Will be available soon...
 - Secured data saving<br/>
 Note: Joysticks compatibility will be added soon...
 
+<b>Compatibility</b><br/>
+- Unity 2018.4 or later
+<b>Note</b>: Not tested for Unity 2020.1 Beta yet
+
+<b>Dependencies</b>
+- Unity 2019.1 or later
+	- Input System: 1.0.0-preview or later
+	- Vector Graphics: Any version
+- Unity 2018.1 to 2018.4
+	- Input System: 0.2.1-preview or older
+	- Vector Graphics: Any version
+
 <b>Release Notes</b>
 - 0.1-preview.3
 	- Fixed the Editor compatibility for Unity 2019.3
@@ -36,13 +48,3 @@ Note: Joysticks compatibility will be added soon...
 	- Add, remove, duplicate inputs
 	- Bind keys in editor
 	- Json preset importer
-
-<b>Compatibility:</b> Unity 2018.4 or later
-
-<b>Dependencies</b>
-- Unity 2019.1 or later
-	- Input System: 1.0.0-preview or later
-	- Vector Graphics: Any version
-- Unity 2018.1 to 2018.4
-	- Input System: 0.2.1-preview or older
-	- Vector Graphics: Any version

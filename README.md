@@ -1,13 +1,13 @@
 # Inputs-Manager
-A new customizable and dynamic Input alternative for Unity based on the New Input System
+A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
 This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
 **Version:** 0.1-preview.3
 
 ## Start-up Tutorial
-The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.
-You can access the Inputs Manager from the `Utilities.Inputs` namespace
+The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
+You can access the Inputs Manager from the `Utilities.Inputs` namespace.
 
 ## Documentation
 Will be available soon...
@@ -44,7 +44,7 @@ Will be available soon...
 	- Added some meta files for the Editor icons
 - 0.1-preview.1
 	- Fixed some compatibility issues
-- 0.1-preview (First Commit)<br/>
+- 0.1-preview (First Commit)
 	- Add, remove, duplicate inputs
 	- Bind keys in editor
 	- Json preset importer
@@ -52,10 +52,10 @@ Will be available soon...
 ## Important Notes!
 **The Inputs Manager requires an API Compatibility Level of .NET 4.x or later (If available).<br/>
 This package requires the New Input System and the Vector Graphics packages to be installed from the Package Manager.<br/>
-Please do not changes the destination of the existing files under the `Resources` directory. Doing so may cause some internal errors!**
+Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## Contributing
-Please read the [Contributing guidlines](https://github.com/mediamax07/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.
+Please read the [contributing guidlines](https://github.com/mediamax07/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.
 
 ## License
-This project is under the MIT license. [Read more...](https://github.com/mediamax07/Inputs-Manager/blob/master/LICENSE.md)
+This project is under the MIT license. [Read more about it](https://github.com/mediamax07/Inputs-Manager/blob/master/LICENSE.md).

@@ -3,7 +3,7 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
-**Version:** 0.1-preview.3
+**Version:** 0.1-beta.5
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
@@ -38,6 +38,10 @@ Will be available soon...
 	- Vector Graphics: Any version
 
 ## Release Notes
+- 0.1-beta.5
+	- Fixed some bugs
+- 0.1-beta.4
+	- First Pre-Release
 - 0.1-preview.3
 	- Fixed the Editor compatibility for Unity 2019.3
 - 0.1-preview.2

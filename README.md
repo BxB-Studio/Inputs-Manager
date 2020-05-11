@@ -1,7 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System
 
-This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities)
+This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
 **Version:** 0.1-preview.3
 

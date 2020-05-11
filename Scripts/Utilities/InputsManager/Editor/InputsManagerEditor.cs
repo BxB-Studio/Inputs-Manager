@@ -134,7 +134,7 @@ namespace Utilities.Inputs
 				if (EditorUtility.DisplayDialog("Inputs Manager: Internal Error", "We were unable to create a new Inputs Manager asset!", "Report Error...", "Cancel"))
 					ReportError();
 			}
-			else if (EditorUtility.DisplayDialog("Inputs Manager: Info", "A new Inputs Manager asset has been created! Do you want to load the a preset from a Json file?", "Yes", "No"))
+			else if (EditorUtility.DisplayDialog("Inputs Manager: Info", "A new Inputs Manager asset has been created! Do you want to load a Json preset file?", "Yes", "No"))
 			{
 				LoadPreset();
 				OpenInputsManager();

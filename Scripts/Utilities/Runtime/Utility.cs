@@ -465,7 +465,7 @@ namespace Utilities
 
 			return result.ToArray();
 		}
-		public static Texture2D TakeScreenshot(Camera camera, Vector2Int size)
+		public static Texture2D TakeScreenshot(UnityEngine.Camera camera, Vector2Int size)
 		{
 			RenderTexture renderTexture = new RenderTexture(size.x, size.y, 24);
 

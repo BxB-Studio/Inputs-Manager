@@ -10,7 +10,8 @@ The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` m
 You can access the Inputs Manager from the `Utilities.Inputs` namespace.
 
 ## Documentation
-Will be available soon...
+Will be available soon...<br/>
+You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** when ever you need something to explained.
 
 ## Features
 - Easy inputs setup

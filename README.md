@@ -11,7 +11,7 @@ You can access the Inputs Manager from the `Utilities.Inputs` namespace.
 
 ## Documentation
 Will be available soon...<br/>
-You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** when ever you need something to explained.
+You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
 
 ## Features
 - Easy inputs setup

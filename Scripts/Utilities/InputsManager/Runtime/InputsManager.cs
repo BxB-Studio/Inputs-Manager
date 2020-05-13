@@ -339,9 +339,9 @@ namespace Utilities.Inputs
 					float target = Mathf.Lerp(intervalA, intervalB, valueFactor);
 
 					if (interpolation == InputAxisInterpolation.Smooth)
-						mainValue = Mathf.Lerp(mainValue, target, Time.deltaTime / InterpolationTime);
+						mainValue = Mathf.Lerp(mainValue, target, Time.time / InterpolationTime);
 					else if (interpolation == InputAxisInterpolation.Jump)
-						mainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(mainValue) ? 0f : Mathf.Lerp(mainValue, target, Time.deltaTime / InterpolationTime);
+						mainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(mainValue) ? 0f : Mathf.Lerp(mainValue, target, Time.time / InterpolationTime);
 					else
 						mainValue = target;
 
@@ -398,9 +398,9 @@ namespace Utilities.Inputs
 					float target = Mathf.Lerp(intervalA, intervalB, valueFactor);
 
 					if (interpolation == InputAxisInterpolation.Smooth)
-						altValue = Mathf.Lerp(altValue, target, Time.deltaTime / InterpolationTime);
+						altValue = Mathf.Lerp(altValue, target, Time.time / InterpolationTime);
 					else if (interpolation == InputAxisInterpolation.Jump)
-						altValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(altValue) ? 0f : Mathf.Lerp(altValue, target, Time.deltaTime / InterpolationTime);
+						altValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(altValue) ? 0f : Mathf.Lerp(altValue, target, Time.time / InterpolationTime);
 					else
 						altValue = target;
 
@@ -1158,6 +1158,9 @@ namespace Utilities.Inputs
 		public static bool InputNegativeMainAxisHold(Input input) => input.NegativeMainHeld;
 		public static bool InputNegativeMainAxisHold(string name) => GetInput(name).NegativeMainHeld;
 		public static bool InputNegativeMainAxisHold(int index) => GetInput(index).NegativeMainHeld;
+		public static bool InputKey(Key key) => KeyToKeyControl(key).isPressed;
+		public static bool InputKeyDown(Key key) => KeyToKeyControl(key).wasPressedThisFrame;
+		public static bool InputKeyUp(Key key) => KeyToKeyControl(key).wasReleasedThisFrame;
 		public static bool InputMouseButtonPress(int type)
 		{
 			if (type < -1 || type > 1)

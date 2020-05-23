@@ -1,5 +1,9 @@
-﻿using UnityEngine;
+﻿#region Namespaces
+
+using UnityEngine;
 using UnityEditor;
+
+#endregion
 
 namespace Utilities
 {
@@ -31,7 +35,7 @@ namespace Utilities
 #if UNITY_2019_3_OR_NEWER
 					style.normal.textColor = UnityEngine.Color.white;
 #else
-						style.normal = style.active;
+					style.normal = style.active;
 #endif
 
 					return style;
@@ -55,7 +59,7 @@ namespace Utilities
 #if UNITY_2019_3_OR_NEWER
 					style.normal.textColor = UnityEngine.Color.white;
 #else
-						style.normal = style.active;
+					style.normal = style.active;
 #endif
 
 					return style;
@@ -79,7 +83,7 @@ namespace Utilities
 #if UNITY_2019_3_OR_NEWER
 					style.normal.textColor = UnityEngine.Color.white;
 #else
-						style.normal = style.active;
+					style.normal = style.active;
 #endif
 
 					return style;
@@ -103,7 +107,7 @@ namespace Utilities
 #if UNITY_2019_3_OR_NEWER
 					style.normal.textColor = UnityEngine.Color.white;
 #else
-						style.normal = style.active;
+					style.normal = style.active;
 #endif
 
 					return style;
@@ -127,7 +131,7 @@ namespace Utilities
 #if UNITY_2019_3_OR_NEWER
 					style.normal.textColor = UnityEngine.Color.white;
 #else
-						style.normal = style.active;
+					style.normal = style.active;
 #endif
 
 					return style;
@@ -150,6 +154,7 @@ namespace Utilities
 			public static Texture2D CheckCircleColored => Resources.Load($"{IconsPath}/check-circle") as Texture2D;
 			public static Texture2D CheckColored => Resources.Load($"{IconsPath}/check") as Texture2D;
 			public static Texture2D Clone => Resources.Load($"{IconsPath}/{IconsThemeFolder}/clone") as Texture2D;
+			public static Texture2D Cross => Resources.Load($"{IconsPath}/{IconsThemeFolder}/cross") as Texture2D;
 			public static Texture2D Error => Resources.Load($"{IconsPath}/exclamation-circle") as Texture2D;
 			public static Texture2D ExclamationCircle => Resources.Load($"{IconsPath}/{IconsThemeFolder}/exclamation-circle") as Texture2D;
 			public static Texture2D ExclamationTriangle => Resources.Load($"{IconsPath}/{IconsThemeFolder}/exclamation-triangle") as Texture2D;
@@ -208,6 +213,6 @@ namespace Utilities
 			Debug.Log(Selection.activeGameObject.name + " placed on the surface successfully!", Selection.activeGameObject);
 		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

@@ -298,9 +298,10 @@ namespace Utilities.Inputs
 					if (mainValueUpdatedFrame == Time.frameCount)
 						return mainValue;
 
-					float deltaTime = Time.fixedTime - mainValueUpdatedTime;
+					float time = Time.inFixedTimeStep ? Time.fixedTime : Time.time;
+					float deltaTime = time - mainValueUpdatedTime;
 
-					mainValueUpdatedTime = Time.fixedTime;
+					mainValueUpdatedTime = time;
 
 					float positiveValue = Utility.BoolToNumber(PositiveMainPress);
 					float negativeValue = Utility.BoolToNumber(NegativeMainPress);
@@ -361,9 +362,10 @@ namespace Utilities.Inputs
 					if (altValueUpdatedFrame == Time.frameCount)
 						return altValue;
 
-					float deltaTime = Time.fixedTime - altValueUpdatedTime;
+					float time = Time.inFixedTimeStep ? Time.fixedTime : Time.time;
+					float deltaTime = time - altValueUpdatedTime;
 
-					altValueUpdatedTime = Time.fixedTime;
+					altValueUpdatedTime = time;
 
 					float positiveValue = Utility.BoolToNumber(PositiveAltPress);
 					float negativeValue = Utility.BoolToNumber(NegativeAltPress);
@@ -512,7 +514,9 @@ namespace Utilities.Inputs
 
 					if (PositiveMainPress)
 					{
-						positiveMainHoldTimer -= Time.deltaTime;
+						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+						positiveMainHoldTimer -= deltaTime;
 
 						bool held = positiveMainHoldTimer <= 0f;
 
@@ -543,7 +547,9 @@ namespace Utilities.Inputs
 
 					if (NegativeMainPress)
 					{
-						negativeMainHoldTimer -= Time.deltaTime;
+						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+						negativeMainHoldTimer -= deltaTime;
 
 						bool held = negativeMainHoldTimer <= 0f;
 
@@ -574,7 +580,9 @@ namespace Utilities.Inputs
 
 					if (PositiveAltPress)
 					{
-						positiveAltHoldTimer -= Time.deltaTime;
+						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+						positiveAltHoldTimer -= deltaTime;
 
 						bool held = positiveAltHoldTimer <= 0f;
 
@@ -605,7 +613,9 @@ namespace Utilities.Inputs
 
 					if (NegativeAltPress)
 					{
-						negativeAltHoldTimer -= Time.deltaTime;
+						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+						negativeAltHoldTimer -= deltaTime;
 
 						bool held = negativeAltHoldTimer <= 0f;
 
@@ -638,7 +648,10 @@ namespace Utilities.Inputs
 						return positiveMainDouble;
 
 					positiveMainDoubleUpdateFrame = Time.frameCount;
-					positiveMainDoubleTimer += positiveMainDoubleTimer > 0f ? -Time.deltaTime : positiveMainDoubleTimer;
+
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					positiveMainDoubleTimer += positiveMainDoubleTimer > 0f ? -deltaTime : positiveMainDoubleTimer;
 
 					bool pressed = PositiveMainUp;
 
@@ -664,7 +677,10 @@ namespace Utilities.Inputs
 						return negativeMainDouble;
 
 					negativeMainDoubleUpdateFrame = Time.frameCount;
-					negativeMainDoubleTimer += negativeMainDoubleTimer > 0f ? -Time.deltaTime : negativeMainDoubleTimer;
+
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					negativeMainDoubleTimer += negativeMainDoubleTimer > 0f ? -deltaTime : negativeMainDoubleTimer;
 
 					bool pressed = NegativeMainUp;
 
@@ -690,7 +706,10 @@ namespace Utilities.Inputs
 						return positiveAltDouble;
 
 					positiveAltDoubleUpdateFrame = Time.frameCount;
-					positiveAltDoubleTimer += positiveAltDoubleTimer > 0f ? -Time.deltaTime : positiveAltDoubleTimer;
+
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					positiveAltDoubleTimer += positiveAltDoubleTimer > 0f ? -deltaTime : positiveAltDoubleTimer;
 
 					bool pressed = PositiveAltUp;
 
@@ -716,7 +735,10 @@ namespace Utilities.Inputs
 						return negativeAltDouble;
 
 					negativeAltDoubleUpdateFrame = Time.frameCount;
-					negativeAltDoubleTimer += negativeAltDoubleTimer > 0f ? -Time.deltaTime : negativeAltDoubleTimer;
+
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					negativeAltDoubleTimer += negativeAltDoubleTimer > 0f ? -deltaTime : negativeAltDoubleTimer;
 
 					bool pressed = NegativeAltUp;
 
@@ -754,7 +776,6 @@ namespace Utilities.Inputs
 			private Utility.SerializableVector2 valueInterval;
 			[SerializeField]
 			private bool invert;
-
 			private KeyControl PositiveMainControl
 			{
 				get
@@ -795,83 +816,44 @@ namespace Utilities.Inputs
 					return negativeAlt;
 				}
 			}
-			[NonSerialized]
 			private KeyControl positiveMain;
-			[NonSerialized]
 			private KeyControl negativeMain;
-			[NonSerialized]
 			private KeyControl positiveAlt;
-			[NonSerialized]
 			private KeyControl negativeAlt;
-			[NonSerialized]
 			private float mainValue;
-			[NonSerialized]
 			private float altValue;
-			[NonSerialized]
 			private float positiveMainHoldTimer;
-			[NonSerialized]
 			private float negativeMainHoldTimer;
-			[NonSerialized]
 			private float positiveAltHoldTimer;
-			[NonSerialized]
 			private float negativeAltHoldTimer;
-			[NonSerialized]
 			private float positiveMainDoubleTimer;
-			[NonSerialized]
 			private float negativeMainDoubleTimer;
-			[NonSerialized]
 			private float positiveAltDoubleTimer;
-			[NonSerialized]
 			private float negativeAltDoubleTimer;
-			[NonSerialized]
 			private float mainValueUpdatedTime;
-			[NonSerialized]
 			private float altValueUpdatedTime;
-			[NonSerialized]
 			private bool positiveMainHeld;
-			[NonSerialized]
 			private bool negativeMainHeld;
-			[NonSerialized]
 			private bool positiveAltHeld;
-			[NonSerialized]
 			private bool negativeAltHeld;
-			[NonSerialized]
 			private bool positiveMainDouble;
-			[NonSerialized]
 			private bool negativeMainDouble;
-			[NonSerialized]
 			private bool positiveAltDouble;
-			[NonSerialized]
 			private bool negativeAltDouble;
-			[NonSerialized]
 			private bool positiveMainDoubleInitiated;
-			[NonSerialized]
 			private bool negativeMainDoubleInitiated;
-			[NonSerialized]
 			private bool positiveAltDoubleInitiated;
-			[NonSerialized]
 			private bool negativeAltDoubleInitiated;
-			[NonSerialized]
 			private int mainValueUpdatedFrame;
-			[NonSerialized]
 			private int altValueUpdatedFrame;
-			[NonSerialized]
 			private int positiveMainHeldUpdateFrame;
-			[NonSerialized]
 			private int negativeMainHeldUpdateFrame;
-			[NonSerialized]
 			private int positiveAltHeldUpdateFrame;
-			[NonSerialized]
 			private int negativeAltHeldUpdateFrame;
-			[NonSerialized]
 			private int positiveMainDoubleUpdateFrame;
-			[NonSerialized]
 			private int negativeMainDoubleUpdateFrame;
-			[NonSerialized]
 			private int positiveAltDoubleUpdateFrame;
-			[NonSerialized]
 			private int negativeAltDoubleUpdateFrame;
-			[NonSerialized]
 			private bool trimmed;
 
 			#endregion
@@ -1062,7 +1044,9 @@ namespace Utilities.Inputs
 
 				if (InputMouseButtonPress(InputMouseButton.Left))
 				{
-					mouseLeftHoldTimer -= Time.deltaTime;
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					mouseLeftHoldTimer -= deltaTime;
 
 					bool held = mouseLeftHoldTimer <= 0f;
 
@@ -1093,7 +1077,9 @@ namespace Utilities.Inputs
 
 				if (InputMouseButtonPress(InputMouseButton.Middle))
 				{
-					mouseMiddleHoldTimer -= Time.deltaTime;
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					mouseMiddleHoldTimer -= deltaTime;
 
 					bool held = mouseMiddleHoldTimer <= 0f;
 
@@ -1124,7 +1110,9 @@ namespace Utilities.Inputs
 
 				if (InputMouseButtonPress(InputMouseButton.Right))
 				{
-					mouseRightHoldTimer -= Time.deltaTime;
+					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+					mouseRightHoldTimer -= deltaTime;
 
 					bool held = mouseRightHoldTimer <= 0f;
 
@@ -1155,7 +1143,10 @@ namespace Utilities.Inputs
 					return mouseLeftDouble;
 
 				mouseLeftDoubleUpdateFrame = Time.frameCount;
-				mouseLeftDoubleTimer += mouseLeftDoubleTimer > 0f ? -Time.deltaTime : mouseLeftDoubleTimer;
+
+				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+				mouseLeftDoubleTimer += mouseLeftDoubleTimer > 0f ? -deltaTime : mouseLeftDoubleTimer;
 
 				bool pressed = InputMouseButtonUp(InputMouseButton.Left);
 
@@ -1181,7 +1172,10 @@ namespace Utilities.Inputs
 					return mouseMiddleDouble;
 
 				mouseMiddleDoubleUpdateFrame = Time.frameCount;
-				mouseMiddleDoubleTimer += mouseMiddleDoubleTimer > 0f ? -Time.deltaTime : mouseMiddleDoubleTimer;
+
+				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+				mouseMiddleDoubleTimer += mouseMiddleDoubleTimer > 0f ? -deltaTime : mouseMiddleDoubleTimer;
 
 				bool pressed = InputMouseButtonUp(InputMouseButton.Middle);
 
@@ -1207,7 +1201,10 @@ namespace Utilities.Inputs
 					return mouseRightDouble;
 
 				mouseRightDoubleUpdateFrame = Time.frameCount;
-				mouseRightDoubleTimer += mouseRightDoubleTimer > 0f ? -Time.deltaTime : mouseRightDoubleTimer;
+
+				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+
+				mouseRightDoubleTimer += mouseRightDoubleTimer > 0f ? -deltaTime : mouseRightDoubleTimer;
 
 				bool pressed = InputMouseButtonUp(InputMouseButton.Right);
 
@@ -2399,9 +2396,7 @@ namespace Utilities.Inputs
 
 			dataChanged = false;
 
-			DataSheet data = new DataSheet();
-
-			return serializer.SaveOrCreate(data);
+			return serializer.SaveOrCreate(new DataSheet());
 		}
 
 		#endregion

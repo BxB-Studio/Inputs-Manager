@@ -893,11 +893,11 @@ namespace Utilities.Inputs
 
 					EditorGUI.BeginDisabledGroup(forceAdditive);
 
-					importAdditive = Utility.IntToBool(EditorGUILayout.Popup(new GUIContent("Import Mode", "Clear: Clears all the existing inputs and add the selected inputs\r\nAdditive: Add the selected inputs without clearing the existing inputs"), Utility.BoolToInt(importAdditive || forceAdditive), importModes));
+					importAdditive = Utility.NumberToBool(EditorGUILayout.Popup(new GUIContent("Import Mode", "Clear: Clears all the existing inputs and add the selected inputs\r\nAdditive: Add the selected inputs without clearing the existing inputs"), Utility.BoolToNumber(importAdditive || forceAdditive), importModes));
 
 					EditorGUI.BeginDisabledGroup(!importAdditive);
 
-					importOverride = Utility.IntToBool(EditorGUILayout.Popup(new GUIContent("Override Mode", "Ignore Existing: The selected inputs will override the existing inputs if their names match\r\nKeep Existing: Some imported inputs are gonna be ignored if their names match the existing inputs"), Utility.BoolToInt(importOverride || forceAdditive), importOverrideModes));
+					importOverride = Utility.NumberToBool(EditorGUILayout.Popup(new GUIContent("Override Mode", "Ignore Existing: The selected inputs will override the existing inputs if their names match\r\nKeep Existing: Some imported inputs are gonna be ignored if their names match the existing inputs"), Utility.BoolToNumber(importOverride || forceAdditive), importOverrideModes));
 
 					EditorGUI.EndDisabledGroup();
 					EditorGUI.EndDisabledGroup();

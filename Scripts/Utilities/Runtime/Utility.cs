@@ -1,14 +1,383 @@
-﻿using System;
+﻿#region Namespaces
+
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Events;
 
+#endregion
+
 namespace Utilities
 {
 	public static class Utility
 	{
+		#region Modules & Enumerators
+
+		#region Enumerators
+
+		public enum UnitType { Metric, Imperial }
+		public enum Units { Distance, DistanceAccurate, DistanceLong, Force, Liquid, Power, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Weight }
+
+		#endregion
+
+		#region Modules
+
+		[Serializable]
+		public class JsonArray<T>
+		{
+			#region Variables
+
+			#region  Global Variables
+
+			[SerializeField]
+			private T[] items;
+
+			#endregion
+
+			#region Indexers
+
+			public T this[int index]
+			{
+				get
+				{
+					return items[index];
+				}
+			}
+
+			#endregion
+
+			#endregion
+
+			#region Methods
+
+			public T[] ToArray()
+			{
+				return items;
+			}
+
+			#endregion
+
+			#region Constructors
+
+			public JsonArray(T[] array)
+			{
+				items = array;
+			}
+
+			#endregion
+		}
+		[Serializable]
+		public struct Interval
+		{
+			#region Variables
+
+			public float Min
+			{
+				get
+				{
+					return min;
+				}
+				set
+				{
+					min = Mathf.Clamp(min, -Mathf.Infinity, max);
+				}
+			}
+			public float Max
+			{
+				get
+				{
+					return max;
+				}
+				set
+				{
+					max = Mathf.Clamp(max, min, Mathf.Infinity);
+				}
+			}
+
+			private float min;
+			private float max;
+
+			#endregion
+
+			#region Methods
+
+			#region Utilities
+
+			public bool Contains(float value)
+			{
+				return value >= min && value <= max;
+			}
+
+			#endregion
+
+			#region Constructors & Operators
+
+			#region Constructors
+
+			public Interval(float min, float max)
+			{
+				this.min = min;
+				this.max = max;
+			}
+
+			#endregion
+
+			#region Operators
+
+			public static Interval operator +(Interval a, float b)
+			{
+				return new Interval(a.min + b, a.max + b);
+			}
+			public static Interval operator +(Interval a, Interval b)
+			{
+				return new Interval(a.min + b.min, a.max + b.max);
+			}
+			public static Interval operator -(Interval a, float b)
+			{
+				return new Interval(a.min - b, a.max - b);
+			}
+			public static Interval operator -(Interval a, Interval b)
+			{
+				return new Interval(a.min - b.min, a.max - b.max);
+			}
+			public static Interval operator *(Interval a, float b)
+			{
+				return new Interval(a.min * b, a.max * b);
+			}
+			public static Interval operator *(Interval a, Interval b)
+			{
+				return new Interval(a.min * b.min, a.max * b.max);
+			}
+			public static Interval operator /(Interval a, float b)
+			{
+				return new Interval(a.min / b, a.max / b);
+			}
+			public static Interval operator /(Interval a, Interval b)
+			{
+				return new Interval(a.min / b.min, a.max / b.max);
+			}
+
+			#endregion
+
+			#endregion
+
+			#endregion
+		}
+		[Serializable]
+		public struct SerializableVector2
+		{
+			public float x;
+			public float y;
+
+			public SerializableVector2(Vector2 vector)
+			{
+				x = vector.x;
+				y = vector.y;
+			}
+
+			public static SerializableVector2 operator *(SerializableVector2 a, float b)
+			{
+				return new SerializableVector2(new Vector2(a.x, a.y) * b);
+			}
+			public static implicit operator Vector2(SerializableVector2 vector)
+			{
+				return new Vector2(vector.x, vector.y);
+			}
+			public static implicit operator SerializableVector2(Vector2 vector)
+			{
+				return new SerializableVector2(vector);
+			}
+		}
+		[Serializable]
+		public struct SerializableRect
+		{
+			public float x;
+			public float y;
+			public float width;
+			public float height;
+			public SerializableVector2 position;
+			public SerializableVector2 size;
+
+			public SerializableRect(Rect rect)
+			{
+				x = rect.x;
+				y = rect.y;
+				width = rect.width;
+				height = rect.height;
+				position = rect.position;
+				size = rect.size;
+			}
+			public static implicit operator Rect(SerializableRect rect)
+			{
+				return new Rect(rect.x, rect.y, rect.width, rect.height);
+			}
+			public static implicit operator SerializableRect(Rect rect)
+			{
+				return new SerializableRect(rect);
+			}
+
+			public bool Contains(Vector2 point)
+			{
+				return new Rect(x, y, width, height).Contains(point);
+			}
+			public bool Contains(Vector3 point)
+			{
+				return new Rect(x, y, width, height).Contains(point);
+			}
+			public bool Contains(Vector3 point, bool allowInverse)
+			{
+				return new Rect(x, y, width, height).Contains(point, allowInverse);
+			}
+		}
+		[Serializable]
+		public struct ColorSheet
+		{
+			public string name;
+			public SerializableColor color;
+			public float metallic;
+			public float smoothness;
+
+			public ColorSheet(string name)
+			{
+				this.name = name;
+				color = UnityEngine.Color.white;
+				metallic = 0f;
+				smoothness = .5f;
+			}
+			public ColorSheet(ColorSheet sheet)
+			{
+				name = sheet.name;
+				color = sheet.color;
+				metallic = sheet.metallic;
+				smoothness = sheet.smoothness;
+			}
+
+			public void SetMaterial(Material material)
+			{
+				material.SetColor("_BaseColor", color);
+				material.SetFloat("_Metallic", metallic);
+				material.SetFloat("_Smoothness", smoothness);
+				material.SetFloat("_SmoothnessRemapMin", smoothness);
+				material.SetFloat("_SmoothnessRemapMax", smoothness);
+			}
+
+			public static implicit operator ColorSheet(UnityEngine.Color color)
+			{
+				return new ColorSheet()
+				{
+					color = color
+				};
+			}
+			public static implicit operator ColorSheet(Material material)
+			{
+				if (material.shader != Shader.Find("HDRP/Lit"))
+					return null;
+
+				return new ColorSheet()
+				{
+					color = material.GetColor("_BaseColor"),
+					metallic = material.GetFloat("_Metallic"),
+					smoothness = material.GetFloat("_Smoothness")
+				};
+			}
+			public static bool operator ==(ColorSheet sheetA, ColorSheet sheetB)
+			{
+				return sheetA.name == sheetB.name && sheetA.color == sheetB.color && sheetA.metallic == sheetB.metallic && sheetA.smoothness == sheetB.smoothness;
+			}
+			public static bool operator !=(ColorSheet sheetA, ColorSheet sheetB)
+			{
+				return !(sheetA == sheetB);
+			}
+
+			public override bool Equals(object obj)
+			{
+				return obj is ColorSheet sheet &&
+					name == sheet.name &&
+					EqualityComparer<SerializableColor>.Default.Equals(color, sheet.color) &&
+					metallic == sheet.metallic &&
+					smoothness == sheet.smoothness;
+			}
+			public override int GetHashCode()
+			{
+				int hashCode = -383408880;
+
+				hashCode *= -1521134295 + name.GetHashCode();
+				hashCode *= -1521134295 + EqualityComparer<SerializableColor>.Default.GetHashCode(color);
+				hashCode *= -1521134295 + metallic.GetHashCode();
+				hashCode *= -1521134295 + smoothness.GetHashCode();
+
+				return hashCode;
+			}
+		}
+		[Serializable]
+		public struct SerializableColor
+		{
+			public float r;
+			public float g;
+			public float b;
+			public float a;
+
+			public SerializableColor(UnityEngine.Color color)
+			{
+				r = color.r;
+				g = color.g;
+				b = color.b;
+				a = color.a;
+			}
+
+			public static implicit operator UnityEngine.Color(SerializableColor color)
+			{
+				return new UnityEngine.Color(color.r, color.g, color.b, color.a);
+			}
+			public static implicit operator SerializableColor(UnityEngine.Color color)
+			{
+				return new SerializableColor(color);
+			}
+			public static bool operator ==(SerializableColor colorA, SerializableColor colorB)
+			{
+				return colorA.r == colorB.r && colorA.g == colorB.g && colorA.b == colorB.b && colorA.a == colorB.a;
+			}
+			public static bool operator !=(SerializableColor colorA, SerializableColor colorB)
+			{
+				return !(colorA == colorB);
+			}
+
+			public override bool Equals(object obj)
+			{
+				return
+					obj is SerializableColor color &&
+					r == color.r &&
+					g == color.g &&
+					b == color.b &&
+					a == color.a;
+			}
+			public override int GetHashCode()
+			{
+				var hashCode = -490236692;
+
+				hashCode = hashCode * -1521134295 + r.GetHashCode();
+				hashCode = hashCode * -1521134295 + g.GetHashCode();
+				hashCode = hashCode * -1521134295 + b.GetHashCode();
+				hashCode = hashCode * -1521134295 + a.GetHashCode();
+
+				return hashCode;
+			}
+		}
+		public static class Color
+		{
+			public static UnityEngine.Color darkGray = new UnityEngine.Color(.25f, .25f, .25f);
+			public static UnityEngine.Color lightGray = new UnityEngine.Color(.67f, .67f, .67f);
+			public static UnityEngine.Color orange = new UnityEngine.Color(1f, .5f, 0f);
+			public static UnityEngine.Color purple = new UnityEngine.Color(.5f, 0f, 1f);
+			public static UnityEngine.Color transparent = new UnityEngine.Color(0f, 0f, 0f, 0f);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region Methods
 
 		public static void Dummy()
@@ -174,13 +543,19 @@ namespace Utilities
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, bool rounded)
 		{
+			if (Mathf.Abs(number) == Mathf.Infinity)
+				return "Infinity";
+
 			number *= UnitMultiplier(unit, unitType);
 
 			return $"{(rounded ? Mathf.Round(number) : number)} {Unit(unit, unitType)}";
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, int decimals)
 		{
-			float multiplier = 1;
+			if (Mathf.Abs(number) == Mathf.Infinity)
+				return "Infinity";
+
+			float multiplier = 1f;
 
 			if (decimals > 0)
 				for (int i = 0; i < decimals; i++)
@@ -285,21 +660,25 @@ namespace Utilities
 		{
 			return (mask.value & 1 << layer) != 0;
 		}
+		public static bool MaskHasLayer(int mask, int layer)
+		{
+			return (mask & 1 << layer) != 0;
+		}
 		public static int LayerMask(string name)
 		{
 			return ~(1 << UnityEngine.LayerMask.NameToLayer(name));
 		}
-		public static int BoolToInt(bool condition)
+		public static int BoolToNumber(bool condition)
 		{
 			return condition ? 1 : 0;
 		}
-		public static float BoolToInt(bool condition, float source, float damping = 2.5f)
+		public static float BoolToNumber(bool condition, float source, float damping = 2.5f)
 		{
-			return Mathf.LerpUnclamped(source, BoolToInt(condition), Time.time * damping);
+			return Mathf.Lerp(source, BoolToNumber(condition), Time.time * damping);
 		}
-		public static bool IntToBool(int number)
+		public static bool NumberToBool(float number)
 		{
-			return Mathf.Clamp01(Mathf.RoundToInt(number)) != 0;
+			return Mathf.Clamp01(Mathf.RoundToInt(number)) != 0f;
 		}
 		public static bool ValidDate(string date)
 		{
@@ -390,20 +769,31 @@ namespace Utilities
 
 			return abs ? VectorAbs(vector) : vector;
 		}
-		public static Vector3 Vector3Round(Vector3 vector)
+		public static Vector3 Round(Vector3 vector)
 		{
 			return new Vector3(Mathf.Round(vector.x), Mathf.Round(vector.y), Mathf.Round(vector.z));
 		}
 		public static Vector3 Direction(Vector3 origin, Vector3 destination)
 		{
-			return (destination - origin);
+			return destination - origin;
 		}
-		public static string RandomString(int length, bool upperCase = true, bool lowerCase = true, bool numbers = true, bool symbols = true)
+		public static float InverseLerp(Vector3 a, Vector3 b, Vector3 value)
+		{
+			return Mathf.Clamp01(InverseLerpUnclamped(a, b, value));
+		}
+		public static float InverseLerpUnclamped(Vector3 a, Vector3 b, Vector3 value)
+		{
+			Vector3 AB = b - a;
+			Vector3 AV = value - a;
+
+			return Vector3.Dot(AV, AB) / Vector3.Dot(AB, AB);
+		}
+		public static string RandomString(int length, bool upperChars = true, bool lowerChars = true, bool numbers = true, bool symbols = true)
 		{
 			string chars = "";
 
-			chars += upperCase ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "";
-			chars += lowerCase ? "abcdefghijklmnopqrstuvwxyz" : "";
+			chars += upperChars ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "";
+			chars += lowerChars ? "abcdefghijklmnopqrstuvwxyz" : "";
 			chars += numbers ? "0123456789" : "";
 			chars += symbols ? "!@#$%^&()_+-{}[],.;" : "";
 
@@ -465,7 +855,7 @@ namespace Utilities
 
 			return result.ToArray();
 		}
-		public static Texture2D TakeScreenshot(UnityEngine.Camera camera, Vector2Int size)
+		public static Texture2D TakeScreenshot(Camera camera, Vector2Int size)
 		{
 			RenderTexture renderTexture = new RenderTexture(size.x, size.y, 24);
 
@@ -523,13 +913,12 @@ namespace Utilities
 			if (vectors.Length == 0)
 				return Vector3.zero;
 
-			Vector3 result = Vector3.zero;
-
-			result.x = vectors.Average(vector => vector.x);
-			result.y = vectors.Average(vector => vector.y);
-			result.z = vectors.Average(vector => vector.z);
-
-			return result;
+			return new Vector3()
+			{
+				x = vectors.Average(vector => vector.x),
+				y = vectors.Average(vector => vector.y),
+				z = vectors.Average(vector => vector.z)
+			};
 		}
 		public static float Average(params float[] floats)
 		{
@@ -559,9 +948,7 @@ namespace Utilities
 			var v = ((p3.x - p1.x) * (p2.z - p1.z) - (p3.z - p1.z) * (p2.x - p1.x)) / d;
 
 			if (u < 0f || u > 1f || v < 0f || v > 1f)
-			{
 				return false;
-			}
 
 			intersection.x = p1.x + u * (p2.x - p1.x);
 			intersection.z = p1.z + u * (p2.z - p1.z);
@@ -612,271 +999,6 @@ namespace Utilities
 			return controller;
 		}
 
-		#endregion
-
-		#region Modules & Enumerators
-
-		#region Enumerators
-
-		public enum UnitType { Metric, Imperial }
-		public enum Units { Distance, DistanceAccurate, DistanceLong, Force, Liquid, Power, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Weight }
-
-		#endregion
-
-		#region Modules
-
-		[Serializable]
-		public class JsonArray<T>
-		{
-			#region Variables
-
-			#region  Global Variables
-
-			[SerializeField]
-			private T[] items;
-
-			#endregion
-
-			#region Indexers
-
-			public T this[int index]
-			{
-				get
-				{
-					return items[index];
-				}
-			}
-
-			#endregion
-
-			#endregion
-
-			#region Methods
-
-			public T[] ToArray()
-			{
-				return items;
-			}
-
-			#endregion
-
-			#region Constructors
-
-			public JsonArray(T[] array)
-			{
-				items = array;
-			}
-		
-			#endregion
-		}
-		[Serializable]
-		public struct SerializableVector2
-		{
-			public float x;
-			public float y;
-
-			public SerializableVector2(Vector2 vector)
-			{
-				x = vector.x;
-				y = vector.y;
-			}
-
-			public static SerializableVector2 operator *(SerializableVector2 a, float b)
-			{
-				return new SerializableVector2(new Vector2(a.x, a.y) * b);
-			}
-			public static implicit operator Vector2(SerializableVector2 vector)
-			{
-				return new Vector2(vector.x, vector.y);
-			}
-			public static implicit operator SerializableVector2(Vector2 vector)
-			{
-				return new SerializableVector2(vector);
-			}
-		}
-		[Serializable]
-		public struct SerializableRect
-		{
-			public float x;
-			public float y;
-			public float width;
-			public float height;
-			public SerializableVector2 position;
-			public SerializableVector2 size;
-
-			public SerializableRect(Rect rect)
-			{
-				x = rect.x;
-				y = rect.y;
-				width = rect.width;
-				height = rect.height;
-				position = rect.position;
-				size = rect.size;
-			}
-			public static implicit operator Rect(SerializableRect rect)
-			{
-				return new Rect(rect.x, rect.y, rect.width, rect.height);
-			}
-			public static implicit operator SerializableRect(Rect rect)
-			{
-				return new SerializableRect(rect);
-			}
-
-			public bool Contains(Vector2 point)
-			{
-				return new Rect(x, y, width, height).Contains(point);
-			}
-			public bool Contains(Vector3 point)
-			{
-				return new Rect(x, y, width, height).Contains(point);
-			}
-			public bool Contains(Vector3 point, bool allowInverse)
-			{
-				return new Rect(x, y, width, height).Contains(point, allowInverse);
-			}
-		}
-		[Serializable]
-		public struct ColorSheet
-		{
-			public string name;
-			public SerializableColor color;
-			public float metallic;
-			public float smoothness;
-
-			public ColorSheet(string name)
-			{
-				this.name = name;
-				color = UnityEngine.Color.white;
-				metallic = 0f;
-				smoothness = .5f;
-			}
-			public ColorSheet(ColorSheet sheet)
-			{
-				name = sheet.name;
-				color = sheet.color;
-				metallic = sheet.metallic;
-				smoothness = sheet.smoothness;
-			}
-
-			public void SetMaterial(Material material)
-			{
-				material.SetColor("_BaseColor", color);
-				material.SetFloat("_Metallic", metallic);
-				material.SetFloat("_Smoothness", smoothness);
-				material.SetFloat("_SmoothnessRemapMin", smoothness);
-				material.SetFloat("_SmoothnessRemapMax", smoothness);
-			}
-
-			public static implicit operator ColorSheet(UnityEngine.Color color)
-			{
-				return new ColorSheet() { color = color };
-			}
-			public static implicit operator ColorSheet(Material material)
-			{
-				if (material.shader != Shader.Find("HDRP/Lit"))
-					return null;
-
-				return new ColorSheet()
-				{
-					color = material.GetColor("_BaseColor"),
-					metallic = material.GetFloat("_Metallic"),
-					smoothness = material.GetFloat("_Smoothness")
-				};
-			}
-			public static bool operator ==(ColorSheet sheetA, ColorSheet sheetB)
-			{
-				return sheetA.name == sheetB.name && sheetA.color == sheetB.color && sheetA.metallic == sheetB.metallic && sheetA.smoothness == sheetB.smoothness;
-			}
-			public static bool operator !=(ColorSheet sheetA, ColorSheet sheetB)
-			{
-				return !(sheetA == sheetB);
-			}
-
-			public override bool Equals(object obj)
-			{
-				return obj is ColorSheet sheet &&
-					name == sheet.name &&
-					EqualityComparer<SerializableColor>.Default.Equals(color, sheet.color) &&
-					metallic == sheet.metallic &&
-					smoothness == sheet.smoothness;
-			}
-			public override int GetHashCode()
-			{
-				int hashCode = -383408880;
-
-				hashCode *= -1521134295 + name.GetHashCode();
-				hashCode *= -1521134295 + EqualityComparer<SerializableColor>.Default.GetHashCode(color);
-				hashCode *= -1521134295 + metallic.GetHashCode();
-				hashCode *= -1521134295 + smoothness.GetHashCode();
-
-				return hashCode;
-			}
-		}
-		[Serializable]
-		public struct SerializableColor
-		{
-			public float r;
-			public float g;
-			public float b;
-			public float a;
-
-			public SerializableColor(UnityEngine.Color color)
-			{
-				r = color.r;
-				g = color.g;
-				b = color.b;
-				a = color.a;
-			}
-
-			public static implicit operator UnityEngine.Color(SerializableColor color)
-			{
-				return new UnityEngine.Color(color.r, color.g, color.b, color.a);
-			}
-			public static implicit operator SerializableColor(UnityEngine.Color color)
-			{
-				return new SerializableColor(color);
-			}
-			public static bool operator ==(SerializableColor colorA, SerializableColor colorB)
-			{
-				return colorA.r == colorB.r && colorA.g == colorB.g && colorA.b == colorB.b && colorA.a == colorB.a;
-			}
-			public static bool operator !=(SerializableColor colorA, SerializableColor colorB)
-			{
-				return !(colorA == colorB);
-			}
-
-			public override bool Equals(object obj)
-			{
-				return
-					obj is SerializableColor color &&
-					r == color.r &&
-					g == color.g &&
-					b == color.b &&
-					a == color.a;
-			}
-			public override int GetHashCode()
-			{
-				var hashCode = -490236692;
-
-				hashCode = hashCode * -1521134295 + r.GetHashCode();
-				hashCode = hashCode * -1521134295 + g.GetHashCode();
-				hashCode = hashCode * -1521134295 + b.GetHashCode();
-				hashCode = hashCode * -1521134295 + a.GetHashCode();
-
-				return hashCode;
-			}
-		}
-		public static class Color
-		{
-			public static UnityEngine.Color darkGray = new UnityEngine.Color(.25f, .25f, .25f);
-			public static UnityEngine.Color lightGray = new UnityEngine.Color(.67f, .67f, .67f);
-			public static UnityEngine.Color orange = new UnityEngine.Color(1f, .5f, 0f);
-			public static UnityEngine.Color purple = new UnityEngine.Color(.5f, 0f, 1f);
-			public static UnityEngine.Color transparent = new UnityEngine.Color(0f, 0f, 0f, 0f);
-		}
-
-		#endregion
-		
 		#endregion
 	}
 }

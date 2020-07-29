@@ -28,7 +28,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 
 ## Compatibility
 - Unity 2018.4 or later<br/>
-<b>Note</b>: Not tested for Unity 2020.1 Beta yet
+<b>Note</b>: Not tested for Unity 2020.1 yet
 
 ## Dependencies
 - Unity 2019.1 or later

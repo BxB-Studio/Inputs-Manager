@@ -1,7 +1,9 @@
 ﻿#region Namespaces
 
+using System.IO;
 using UnityEngine;
 using UnityEditor;
+using System.Linq;
 
 #endregion
 
@@ -10,10 +12,6 @@ namespace Utilities
 	public static class EditorUtilities
 	{
 		#region Modules
-
-
-		private static readonly string IconsPath = "Editor/Icons";
-		private static readonly string IconsThemeFolder = EditorGUIUtility.isProSkin ? "Pro" : "Personal";
 
 		public static class Styles
 		{
@@ -171,6 +169,13 @@ namespace Utilities
 
 		#endregion
 
+		#region Variables
+
+		private static readonly string IconsPath = "Editor/Icons";
+		private static readonly string IconsThemeFolder = EditorGUIUtility.isProSkin ? "Pro" : "Personal";
+
+		#endregion
+
 		#region Methods
 
 		[MenuItem("Tools/Utilities/Debug/GameObject Bounds", true)]
@@ -184,12 +189,42 @@ namespace Utilities
 		[MenuItem("Tools/Utilities/Debug/GameObject Bounds", false, 0)]
 		public static void DebugBounds()
 		{
-			if (!Selection.activeGameObject)
+			if (!DebugBoundsCheck())
 				return;
 
 			Bounds bounds = Utility.GetObjectBounds(Selection.activeGameObject);
 
-			Debug.Log($"{Selection.activeGameObject.name} Dimensions (Click to see more...)\n\nSize in meters\nX: {bounds.size.x}\nY: {bounds.size.y}\nZ: {bounds.size.z}\n\nCenter in Unity coordinates\nX: {bounds.center.x}\nY: {bounds.center.y}\nZ: {bounds.center.z}\n\n", Selection.activeGameObject);
+			Debug.Log($"{Selection.activeGameObject.name} Dimensions (Click to see more...)\r\n\r\nSize in meters\r\nX: {bounds.size.x}\r\nY: {bounds.size.y}\r\nZ: {bounds.size.z}\r\n\r\nCenter in Unity coordinates\r\nX: {bounds.center.x}\r\nY: {bounds.center.y}\r\nZ: {bounds.center.z}\r\n\r\n", Selection.activeGameObject);
+		}
+		[MenuItem("Tools/Utilities/Debug/GameObject Meshs", true)]
+		public static bool DebugMeshCheck()
+		{
+			if (Selection.activeGameObject && Selection.gameObjects.Length == 1 && Selection.activeGameObject.GetComponentInChildren<MeshFilter>())
+				return true;
+
+			return false;
+		}
+		[MenuItem("Tools/Utilities/Debug/GameObject Meshs", false, 0)]
+		public static void DebugMesh()
+		{
+			if (!DebugMeshCheck())
+				return;
+
+			MeshFilter[] meshFilters = Selection.activeGameObject.GetComponentsInChildren<MeshFilter>();
+			int vertices = 0;
+			int triangles = 0;
+
+			for (int i = 0; i < meshFilters.Length; i++)
+				if (meshFilters[i].sharedMesh)
+				{
+					vertices += meshFilters[i].sharedMesh.vertexCount;
+					triangles += meshFilters[i].sharedMesh.triangles.Length;
+
+					for (int j = 0; j < meshFilters[i].sharedMesh.subMeshCount; j++)
+						vertices += meshFilters[i].sharedMesh.GetSubMesh(j).vertexCount;
+				}
+
+			Debug.Log($"{Selection.activeGameObject.name} Mesh Details (Click to see more...)\r\n\r\nVertices: {vertices}\r\nTriangles: {triangles}", Selection.activeGameObject);
 		}
 		[MenuItem("Tools/Utilities/Place the selected object on top of the Zero surface", true)]
 		public static bool PlaceObjectOnSurfaceCheck()
@@ -199,7 +234,7 @@ namespace Utilities
 
 			return false;
 		}
-		[MenuItem("Tools/Utilities/Place the selected object on top of the Zero surface")]
+		[MenuItem("Tools/Utilities/Place the selected object on top of the Zero surface", false, 100)]
 		public static void PlaceObjectOnSurface()
 		{
 			if (!Selection.activeGameObject)
@@ -211,6 +246,37 @@ namespace Utilities
 			Selection.activeGameObject.transform.position = Vector3.up * (bounds.center.y * -1f + bounds.extents.y);
 
 			Debug.Log(Selection.activeGameObject.name + " placed on the surface successfully!", Selection.activeGameObject);
+		}
+		[MenuItem("Tools/Utilities/Export textures from Texture Array", true)]
+		public static bool Texture2DArrayExportCheck()
+		{
+			if (Selection.activeObject && Selection.objects.Length == 1)
+				return Selection.activeObject is Texture2DArray;
+
+			return false;
+		}
+		[MenuItem("Tools/Utilities/Export textures from Texture Array")]
+		public static void Texture2DArrayExport()
+		{
+			if (!Texture2DArrayExportCheck())
+				return;
+
+			Texture2DArray array = Selection.activeObject as Texture2DArray;
+			Texture2D[] textures = Utility.GetTextureArrayItems(array);
+			string path = EditorUtility.SaveFolderPanel("Choose a save destination...", Path.GetDirectoryName(AssetDatabase.GetAssetPath(array)), array.name);
+
+			if (string.IsNullOrEmpty(path))
+				return;
+
+			for (int i = 0; i < textures.Length; i++)
+			{
+				EditorUtility.DisplayProgressBar("Exporing...", $"{array.name}_{i}", (float)i / textures.Length);
+				Utility.SaveTexture2D(textures[i], Utility.TextureEncodingType.PNG, $"{path}/{array.name}_{i}");
+			}
+
+			EditorUtility.DisplayProgressBar("Exporing...", "Finishing...", 1f);
+			AssetDatabase.Refresh();
+			EditorUtility.ClearProgressBar();
 		}
 
 		#endregion

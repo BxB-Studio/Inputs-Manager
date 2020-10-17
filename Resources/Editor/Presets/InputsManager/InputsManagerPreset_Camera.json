@@ -2,12 +2,7 @@
     "items": [
         {
             "name": "Change Camera",
-            "interpolation": 2,
-            "valueInterval": {
-                "x": 0.0,
-                "y": 1.0
-            },
-            "invert": false,
+            "type": 1,
             "main": {
                 "strongSide": 0,
                 "positive": 17,
@@ -18,18 +13,18 @@
                 "positive": 0,
                 "negative": 0
             },
-            "type": 1
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
         },
         {
             "name": "Camera Forward",
-            "interpolation": 0,
-            "valueInterval": {
-                "x": -1.0,
-                "y": 1.0
-            },
-            "invert": false,
+            "type": 0,
             "main": {
-                "strongSide": 3,
+                "strongSide": 0,
                 "positive": 92,
                 "negative": 86
             },
@@ -38,18 +33,18 @@
                 "positive": 0,
                 "negative": 0
             },
-            "type": 0
-        },
-        {
-            "name": "Camera Sideways",
-            "interpolation": 0,
+            "interpolation": 2,
             "valueInterval": {
                 "x": -1.0,
                 "y": 1.0
             },
-            "invert": false,
+            "invert": false
+        },
+        {
+            "name": "Camera Sideways",
+            "type": 0,
             "main": {
-                "strongSide": 3,
+                "strongSide": 0,
                 "positive": 90,
                 "negative": 88
             },
@@ -58,7 +53,12 @@
                 "positive": 0,
                 "negative": 0
             },
-            "type": 0
+            "interpolation": 2,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
         }
     ]
 }

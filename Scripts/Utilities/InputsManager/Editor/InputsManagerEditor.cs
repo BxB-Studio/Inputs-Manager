@@ -23,14 +23,14 @@ namespace Utilities.Inputs
 
 		#endregion
 
-		#region  Variables
+		#region Variables
 
 		private static InputsManagerEditor editorInstance;
 		private static InputsManager.InputAxis bindingAxis;
 		private static InputsManager.Input input;
 		private static BindTarget bindingTarget;
 		private static Event bindingEvent;
-		private static string inittializerKey = "InputsManager_Init";
+		private readonly static string inittializerKey = "InputsManager_Init";
 		private static string inputName;
 		private static bool addingInput;
 		private static bool sortingInputs;
@@ -59,9 +59,9 @@ namespace Utilities.Inputs
 
 		#endregion
 
-		#region  Methods
+		#region Methods
 
-		#region  Utilities
+		#region Utilities
 
 		[MenuItem("Tools/Utilities/Inputs Manager/Debug/Available Joysticks", false, 0)]
 		public static void DebugJoysticks()
@@ -158,7 +158,7 @@ namespace Utilities.Inputs
 
 		#endregion
 
-		#region  Editor
+		#region Editor
 
 		private static bool RecreateDataFile()
 		{
@@ -1172,7 +1172,7 @@ namespace Utilities.Inputs
 
 					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Sort), unstretchableMiniButtonWide))
 					{
-						sortingInputs = !sortingInputs;
+						sortingInputs = true;
 						settings = false;
 					}
 
@@ -1265,7 +1265,7 @@ namespace Utilities.Inputs
 
 		#endregion
 
-		#region  Destroy & Enable
+		#region Destroy & Enable
 
 		private void OnEnable()
 		{

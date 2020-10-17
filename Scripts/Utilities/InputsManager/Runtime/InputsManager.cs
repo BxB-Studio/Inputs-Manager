@@ -28,7 +28,7 @@ namespace Utilities.Inputs
 		public enum InputType { Axis, Button }
 		public enum InputAxisInterpolation { Instant = 2, Jump = 1, Smooth = 0 }
 		public enum InputAxisStrongSide { None, Positive, Negative, FirstPressing }
-		public enum InputMouseButton { Left = -1, Middle, Right }
+		public enum InputMouseButton { Left, Right, Middle }
 
 		#endregion
 
@@ -39,11 +39,41 @@ namespace Utilities.Inputs
 		{
 			#region Variables
 
-			public Input[] Inputs => inputs;
-			public float InterpolationTime => interpolationTime;
-			public float HoldTriggerTime => holdTriggerTime;
-			public float HoldWaitTime => holdWaitTime;
-			public float DoublePressTimeout => doublePressTimeout;
+			public Input[] Inputs
+			{
+				get
+				{
+					return inputs;
+				}
+			}
+			public float InterpolationTime
+			{
+				get
+				{
+					return interpolationTime;
+				}
+			}
+			public float HoldTriggerTime
+			{
+				get
+				{
+					return holdTriggerTime;
+				}
+			}
+			public float HoldWaitTime
+			{
+				get
+				{
+					return holdWaitTime;
+				}
+			}
+			public float DoublePressTimeout
+			{
+				get
+				{
+					return doublePressTimeout;
+				}
+			}
 
 			[SerializeField]
 			private Input[] inputs;
@@ -66,7 +96,7 @@ namespace Utilities.Inputs
 
 			public DataSheet()
 			{
-				inputs = InputsManager.Inputs.ToArray();
+				inputs = InputsManager.Inputs;
 				interpolationTime = InputsManager.InterpolationTime;
 				holdTriggerTime = InputsManager.HoldTriggerTime;
 				holdWaitTime = InputsManager.HoldWaitTime;
@@ -192,7 +222,7 @@ namespace Utilities.Inputs
 				}
 				set
 				{
-					if (!Application.isPlaying)
+					if (Application.isPlaying)
 						return;
 
 					if (value == InputType.Button)
@@ -252,9 +282,6 @@ namespace Utilities.Inputs
 			{
 				get
 				{
-					if (!main)
-						main = new InputAxis();
-
 					return main;
 				}
 				set
@@ -273,9 +300,6 @@ namespace Utilities.Inputs
 			{
 				get
 				{
-					if (!alt)
-						alt = new InputAxis();
-
 					return alt;
 				}
 				set
@@ -291,577 +315,425 @@ namespace Utilities.Inputs
 				}
 			}
 
-			internal float MainValue
-			{
-				get
-				{
-					if (mainValueUpdatedFrame == Time.frameCount)
-						return mainValue;
-
-					float time = Time.inFixedTimeStep ? Time.fixedTime : Time.time;
-					float deltaTime = time - mainValueUpdatedTime;
-
-					mainValueUpdatedTime = time;
-
-					float positiveValue = Utility.BoolToNumber(PositiveMainPress);
-					float negativeValue = Utility.BoolToNumber(NegativeMainPress);
-					float positiveCoeficient = 1f;
-					float negativeCoeficient = 1f;
-
-					switch (Main.StrongSide)
-					{
-						case InputAxisStrongSide.FirstPressing:
-							if (negativeCoeficient == 1f && positiveValue != 0f && negativeValue == 0f)
-								positiveCoeficient = 2f;
-
-							if (positiveCoeficient == 1f && negativeValue != 0f && positiveValue == 0f)
-								negativeCoeficient = 2f;
-								
-							break;
-
-						case InputAxisStrongSide.Positive:
-							positiveCoeficient = 2f;
-							break;
-
-						case InputAxisStrongSide.Negative:
-							negativeCoeficient = 2f;
-							break;
-					}
-
-					positiveValue *= positiveCoeficient;
-					negativeValue *= negativeCoeficient;
-
-					float valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
-
-					if (Type == InputType.Axis)
-					{
-						valueFactor += 1f;
-						valueFactor *= .5f;
-					}
-
-					float intervalA = invert ? valueInterval.y : valueInterval.x;
-					float intervalB = invert ? valueInterval.x : valueInterval.y;
-					float target = Mathf.Lerp(intervalA, intervalB, valueFactor);
-
-					if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
-						mainValue = Mathf.MoveTowards(mainValue, target, deltaTime / InterpolationTime);
-					else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
-						mainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(mainValue) ? 0f : Mathf.MoveTowards(mainValue, target, deltaTime / InterpolationTime);
-					else
-						mainValue = target;
-
-					mainValueUpdatedFrame = Time.frameCount;
-
-					return mainValue;
-				}
-			}
-			internal float AltValue
-			{
-				get
-				{
-					if (altValueUpdatedFrame == Time.frameCount)
-						return altValue;
-
-					float time = Time.inFixedTimeStep ? Time.fixedTime : Time.time;
-					float deltaTime = time - altValueUpdatedTime;
-
-					altValueUpdatedTime = time;
-
-					float positiveValue = Utility.BoolToNumber(PositiveAltPress);
-					float negativeValue = Utility.BoolToNumber(NegativeAltPress);
-					float positiveCoeficient = 1f;
-					float negativeCoeficient = 1f;
-
-					switch (Alt.StrongSide)
-					{
-						case InputAxisStrongSide.FirstPressing:
-							if (negativeCoeficient == 1f && positiveValue != 0f && negativeValue == 0f)
-								positiveCoeficient = 2f;
-
-							if (positiveCoeficient == 1f && negativeValue != 0f && positiveValue == 0f)
-								negativeCoeficient = 2f;
-								
-							break;
-
-						case InputAxisStrongSide.Positive:
-							positiveCoeficient = 2f;
-							break;
-
-						case InputAxisStrongSide.Negative:
-							negativeCoeficient = 2f;
-							break;
-					}
-
-					positiveValue *= positiveCoeficient;
-					negativeValue *= negativeCoeficient;
-
-					float valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
-
-					if (Type == InputType.Axis)
-					{
-						valueFactor += 1f;
-						valueFactor *= .5f;
-					}
-
-					float intervalA = invert ? valueInterval.y : valueInterval.x;
-					float intervalB = invert ? valueInterval.x : valueInterval.y;
-					float target = Mathf.Lerp(intervalA, intervalB, valueFactor);
-
-					if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
-						altValue = Mathf.MoveTowards(altValue, target, deltaTime / InterpolationTime);
-					else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
-						altValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(altValue) ? 0f : Mathf.MoveTowards(altValue, target, deltaTime / InterpolationTime);
-					else
-						altValue = target;
-
-					altValueUpdatedFrame = Time.frameCount;
-
-					return altValue;
-				}
-			}
-			internal float Value
-			{
-				get
-				{
-					float mainValue = MainValue;
-
-					if (mainValue != 0f)
-						return mainValue;
-
-					return AltValue;
-				}
-			}
-			internal bool PositiveMainBindable
-			{
-				get
-				{
-					if (!trimmed)
-						Trim();
-					
-					return Main.Positive != Key.None;
-				}
-			}
-			internal bool NegativeMainBindable
-			{
-				get
-				{
-					if (!trimmed)
-						Trim();
-
-					return Main.Negative != Key.None;
-				}
-			}
-			internal bool PositiveAltBindable
-			{
-				get
-				{
-					if (!trimmed)
-						Trim();
-
-					return Alt.Positive != Key.None;
-				}
-			}
-			internal bool NegativeAltBindable
-			{
-				get
-				{
-					if (!trimmed)
-						Trim();
-
-					return Alt.Negative != Key.None;
-				}
-			}
-			internal bool MainBindable => PositiveMainBindable || NegativeMainBindable;
-			internal bool AltBindable => PositiveAltBindable || NegativeAltBindable;
-			internal bool PositiveBindable => PositiveMainBindable || PositiveAltBindable;
-			internal bool NegativeBindable => NegativeMainBindable || NegativeAltBindable;
-			internal bool Bindable => MainBindable || AltBindable;
-			internal bool PositiveMainPress => PositiveMainBindable && PositiveMainControl.isPressed;
-			internal bool NegativeMainPress => NegativeMainBindable && NegativeMainControl.isPressed;
-			internal bool PositiveAltPress => PositiveAltBindable && PositiveAltControl.isPressed;
-			internal bool NegativeAltPress => NegativeAltBindable && NegativeAltControl.isPressed;
-			internal bool MainPress => PositiveMainPress || NegativeMainPress;
-			internal bool AltPress => PositiveAltPress || NegativeAltPress;
-			internal bool PositivePress => PositiveMainPress || PositiveAltPress;
-			internal bool NegativePress => NegativeMainPress || NegativeAltPress;
-			internal bool Press => MainPress || AltPress;
-			internal bool PositiveMainDown => PositiveMainBindable && PositiveMainControl.wasPressedThisFrame;
-			internal bool NegativeMainDown => NegativeMainBindable && NegativeMainControl.wasPressedThisFrame;
-			internal bool PositiveAltDown => PositiveAltBindable && PositiveAltControl.wasPressedThisFrame;
-			internal bool NegativeAltDown => NegativeAltBindable && NegativeAltControl.wasPressedThisFrame;
-			internal bool MainDown => PositiveMainDown || NegativeMainDown;
-			internal bool AltDown => PositiveAltDown || NegativeAltDown;
-			internal bool PositiveDown => PositiveMainDown || PositiveAltDown;
-			internal bool NegativeDown => NegativeMainDown || NegativeAltDown;
-			internal bool Down => MainDown || AltDown;
-			internal bool PositiveMainUp => PositiveMainBindable && PositiveMainControl.wasReleasedThisFrame;
-			internal bool NegativeMainUp => NegativeMainBindable && NegativeMainControl.wasReleasedThisFrame;
-			internal bool PositiveAltUp => PositiveAltBindable && PositiveAltControl.wasReleasedThisFrame;
-			internal bool NegativeAltUp => NegativeAltBindable && NegativeAltControl.wasReleasedThisFrame;
-			internal bool MainUp => PositiveMainUp || NegativeMainUp;
-			internal bool AltUp => PositiveAltUp || NegativeAltUp;
-			internal bool PositiveUp => PositiveMainUp || PositiveAltUp;
-			internal bool NegativeUp => NegativeMainUp || NegativeAltUp;
-			internal bool Up => MainUp || AltUp;
-			internal bool PositiveMainHeld
-			{
-				get
-				{
-					if (positiveMainHeldUpdateFrame == Time.frameCount)
-						return positiveMainHeld;
-
-					positiveMainHeldUpdateFrame = Time.frameCount;
-
-					if (PositiveMainPress)
-					{
-						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-						positiveMainHoldTimer -= deltaTime;
-
-						bool held = positiveMainHoldTimer <= 0f;
-
-						if (held)
-							positiveMainHoldTimer = HoldWaitTime;
-
-						positiveMainHeld = held;
-
-						return held;
-					}
-
-					if (positiveMainHoldTimer != HoldTriggerTime)
-						positiveMainHoldTimer = HoldTriggerTime;
-
-					positiveMainHeld = false;
-
-					return false;
-				}
-			}
-			internal bool NegativeMainHeld
-			{
-				get
-				{
-					if (negativeMainHeldUpdateFrame == Time.frameCount)
-						return negativeMainHeld;
-
-					negativeMainHeldUpdateFrame = Time.frameCount;
-
-					if (NegativeMainPress)
-					{
-						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-						negativeMainHoldTimer -= deltaTime;
-
-						bool held = negativeMainHoldTimer <= 0f;
-
-						if (held)
-							negativeMainHoldTimer = HoldWaitTime;
-
-						negativeMainHeld = held;
-
-						return held;
-					}
-
-					if (negativeMainHoldTimer != HoldTriggerTime)
-						negativeMainHoldTimer = HoldTriggerTime;
-
-					negativeMainHeld = false;
-
-					return false;
-				}
-			}
-			internal bool PositiveAltHeld
-			{
-				get
-				{
-					if (positiveAltHeldUpdateFrame == Time.frameCount)
-						return positiveAltHeld;
-
-					positiveAltHeldUpdateFrame = Time.frameCount;
-
-					if (PositiveAltPress)
-					{
-						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-						positiveAltHoldTimer -= deltaTime;
-
-						bool held = positiveAltHoldTimer <= 0f;
-
-						if (held)
-							positiveAltHoldTimer = HoldWaitTime;
-
-						positiveAltHeld = held;
-
-						return held;
-					}
-
-					if (positiveAltHoldTimer != HoldTriggerTime)
-						positiveAltHoldTimer = HoldTriggerTime;
-
-					positiveAltHeld = false;
-
-					return false;
-				}
-			}
-			internal bool NegativeAltHeld
-			{
-				get
-				{
-					if (negativeAltHeldUpdateFrame == Time.frameCount)
-						return negativeAltHeld;
-
-					negativeAltHeldUpdateFrame = Time.frameCount;
-
-					if (NegativeAltPress)
-					{
-						float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-						negativeAltHoldTimer -= deltaTime;
-
-						bool held = negativeAltHoldTimer <= 0f;
-
-						if (held)
-							negativeAltHoldTimer = HoldWaitTime;
-
-						negativeAltHeld = held;
-
-						return held;
-					}
-
-					if (negativeAltHoldTimer != HoldTriggerTime)
-						negativeAltHoldTimer = HoldTriggerTime;
-
-					negativeAltHeld = false;
-
-					return false;
-				}
-			}
-			internal bool MainHeld => PositiveMainHeld || NegativeMainHeld;
-			internal bool AltHeld => PositiveAltHeld || NegativeAltHeld;
-			internal bool PositiveHeld => PositiveMainHeld || PositiveAltHeld;
-			internal bool NegativeHeld => NegativeMainHeld || NegativeAltHeld;
-			internal bool Held => MainHeld || AltHeld;
-			internal bool PositiveMainDoublePress
-			{
-				get
-				{
-					if (positiveMainDoubleUpdateFrame == Time.frameCount)
-						return positiveMainDouble;
-
-					positiveMainDoubleUpdateFrame = Time.frameCount;
-
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					positiveMainDoubleTimer += positiveMainDoubleTimer > 0f ? -deltaTime : positiveMainDoubleTimer;
-
-					bool pressed = PositiveMainUp;
-
-					if (pressed)
-						positiveMainDoubleTimer = DoublePressTimeout;
-
-					positiveMainDouble = positiveMainDoubleInitiated && pressed;
-
-					if (pressed && positiveMainDoubleTimer > 0f)
-						positiveMainDoubleInitiated = true;
-
-					if (positiveMainDoubleTimer <= 0f)
-						positiveMainDoubleInitiated = false;
-
-					return positiveMainDouble;
-				}
-			}
-			internal bool NegativeMainDoublePress
-			{
-				get
-				{
-					if (negativeMainDoubleUpdateFrame == Time.frameCount)
-						return negativeMainDouble;
-
-					negativeMainDoubleUpdateFrame = Time.frameCount;
-
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					negativeMainDoubleTimer += negativeMainDoubleTimer > 0f ? -deltaTime : negativeMainDoubleTimer;
-
-					bool pressed = NegativeMainUp;
-
-					if (pressed)
-						negativeMainDoubleTimer = DoublePressTimeout;
-
-					negativeMainDouble = negativeMainDoubleInitiated && pressed;
-
-					if (pressed && negativeMainDoubleTimer > 0f)
-						negativeMainDoubleInitiated = true;
-
-					if (negativeMainDoubleTimer <= 0f)
-						negativeMainDoubleInitiated = false;
-
-					return negativeMainDouble;
-				}
-			}
-			internal bool PositiveAltDoublePress
-			{
-				get
-				{
-					if (positiveAltDoubleUpdateFrame == Time.frameCount)
-						return positiveAltDouble;
-
-					positiveAltDoubleUpdateFrame = Time.frameCount;
-
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					positiveAltDoubleTimer += positiveAltDoubleTimer > 0f ? -deltaTime : positiveAltDoubleTimer;
-
-					bool pressed = PositiveAltUp;
-
-					if (pressed)
-						positiveAltDoubleTimer = DoublePressTimeout;
-
-					positiveAltDouble = positiveAltDoubleInitiated && pressed;
-
-					if (pressed && positiveAltDoubleTimer > 0f)
-						positiveAltDoubleInitiated = true;
-
-					if (positiveAltDoubleTimer <= 0f)
-						positiveAltDoubleInitiated = false;
-
-					return positiveAltDouble;
-				}
-			}
-			internal bool NegativeAltDoublePress
-			{
-				get
-				{
-					if (negativeAltDoubleUpdateFrame == Time.frameCount)
-						return negativeAltDouble;
-
-					negativeAltDoubleUpdateFrame = Time.frameCount;
-
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					negativeAltDoubleTimer += negativeAltDoubleTimer > 0f ? -deltaTime : negativeAltDoubleTimer;
-
-					bool pressed = NegativeAltUp;
-
-					if (pressed)
-						negativeAltDoubleTimer = DoublePressTimeout;
-
-					negativeAltDouble = negativeAltDoubleInitiated && pressed;
-
-					if (pressed && negativeAltDoubleTimer > 0f)
-						negativeAltDoubleInitiated = true;
-
-					if (negativeAltDoubleTimer <= 0f)
-						negativeAltDoubleInitiated = false;
-
-					return negativeAltDouble;
-				}
-			}
-			internal bool MainDoublePress => PositiveMainDoublePress || NegativeMainDoublePress;
-			internal bool AltDoublePress => PositiveAltDoublePress || NegativeAltDoublePress;
-			internal bool PositiveDoublePress => PositiveMainDoublePress || PositiveAltDoublePress;
-			internal bool NegativeDoublePress => NegativeMainDoublePress || NegativeAltDoublePress;
-			internal bool DoublePress => MainDoublePress || AltDoublePress;
+			internal float MainValue { get; private set; }
+			internal float AltValue { get; private set; }
+			internal float Value { get; private set; }
+			internal bool PositiveMainBindable { get; private set; }
+			internal bool NegativeMainBindable { get; private set; }
+			internal bool PositiveAltBindable { get; private set; }
+			internal bool NegativeAltBindable { get; private set; }
+			internal bool MainBindable { get; private set; }
+			internal bool AltBindable { get; private set; }
+			internal bool PositiveBindable { get; private set; }
+			internal bool NegativeBindable { get; private set; }
+			internal bool Bindable { get; private set; }
+			internal bool PositiveMainPress { get; private set; }
+			internal bool NegativeMainPress { get; private set; }
+			internal bool PositiveAltPress { get; private set; }
+			internal bool NegativeAltPress { get; private set; }
+			internal bool MainPress { get; private set; }
+			internal bool AltPress { get; private set; }
+			internal bool PositivePress { get; private set; }
+			internal bool NegativePress { get; private set; }
+			internal bool Press { get; private set; }
+			internal bool PositiveMainDown { get; private set; }
+			internal bool NegativeMainDown { get; private set; }
+			internal bool PositiveAltDown { get; private set; }
+			internal bool NegativeAltDown { get; private set; }
+			internal bool MainDown { get; private set; }
+			internal bool AltDown { get; private set; }
+			internal bool PositiveDown { get; private set; }
+			internal bool NegativeDown { get; private set; }
+			internal bool Down { get; private set; }
+			internal bool PositiveMainUp { get; private set; }
+			internal bool NegativeMainUp { get; private set; }
+			internal bool PositiveAltUp { get; private set; }
+			internal bool NegativeAltUp { get; private set; }
+			internal bool MainUp { get; private set; }
+			internal bool AltUp { get; private set; }
+			internal bool PositiveUp { get; private set; }
+			internal bool NegativeUp { get; private set; }
+			internal bool Up { get; private set; }
+			internal bool PositiveMainHeld { get; private set; }
+			internal bool NegativeMainHeld { get; private set; }
+			internal bool PositiveAltHeld { get; private set; }
+			internal bool NegativeAltHeld { get; private set; }
+			internal bool MainHeld { get; private set; }
+			internal bool AltHeld { get; private set; }
+			internal bool PositiveHeld { get; private set; }
+			internal bool NegativeHeld { get; private set; }
+			internal bool Held { get; private set; }
+			internal bool PositiveMainDoublePress { get; private set; }
+			internal bool NegativeMainDoublePress { get; private set; }
+			internal bool PositiveAltDoublePress { get; private set; }
+			internal bool NegativeAltDoublePress { get; private set; }
+			internal bool MainDoublePress { get; private set; }
+			internal bool AltDoublePress { get; private set; }
+			internal bool PositiveDoublePress { get; private set; }
+			internal bool NegativeDoublePress { get; private set; }
+			internal bool DoublePress { get; private set; }
 
 			[SerializeField]
 			private string name;
 			[SerializeField]
 			private InputType type;
 			[SerializeField]
-			private InputAxis main;
+			private InputAxis main = new InputAxis();
 			[SerializeField]
-			private InputAxis alt;
+			private InputAxis alt = new InputAxis();
 			[SerializeField]
 			private InputAxisInterpolation interpolation;
 			[SerializeField]
 			private Utility.SerializableVector2 valueInterval;
 			[SerializeField]
 			private bool invert;
-			private KeyControl PositiveMainControl
-			{
-				get
-				{
-					if (PositiveMainBindable && positiveMain == null)
-						positiveMain = KeyToKeyControl(Main.Positive);
-
-					return positiveMain;
-				}
-			}	
-			private KeyControl NegativeMainControl
-			{
-				get
-				{
-					if (NegativeMainBindable && negativeMain == null)
-						negativeMain = KeyToKeyControl(Main.Negative);
-
-					return negativeMain;
-				}
-			}
-			private KeyControl PositiveAltControl
-			{
-				get
-				{
-					if (PositiveAltBindable && positiveAlt == null)
-						positiveAlt = KeyToKeyControl(Alt.Positive);
-
-					return positiveAlt;
-				}
-			}
-			private KeyControl NegativeAltControl
-			{
-				get
-				{
-					if (NegativeAltBindable && negativeAlt == null)
-						negativeAlt = KeyToKeyControl(Alt.Negative);
-
-					return negativeAlt;
-				}
-			}
-			private KeyControl positiveMain;
-			private KeyControl negativeMain;
-			private KeyControl positiveAlt;
-			private KeyControl negativeAlt;
-			private float mainValue;
-			private float altValue;
+			[NonSerialized]
+			private KeyControl positiveMainControl;
+			[NonSerialized]
+			private KeyControl negativeMainControl;
+			[NonSerialized]
+			private KeyControl positiveAltControl;
+			[NonSerialized]
+			private KeyControl negativeAltControl;
+			[NonSerialized]
 			private float positiveMainHoldTimer;
+			[NonSerialized]
 			private float negativeMainHoldTimer;
+			[NonSerialized]
 			private float positiveAltHoldTimer;
+			[NonSerialized]
 			private float negativeAltHoldTimer;
-			private float positiveMainDoubleTimer;
-			private float negativeMainDoubleTimer;
-			private float positiveAltDoubleTimer;
-			private float negativeAltDoubleTimer;
-			private float mainValueUpdatedTime;
-			private float altValueUpdatedTime;
-			private bool positiveMainHeld;
-			private bool negativeMainHeld;
-			private bool positiveAltHeld;
-			private bool negativeAltHeld;
-			private bool positiveMainDouble;
-			private bool negativeMainDouble;
-			private bool positiveAltDouble;
-			private bool negativeAltDouble;
-			private bool positiveMainDoubleInitiated;
-			private bool negativeMainDoubleInitiated;
-			private bool positiveAltDoubleInitiated;
-			private bool negativeAltDoubleInitiated;
-			private int mainValueUpdatedFrame;
-			private int altValueUpdatedFrame;
-			private int positiveMainHeldUpdateFrame;
-			private int negativeMainHeldUpdateFrame;
-			private int positiveAltHeldUpdateFrame;
-			private int negativeAltHeldUpdateFrame;
-			private int positiveMainDoubleUpdateFrame;
-			private int negativeMainDoubleUpdateFrame;
-			private int positiveAltDoubleUpdateFrame;
-			private int negativeAltDoubleUpdateFrame;
+			[NonSerialized]
+			private float positiveMainDoublePressTimer;
+			[NonSerialized]
+			private float negativeMainDoublePressTimer;
+			[NonSerialized]
+			private float positiveAltDoublePressTimer;
+			[NonSerialized]
+			private float negativeAltDoublePressTimer;
+			[NonSerialized]
+			private float positiveValue;
+			[NonSerialized]
+			private float negativeValue;
+			[NonSerialized]
+			private float valueFactor;
+			[NonSerialized]
+			private float positiveCoeficient;
+			[NonSerialized]
+			private float negativeCoeficient;
+			[NonSerialized]
+			private float intervalA;
+			[NonSerialized]
+			private float intervalB;
+			[NonSerialized]
+			private float target;
+			[NonSerialized]
+			private bool positiveMainDoublePressInitiated;
+			[NonSerialized]
+			private bool negativeMainDoublePressInitiated;
+			[NonSerialized]
+			private bool positiveAltDoublePressInitiated;
+			[NonSerialized]
+			private bool negativeAltDoublePressInitiated;
+			[NonSerialized]
 			private bool trimmed;
 
 			#endregion
 
 			#region Methods
 
+			internal void Start()
+			{
+				if (!trimmed)
+					Trim();
+
+				PositiveMainBindable = Main.Positive != Key.None;
+				NegativeMainBindable = Main.Negative != Key.None;
+				PositiveAltBindable = Alt.Positive != Key.None;
+				NegativeAltBindable = Alt.Negative != Key.None;
+				MainBindable = PositiveMainBindable || NegativeMainBindable;
+				AltBindable = PositiveAltBindable || NegativeAltBindable;
+				PositiveBindable = PositiveMainBindable || PositiveAltBindable;
+				NegativeBindable = NegativeMainBindable || NegativeAltBindable;
+				Bindable = MainBindable || AltBindable;
+
+				if (positiveMainControl == null && PositiveMainBindable)
+					positiveMainControl = KeyToKeyControl(Main.Positive);
+
+				if (negativeMainControl == null && NegativeMainBindable)
+					negativeMainControl = KeyToKeyControl(Main.Negative);
+
+				if (positiveAltControl == null && PositiveAltBindable)
+					positiveAltControl = KeyToKeyControl(Alt.Positive);
+
+				if (negativeAltControl == null && NegativeAltBindable)
+					negativeAltControl = KeyToKeyControl(Alt.Negative);
+			}
+			internal void Update()
+			{
+				positiveValue = Utility.BoolToNumber(PositiveMainPress);
+				negativeValue = Utility.BoolToNumber(NegativeMainPress);
+				positiveCoeficient = 1f;
+				negativeCoeficient = 1f;
+
+				switch (Main.StrongSide)
+				{
+					case InputAxisStrongSide.FirstPressing:
+						if (MainValue > 0f)
+							positiveCoeficient = 2f;
+						else if (MainValue < 0f)
+							negativeCoeficient = 2f;
+
+						break;
+
+					case InputAxisStrongSide.Positive:
+						positiveCoeficient = 2f;
+						break;
+
+					case InputAxisStrongSide.Negative:
+						negativeCoeficient = 2f;
+						break;
+				}
+
+				positiveValue *= positiveCoeficient;
+				negativeValue *= negativeCoeficient;
+				valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
+
+				if (Type == InputType.Axis)
+				{
+					valueFactor += 1f;
+					valueFactor *= .5f;
+				}
+
+				intervalA = invert ? valueInterval.y : valueInterval.x;
+				intervalB = invert ? valueInterval.x : valueInterval.y;
+				target = Mathf.Lerp(intervalA, intervalB, valueFactor);
+
+				if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
+					MainValue = Mathf.MoveTowards(MainValue, target, deltaTime / InterpolationTime);
+				else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
+					MainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(MainValue) ? 0f : Mathf.MoveTowards(MainValue, target, deltaTime / InterpolationTime);
+				else
+					MainValue = target;
+				
+				positiveValue = Utility.BoolToNumber(PositiveAltPress);
+				negativeValue = Utility.BoolToNumber(NegativeAltPress);
+				positiveCoeficient = 1f;
+				negativeCoeficient = 1f;
+
+				switch (Alt.StrongSide)
+				{
+					case InputAxisStrongSide.FirstPressing:
+						if (AltValue > 0f)
+							positiveCoeficient = 2f;
+						else if (AltValue < 0f)
+							negativeCoeficient = 2f;
+
+						break;
+
+					case InputAxisStrongSide.Positive:
+						positiveCoeficient = 2f;
+						break;
+
+					case InputAxisStrongSide.Negative:
+						negativeCoeficient = 2f;
+						break;
+				}
+
+				positiveValue *= positiveCoeficient;
+				negativeValue *= negativeCoeficient;
+				valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
+
+				if (Type == InputType.Axis)
+				{
+					valueFactor += 1f;
+					valueFactor *= .5f;
+				}
+
+				target = Mathf.Lerp(intervalA, intervalB, valueFactor);
+
+				if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
+					AltValue = Mathf.MoveTowards(AltValue, target, deltaTime / InterpolationTime);
+				else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
+					AltValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(AltValue) ? 0f : Mathf.MoveTowards(AltValue, target, deltaTime / InterpolationTime);
+				else
+					AltValue = target;
+				
+				if (MainValue != 0f)
+					Value = MainValue;
+				else
+					Value = AltValue;
+
+				if (Bindable)
+				{
+					if (MainBindable)
+					{
+						PositiveMainPress = PositiveMainBindable && positiveMainControl.isPressed;
+						NegativeMainPress = NegativeMainBindable && negativeMainControl.isPressed;
+						MainPress = PositiveMainPress || NegativeMainPress;
+						PositiveMainDown = PositiveMainBindable && positiveMainControl.wasPressedThisFrame;
+						NegativeMainDown = NegativeMainBindable && negativeMainControl.wasPressedThisFrame;
+						MainDown = PositiveMainDown || NegativeMainDown;
+						PositiveMainUp = PositiveMainBindable && positiveMainControl.wasReleasedThisFrame;
+						NegativeMainUp = NegativeMainBindable && negativeMainControl.wasReleasedThisFrame;
+						MainUp = PositiveMainUp || NegativeMainUp;
+						PositiveMainHeld = false;
+
+						if (PositiveMainPress)
+						{
+							positiveMainHoldTimer -= deltaTime;
+							PositiveMainHeld = positiveMainHoldTimer <= 0f;
+
+							if (PositiveMainHeld)
+								positiveMainHoldTimer = HoldWaitTime;
+						}
+						else if (positiveMainHoldTimer != HoldTriggerTime)
+							positiveMainHoldTimer = HoldTriggerTime;
+
+						NegativeMainHeld = false;
+
+						if (NegativeMainPress)
+						{
+							negativeMainHoldTimer -= deltaTime;
+							NegativeMainHeld = negativeMainHoldTimer <= 0f;
+
+							if (NegativeMainHeld)
+								negativeMainHoldTimer = HoldWaitTime;
+						}
+						else if (negativeMainHoldTimer != HoldTriggerTime)
+							negativeMainHoldTimer = HoldTriggerTime;
+
+						MainHeld = PositiveMainHeld || NegativeMainHeld;
+						positiveMainDoublePressTimer += positiveMainDoublePressTimer > 0f ? -deltaTime : positiveMainDoublePressTimer;
+
+						if (PositiveMainUp)
+							positiveMainDoublePressTimer = DoublePressTimeout;
+
+						PositiveMainDoublePress = positiveMainDoublePressInitiated && PositiveMainUp;
+
+						if (PositiveMainUp && positiveMainDoublePressTimer > 0f)
+							positiveMainDoublePressInitiated = true;
+
+						if (positiveMainDoublePressTimer <= 0f)
+							positiveMainDoublePressInitiated = false;
+
+						negativeMainDoublePressTimer += negativeMainDoublePressTimer > 0f ? -deltaTime : negativeMainDoublePressTimer;
+
+						if (NegativeMainUp)
+							negativeMainDoublePressTimer = DoublePressTimeout;
+
+						NegativeMainDoublePress = negativeMainDoublePressInitiated && NegativeMainUp;
+
+						if (NegativeMainUp && negativeMainDoublePressTimer > 0f)
+							negativeMainDoublePressInitiated = true;
+
+						if (negativeMainDoublePressTimer <= 0f)
+							negativeMainDoublePressInitiated = false;
+
+						MainDoublePress = PositiveMainDoublePress || NegativeMainDoublePress;
+					}
+
+					if (AltBindable)
+					{
+						PositiveAltPress = PositiveAltBindable && positiveAltControl.isPressed;
+						NegativeAltPress = NegativeAltBindable && negativeAltControl.isPressed;
+						AltPress = PositiveAltPress || NegativeAltPress;
+						PositiveAltDown = PositiveAltBindable && positiveAltControl.wasPressedThisFrame;
+						NegativeAltDown = NegativeAltBindable && negativeAltControl.wasPressedThisFrame;
+						AltDown = PositiveAltDown || NegativeAltDown;
+						PositiveAltUp = PositiveAltBindable && positiveAltControl.wasReleasedThisFrame;
+						NegativeAltUp = NegativeAltBindable && negativeAltControl.wasReleasedThisFrame;
+						AltUp = PositiveAltUp || NegativeAltUp;
+						PositiveAltHeld = false;
+
+						if (PositiveAltPress)
+						{
+							positiveAltHoldTimer -= deltaTime;
+							PositiveAltHeld = positiveAltHoldTimer <= 0f;
+
+							if (PositiveAltHeld)
+								positiveAltHoldTimer = HoldWaitTime;
+						}
+						else if (positiveAltHoldTimer != HoldTriggerTime)
+							positiveAltHoldTimer = HoldTriggerTime;
+
+						NegativeAltHeld = false;
+
+						if (NegativeAltPress)
+						{
+							negativeAltHoldTimer -= deltaTime;
+							NegativeAltHeld = negativeAltHoldTimer <= 0f;
+
+							if (NegativeAltHeld)
+								negativeAltHoldTimer = HoldWaitTime;
+						}
+						else if (negativeAltHoldTimer != HoldTriggerTime)
+							negativeAltHoldTimer = HoldTriggerTime;
+
+						AltHeld = PositiveAltHeld || NegativeAltHeld;
+						positiveAltDoublePressTimer += positiveAltDoublePressTimer > 0f ? -deltaTime : positiveAltDoublePressTimer;
+
+						if (PositiveAltUp)
+							positiveAltDoublePressTimer = DoublePressTimeout;
+
+						PositiveAltDoublePress = positiveAltDoublePressInitiated && PositiveAltUp;
+
+						if (PositiveAltUp && positiveAltDoublePressTimer > 0f)
+							positiveAltDoublePressInitiated = true;
+
+						if (positiveAltDoublePressTimer <= 0f)
+							positiveAltDoublePressInitiated = false;
+
+						negativeAltDoublePressTimer += negativeAltDoublePressTimer > 0f ? -deltaTime : negativeAltDoublePressTimer;
+
+						if (NegativeAltUp)
+							negativeAltDoublePressTimer = DoublePressTimeout;
+
+						NegativeAltDoublePress = negativeAltDoublePressInitiated && NegativeAltUp;
+
+						if (NegativeAltUp && negativeAltDoublePressTimer > 0f)
+							negativeAltDoublePressInitiated = true;
+
+						if (negativeAltDoublePressTimer <= 0f)
+							negativeAltDoublePressInitiated = false;
+
+						AltDoublePress = PositiveAltDoublePress || NegativeAltDoublePress;
+					}
+
+					if (PositiveBindable)
+					{
+						PositivePress = PositiveMainPress || PositiveAltPress;
+						PositiveDown = PositiveMainDown || PositiveAltDown;
+						PositiveUp = PositiveMainUp || PositiveAltUp;
+						PositiveHeld = PositiveMainHeld || PositiveAltHeld;
+						PositiveDoublePress = PositiveMainDoublePress || PositiveAltDoublePress;
+					}
+
+					if (NegativeBindable)
+					{
+						NegativePress = NegativeMainPress || NegativeAltPress;
+						NegativeDown = NegativeMainDown || NegativeAltDown;
+						NegativeUp = NegativeMainUp || NegativeAltUp;
+						NegativeHeld = NegativeMainHeld || NegativeAltHeld;
+						NegativeDoublePress = NegativeMainDoublePress || NegativeAltDoublePress;
+					}
+
+					Press = MainPress || AltPress;
+					Down = MainDown || AltDown;
+					Up = MainUp || AltUp;
+					Held = MainHeld || AltHeld;
+					DoublePress = MainDoublePress || AltDoublePress;
+				}
+			}
+
 			private void Trim()
 			{
+				if (!Main)
+					main = new InputAxis();
+
+				if (!Alt)
+					alt = new InputAxis();
+
 				if (Main.Positive == Key.None && Alt.Positive != Key.None)
 				{
 					Main.Positive = Alt.Positive;
@@ -929,12 +801,13 @@ namespace Utilities.Inputs
 
 		#region Variables
 
-		public static readonly string DataAssetPath = "Resources/Assets/InputsManager_Data.imdata";
+		public static readonly string DataAssetPath = "Resources/Assets/InputsManager_Data";
 		public static float InterpolationTime
 		{
 			get
 			{
-				LoadData();
+				if (!Application.isPlaying && interpolationTime == 0f)
+					LoadData();
 
 				return interpolationTime;
 			}
@@ -952,7 +825,8 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				LoadData();
+				if (!Application.isPlaying && holdTriggerTime == 0f)
+					LoadData();
 
 				return holdTriggerTime;
 			}
@@ -970,7 +844,8 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				LoadData();
+				if (!Application.isPlaying && holdWaitTime == 0f)
+					LoadData();
 
 				return holdWaitTime;
 			}
@@ -988,7 +863,8 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				LoadData();
+				if (!Application.isPlaying && doublePressTimeout == 0f)
+					LoadData();
 
 				return doublePressTimeout;
 			}
@@ -1002,239 +878,87 @@ namespace Utilities.Inputs
 				SaveData();
 			}
 		}
-		public static bool DataLoaded => DataAssetExists && File.GetLastWriteTime($"{Application.dataPath}/{DataAssetPath}") == dataLastWriteTime;
-		public static bool DataChanged => DataLoaded && dataChanged;
-		public static bool DataAssetExists => File.Exists($"{Application.dataPath}/{DataAssetPath}");
-		public static int Count => Inputs.Count;
-
-		private static List<Input> Inputs
+		public static bool DataLoaded
 		{
 			get
 			{
-				LoadData();
+				return DataAssetExists && File.GetLastWriteTime($"{Application.dataPath}/{DataAssetPath}") == dataLastWriteTime;
+			}
+		}
+		public static bool DataChanged
+		{
+			get
+			{
+				return DataLoaded && dataChanged;
+			}
+		}
+		public static bool DataAssetExists
+		{
+			get
+			{
+				return File.Exists($"{Application.dataPath}/{DataAssetPath}");
+			}
+		}
+		public static int Count
+		{
+			get
+			{
+				return Inputs.Length;
+			}
+		}
+
+		private static Input[] Inputs
+		{
+			get
+			{
+				if (!Application.isPlaying)
+					LoadData();
 
 				if (inputs == null)
-					inputs = new List<Input>();
+					inputs = new Input[] { };
 
 				return inputs;
 			}
 		}
-		private static Keyboard Keyboard => Keyboard.current;
-		private static Mouse Mouse => Mouse.current;
+		private static string[] inputNames;
+		private static Keyboard Keyboard
+		{
+			get
+			{
+				return Keyboard.current;
+			}
+		}
+		private static Mouse Mouse
+		{
+			get
+			{
+				return Mouse.current;
+			}
+		}
 		private static DateTime dataLastWriteTime;
-		private static List<Input> inputs;
-		private static float interpolationTime;
-		private static float holdTriggerTime;
-		private static float holdWaitTime;
-		private static float doublePressTimeout;
+		private static Input[] inputs;
+		private static float interpolationTime = .25f;
+		private static float holdTriggerTime = .3f;
+		private static float holdWaitTime = .1f;
+		private static float doublePressTimeout = .2f;
 		private static float mouseLeftHoldTimer;
 		private static float mouseMiddleHoldTimer;
 		private static float mouseRightHoldTimer;
-		private static float mouseLeftDoubleTimer;
-		private static float mouseMiddleDoubleTimer;
-		private static float mouseRightDoubleTimer;
-		private static bool MouseLeftHeld
-		{
-			get
-			{
-				if (mouseLeftHeldUpdateFrame == Time.frameCount)
-					return mouseLeftHeld;
-
-				mouseLeftHeldUpdateFrame = Time.frameCount;
-
-				if (InputMouseButtonPress(InputMouseButton.Left))
-				{
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					mouseLeftHoldTimer -= deltaTime;
-
-					bool held = mouseLeftHoldTimer <= 0f;
-
-					if (held)
-						mouseLeftHoldTimer = HoldWaitTime;
-
-					mouseLeftHeld = held;
-
-					return held;
-				}
-
-				if (mouseLeftHoldTimer != HoldTriggerTime)
-					mouseLeftHoldTimer = HoldTriggerTime;
-				
-				mouseLeftHeld = false;
-
-				return false;
-			}
-		}
-		private static bool MouseMiddleHeld
-		{
-			get
-			{
-				if (mouseMiddleHeldUpdateFrame == Time.frameCount)
-					return mouseMiddleHeld;
-
-				mouseMiddleHeldUpdateFrame = Time.frameCount;
-
-				if (InputMouseButtonPress(InputMouseButton.Middle))
-				{
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					mouseMiddleHoldTimer -= deltaTime;
-
-					bool held = mouseMiddleHoldTimer <= 0f;
-
-					if (held)
-						mouseMiddleHoldTimer = HoldWaitTime;
-
-					mouseMiddleHeld = held;
-
-					return held;
-				}
-
-				if (mouseMiddleHoldTimer != HoldTriggerTime)
-					mouseMiddleHoldTimer = HoldTriggerTime;
-
-				mouseMiddleHeld = false;
-
-				return false;
-			}
-		}
-		private static bool MouseRightHeld
-		{
-			get
-			{
-				if (mouseRightHeldUpdateFrame == Time.frameCount)
-					return mouseRightHeld;
-
-				mouseRightHeldUpdateFrame = Time.frameCount;
-
-				if (InputMouseButtonPress(InputMouseButton.Right))
-				{
-					float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-					mouseRightHoldTimer -= deltaTime;
-
-					bool held = mouseRightHoldTimer <= 0f;
-
-					if (held)
-						mouseRightHoldTimer = HoldWaitTime;
-
-					mouseRightHeld = held;
-
-					return held;
-				}
-
-				if (mouseRightHoldTimer != HoldTriggerTime)
-					mouseRightHoldTimer = HoldTriggerTime;
-				
-				mouseRightHeld = false;
-
-				return false;
-			}
-		}
+		private static float mouseLeftDoublePressTimer;
+		private static float mouseMiddleDoublePressTimer;
+		private static float mouseRightDoublePressTimer;
+		private static float deltaTime;
 		private static bool mouseLeftHeld;
 		private static bool mouseMiddleHeld;
 		private static bool mouseRightHeld;
-		private static bool MouseLeftDouble
-		{
-			get
-			{
-				if (mouseLeftDoubleUpdateFrame == Time.frameCount)
-					return mouseLeftDouble;
-
-				mouseLeftDoubleUpdateFrame = Time.frameCount;
-
-				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-				mouseLeftDoubleTimer += mouseLeftDoubleTimer > 0f ? -deltaTime : mouseLeftDoubleTimer;
-
-				bool pressed = InputMouseButtonUp(InputMouseButton.Left);
-
-				if (pressed)
-					mouseLeftDoubleTimer = DoublePressTimeout;
-
-				mouseLeftDouble = mouseLeftDoubleInitiated && pressed;
-
-				if (pressed && mouseLeftDoubleTimer > 0f)
-					mouseLeftDoubleInitiated = true;
-
-				if (mouseLeftDoubleTimer <= 0f)
-					mouseLeftDoubleInitiated = false;
-
-				return mouseLeftDouble;
-			}
-		}
-		private static bool MouseMiddleDouble
-		{
-			get
-			{
-				if (mouseMiddleDoubleUpdateFrame == Time.frameCount)
-					return mouseMiddleDouble;
-
-				mouseMiddleDoubleUpdateFrame = Time.frameCount;
-
-				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-				mouseMiddleDoubleTimer += mouseMiddleDoubleTimer > 0f ? -deltaTime : mouseMiddleDoubleTimer;
-
-				bool pressed = InputMouseButtonUp(InputMouseButton.Middle);
-
-				if (pressed)
-					mouseMiddleDoubleTimer = DoublePressTimeout;
-
-				mouseMiddleDouble = mouseMiddleDoubleInitiated && pressed;
-
-				if (pressed && mouseMiddleDoubleTimer > 0f)
-					mouseMiddleDoubleInitiated = true;
-
-				if (mouseMiddleDoubleTimer <= 0f)
-					mouseMiddleDoubleInitiated = false;
-
-				return mouseMiddleDouble;
-			}
-		}
-		private static bool MouseRightDouble
-		{
-			get
-			{
-				if (mouseRightDoubleUpdateFrame == Time.frameCount)
-					return mouseRightDouble;
-
-				mouseRightDoubleUpdateFrame = Time.frameCount;
-
-				float deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
-
-				mouseRightDoubleTimer += mouseRightDoubleTimer > 0f ? -deltaTime : mouseRightDoubleTimer;
-
-				bool pressed = InputMouseButtonUp(InputMouseButton.Right);
-
-				if (pressed)
-					mouseRightDoubleTimer = DoublePressTimeout;
-
-				mouseRightDouble = mouseRightDoubleInitiated && pressed;
-
-				if (pressed && mouseRightDoubleTimer > 0f)
-					mouseRightDoubleInitiated = true;
-
-				if (mouseRightDoubleTimer <= 0f)
-					mouseRightDoubleInitiated = false;
-
-				return mouseRightDouble;
-			}
-		}
-		private static bool mouseLeftDouble;
-		private static bool mouseLeftDoubleInitiated;
-		private static bool mouseMiddleDouble;
-		private static bool mouseMiddleDoubleInitiated;
-		private static bool mouseRightDouble;
-		private static bool mouseRightDoubleInitiated;
+		private static bool MouseLeftDoublePress;
+		private static bool MouseMiddleDoublePress;
+		private static bool MouseRightDoublePress;
+		private static bool mouseLeftDoublePressInitiated;
+		private static bool mouseMiddleDoublePressInitiated;
+		private static bool mouseRightDoublePressInitiated;
+		private static bool mousePressed;
 		private static bool dataChanged;
-		private static int mouseLeftHeldUpdateFrame;
-		private static int mouseMiddleHeldUpdateFrame;
-		private static int mouseRightHeldUpdateFrame;
-		private static int mouseLeftDoubleUpdateFrame;
-		private static int mouseMiddleDoubleUpdateFrame;
-		private static int mouseRightDoubleUpdateFrame;
 
 		#endregion
 
@@ -1397,109 +1121,289 @@ namespace Utilities.Inputs
 		public static bool InputKeyUp(Key key) => KeyToKeyControl(key).wasReleasedThisFrame;
 		public static bool InputMouseButtonPress(int type)
 		{
-			if (type < -1 || type > 1)
+			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
 			switch (type)
 			{
-				case -1:
-					return Mouse.leftButton.isPressed;
-
 				case 0:
-					return Mouse.middleButton.isPressed;
+					return Mouse.leftButton.isPressed;
 
 				case 1:
 					return Mouse.rightButton.isPressed;
+
+				case 2:
+					return Mouse.middleButton.isPressed;
 			}
 			
 			return false;
 		}
-		public static bool InputMouseButtonPress(InputMouseButton type) => InputMouseButtonPress((int)type);
+		public static bool InputMouseButtonPress(InputMouseButton type)
+		{
+			switch (type)
+			{
+				case InputMouseButton.Left:
+					return InputMouseButtonPress(0);
+
+				case InputMouseButton.Right:
+					return InputMouseButtonPress(1);
+
+				case InputMouseButton.Middle:
+					return InputMouseButtonPress(2);
+
+				default:
+					return false;
+			}
+		}
 		public static bool InputMouseButtonDown(int type)
 		{
-			if (type < -1 || type > 1)
+			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
 			switch (type)
 			{
-				case -1:
-					return Mouse.leftButton.wasPressedThisFrame;
-
 				case 0:
-					return Mouse.middleButton.wasPressedThisFrame;
+					return Mouse.leftButton.wasPressedThisFrame;
 
 				case 1:
 					return Mouse.rightButton.wasPressedThisFrame;
+
+				case 2:
+					return Mouse.middleButton.wasPressedThisFrame;
 			}
 			
 			return false;
 		}
-		public static bool InputMouseButtonDown(InputMouseButton type) => InputMouseButtonDown((int)type);
+		public static bool InputMouseButtonDown(InputMouseButton type)
+		{
+			switch (type)
+			{
+				case InputMouseButton.Left:
+					return InputMouseButtonPress(0);
+
+				case InputMouseButton.Right:
+					return InputMouseButtonPress(1);
+
+				case InputMouseButton.Middle:
+					return InputMouseButtonPress(2);
+
+				default:
+					return false;
+			}
+		}
 		public static bool InputMouseButtonUp(int type)
 		{
-			if (type < -1 || type > 1)
+			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
 			switch (type)
 			{
-				case -1:
-					return Mouse.leftButton.wasReleasedThisFrame;
-
 				case 0:
-					return Mouse.middleButton.wasReleasedThisFrame;
+					return Mouse.leftButton.wasReleasedThisFrame;
 
 				case 1:
 					return Mouse.rightButton.wasReleasedThisFrame;
+
+				case 2:
+					return Mouse.middleButton.wasReleasedThisFrame;
 			}
 
 			return false;
 		}
-		public static bool InputMouseButtonUp(InputMouseButton type) => InputMouseButtonUp((int)type);
+		public static bool InputMouseButtonUp(InputMouseButton type)
+		{
+			switch (type)
+			{
+				case InputMouseButton.Left:
+					return InputMouseButtonUp(0);
+
+				case InputMouseButton.Right:
+					return InputMouseButtonUp(1);
+
+				case InputMouseButton.Middle:
+					return InputMouseButtonUp(2);
+
+				default:
+					return false;
+			}
+		}
 		public static bool InputMouseButtonHold(int type)
 		{
-			if (type < -1 || type > 1)
+			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
 			switch (type)
 			{
-				case -1:
-					return MouseLeftHeld;
-
 				case 0:
-					return MouseMiddleHeld;
+					return mouseLeftHeld;
 
 				case 1:
-					return MouseRightHeld;
+					return mouseRightHeld;
+
+				case 2:
+					return mouseMiddleHeld;
 			}
 
 			return false;
 		}
-		public static bool InputMouseButtonHold(InputMouseButton type) => InputMouseButtonHold((int)type);
+		public static bool InputMouseButtonHold(InputMouseButton type)
+		{
+			switch (type)
+			{
+				case InputMouseButton.Left:
+					return InputMouseButtonHold(0);
+
+				case InputMouseButton.Right:
+					return InputMouseButtonHold(1);
+
+				case InputMouseButton.Middle:
+					return InputMouseButtonHold(2);
+
+				default:
+					return false;
+			}
+		}
 		public static bool InputMouseButtonDoublePress(int type)
 		{
-			if (type < -1 || type > 1)
+			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
 			switch (type)
 			{
-				case -1:
-					return MouseLeftDouble;
-
 				case 0:
-					return MouseMiddleDouble;
+					return MouseLeftDoublePress;
 
 				case 1:
-					return MouseRightDouble;
+					return MouseRightDoublePress;
+
+				case 2:
+					return MouseMiddleDoublePress;
 			}
 
 			return false;
 		}
-		public static bool InputMouseButtonDoublePress(InputMouseButton type) => InputMouseButtonDoublePress((int)type);
+		public static bool InputMouseButtonDoublePress(InputMouseButton type)
+		{
+			switch (type)
+			{
+				case InputMouseButton.Left:
+					return InputMouseButtonDoublePress(0);
+
+				case InputMouseButton.Right:
+					return InputMouseButtonDoublePress(1);
+
+				case InputMouseButton.Middle:
+					return InputMouseButtonDoublePress(2);
+
+				default:
+					return false;
+			}
+		}
 
 		#endregion
 
 		#region Utilities
 
+		public static void Start()
+		{
+			LoadData();
+
+			if (Inputs == null || Inputs.Length == 0)
+				return;
+
+			for (int i = 0; i < Inputs.Length; i++)
+				Inputs[i].Start();
+		}
+		public static void Update()
+		{
+			deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+			mouseLeftHeld = false;
+
+			if (InputMouseButtonPress(InputMouseButton.Left))
+			{
+				mouseLeftHoldTimer -= deltaTime;
+				mouseLeftHeld = mouseLeftHoldTimer <= 0f;
+
+				if (mouseLeftHeld)
+					mouseLeftHoldTimer = HoldWaitTime;
+			}
+			else if (mouseLeftHoldTimer != HoldTriggerTime)
+				mouseLeftHoldTimer = HoldTriggerTime;
+
+			mouseLeftDoublePressTimer += mouseLeftDoublePressTimer > 0f ? -deltaTime : mouseLeftDoublePressTimer;
+			mousePressed = InputMouseButtonUp(InputMouseButton.Left);
+
+			if (mousePressed)
+				mouseLeftDoublePressTimer = DoublePressTimeout;
+
+			MouseLeftDoublePress = mouseLeftDoublePressInitiated && mousePressed;
+
+			if (mousePressed && mouseLeftDoublePressTimer > 0f)
+				mouseLeftDoublePressInitiated = true;
+
+			if (mouseLeftDoublePressTimer <= 0f)
+				mouseLeftDoublePressInitiated = false;
+
+			mouseMiddleHeld = false;
+
+			if (InputMouseButtonPress(InputMouseButton.Middle))
+			{
+				mouseMiddleHoldTimer -= deltaTime;
+				mouseMiddleHeld = mouseMiddleHoldTimer <= 0f;
+
+				if (mouseMiddleHeld)
+					mouseMiddleHoldTimer = HoldWaitTime;
+			}
+			else if (mouseMiddleHoldTimer != HoldTriggerTime)
+				mouseMiddleHoldTimer = HoldTriggerTime;
+
+			mouseMiddleDoublePressTimer += mouseMiddleDoublePressTimer > 0f ? -deltaTime : mouseMiddleDoublePressTimer;
+			mousePressed = InputMouseButtonUp(InputMouseButton.Middle);
+
+			if (mousePressed)
+				mouseMiddleDoublePressTimer = DoublePressTimeout;
+
+			MouseMiddleDoublePress = mouseMiddleDoublePressInitiated && mousePressed;
+
+			if (mousePressed && mouseMiddleDoublePressTimer > 0f)
+				mouseMiddleDoublePressInitiated = true;
+
+			if (mouseMiddleDoublePressTimer <= 0f)
+				mouseMiddleDoublePressInitiated = false;
+
+			mouseRightHeld = false;
+
+			if (InputMouseButtonPress(InputMouseButton.Right))
+			{
+				mouseRightHoldTimer -= deltaTime;
+				mouseRightHeld = mouseRightHoldTimer <= 0f;
+
+				if (mouseRightHeld)
+					mouseRightHoldTimer = HoldWaitTime;
+			}
+			else if (mouseRightHoldTimer != HoldTriggerTime)
+				mouseRightHoldTimer = HoldTriggerTime;
+
+			mouseRightDoublePressTimer += mouseRightDoublePressTimer > 0f ? -deltaTime : mouseRightDoublePressTimer;
+			mousePressed = InputMouseButtonUp(InputMouseButton.Right);
+
+			if (mousePressed)
+				mouseRightDoublePressTimer = DoublePressTimeout;
+
+			MouseRightDoublePress = mouseRightDoublePressInitiated && mousePressed;
+
+			if (mousePressed && mouseRightDoublePressTimer > 0f)
+				mouseRightDoublePressInitiated = true;
+
+			if (mouseRightDoublePressTimer <= 0f)
+				mouseRightDoublePressInitiated = false;
+
+			if (Inputs == null || Inputs.Length == 0)
+				return;
+
+			for (int i = 0; i < Inputs.Length; i++)
+				Inputs[i].Update();
+		}
 		public static Input[] KeyUsed(Key key)
 		{
 			if (key == Key.None)
@@ -1512,338 +1416,6 @@ namespace Utilities.Inputs
 					inputs.Add(Inputs[i]);
 
 			return inputs.ToArray();
-		}
-		private static KeyControl KeyToKeyControl(Key key)
-		{
-			switch (key)
-			{
-				case Key.A:
-					return Keyboard.aKey;
-					
-				case Key.B:
-					return Keyboard.bKey;
-					
-				case Key.Backquote:
-					return Keyboard.backquoteKey;
-					
-				case Key.Backslash:
-					return Keyboard.backslashKey;
-					
-				case Key.Backspace:
-					return Keyboard.backspaceKey;
-					
-				case Key.C:
-					return Keyboard.cKey;
-					
-				case Key.Comma:
-					return Keyboard.commaKey;
-					
-				case Key.ContextMenu:
-					return Keyboard.contextMenuKey;
-					
-				case Key.D:
-					return Keyboard.dKey;
-					
-				case Key.Delete:
-					return Keyboard.deleteKey;
-					
-				case Key.Digit0:
-					return Keyboard.digit0Key;
-					
-				case Key.Digit1:
-					return Keyboard.digit1Key;
-					
-				case Key.Digit2:
-					return Keyboard.digit2Key;
-					
-				case Key.Digit3:
-					return Keyboard.digit3Key;
-					
-				case Key.Digit4:
-					return Keyboard.digit4Key;
-					
-				case Key.Digit5:
-					return Keyboard.digit5Key;
-					
-				case Key.Digit6:
-					return Keyboard.digit6Key;
-					
-				case Key.Digit7:
-					return Keyboard.digit7Key;
-					
-				case Key.Digit8:
-					return Keyboard.digit8Key;
-					
-				case Key.Digit9:
-					return Keyboard.digit9Key;
-					
-				case Key.DownArrow:
-					return Keyboard.downArrowKey;
-					
-				case Key.E:
-					return Keyboard.eKey;
-					
-				case Key.End:
-					return Keyboard.endKey;
-					
-				case Key.Enter:
-					return Keyboard.enterKey;
-					
-				case Key.Equals:
-					return Keyboard.equalsKey;
-					
-				case Key.Escape:
-					return Keyboard.escapeKey;
-					
-				case Key.F:
-					return Keyboard.fKey;
-					
-				case Key.F1:
-					return Keyboard.f1Key;
-					
-				case Key.F2:
-					return Keyboard.f2Key;
-					
-				case Key.F3:
-					return Keyboard.f3Key;
-					
-				case Key.F4:
-					return Keyboard.f4Key;
-					
-				case Key.F5:
-					return Keyboard.f5Key;
-					
-				case Key.F6:
-					return Keyboard.f6Key;
-					
-				case Key.F7:
-					return Keyboard.f7Key;
-					
-				case Key.F8:
-					return Keyboard.f8Key;
-					
-				case Key.F9:
-					return Keyboard.f9Key;
-					
-				case Key.F10:
-					return Keyboard.f10Key;
-					
-				case Key.F11:
-					return Keyboard.f11Key;
-					
-				case Key.F12:
-					return Keyboard.f12Key;
-					
-				case Key.G:
-					return Keyboard.gKey;
-					
-				case Key.H:
-					return Keyboard.hKey;
-					
-				case Key.Home:
-					return Keyboard.homeKey;
-					
-				case Key.I:
-					return Keyboard.iKey;
-					
-				case Key.Insert:
-					return Keyboard.insertKey;
-					
-				case Key.J:
-					return Keyboard.jKey;
-					
-				case Key.K:
-					return Keyboard.kKey;
-					
-				case Key.L:
-					return Keyboard.lKey;
-					
-				case Key.LeftAlt:
-					return Keyboard.leftAltKey;
-					
-				case Key.LeftArrow:
-					return Keyboard.leftArrowKey;
-					
-				case Key.LeftBracket:
-					return Keyboard.leftBracketKey;
-					
-				case Key.LeftCtrl:
-					return Keyboard.leftCtrlKey;
-				
-				case Key.LeftMeta:
-					return Keyboard.leftMetaKey;
-					
-				case Key.LeftShift:
-					return Keyboard.leftShiftKey;
-					
-				case Key.M:
-					return Keyboard.mKey;
-					
-				case Key.Minus:
-					return Keyboard.minusKey;
-					
-				case Key.N:
-					return Keyboard.nKey;
-					
-				case Key.NumLock:
-					return Keyboard.numLockKey;
-					
-				case Key.Numpad0:
-					return Keyboard.numpad0Key;
-					
-				case Key.Numpad1:
-					return Keyboard.numpad1Key;
-					
-				case Key.Numpad2:
-					return Keyboard.numpad2Key;
-					
-				case Key.Numpad3:
-					return Keyboard.numpad3Key;
-					
-				case Key.Numpad4:
-					return Keyboard.numpad4Key;
-					
-				case Key.Numpad5:
-					return Keyboard.numpad5Key;
-					
-				case Key.Numpad6:
-					return Keyboard.numpad6Key;
-					
-				case Key.Numpad7:
-					return Keyboard.numpad7Key;
-					
-				case Key.Numpad8:
-					return Keyboard.numpad8Key;
-					
-				case Key.Numpad9:
-					return Keyboard.numpad9Key;
-					
-				case Key.NumpadDivide:
-					return Keyboard.numpadDivideKey;
-					
-				case Key.NumpadEnter:
-					return Keyboard.numpadEnterKey;
-					
-				case Key.NumpadEquals:
-					return Keyboard.numpadEqualsKey;
-					
-				case Key.NumpadMinus:
-					return Keyboard.numpadMinusKey;
-					
-				case Key.NumpadMultiply:
-					return Keyboard.numpadMultiplyKey;
-					
-				case Key.NumpadPeriod:
-					return Keyboard.numpadPeriodKey;
-					
-				case Key.NumpadPlus:
-					return Keyboard.numpadPlusKey;
-					
-				case Key.O:
-					return Keyboard.oKey;
-					
-				case Key.OEM1:
-					return Keyboard.oem1Key;
-					
-				case Key.OEM2:
-					return Keyboard.oem2Key;
-					
-				case Key.OEM3:
-					return Keyboard.oem3Key;
-					
-				case Key.OEM4:
-					return Keyboard.oem4Key;
-					
-				case Key.OEM5:
-					return Keyboard.oem5Key;
-					
-				case Key.P:
-					return Keyboard.pKey;
-					
-				case Key.PageDown:
-					return Keyboard.pageDownKey;
-					
-				case Key.PageUp:
-					return Keyboard.pageUpKey;
-					
-				case Key.Pause:
-					return Keyboard.pauseKey;
-					
-				case Key.Period:
-					return Keyboard.periodKey;
-					
-				case Key.Q:
-					return Keyboard.qKey;
-					
-				case Key.Quote:
-					return Keyboard.quoteKey;
-					
-				case Key.R:
-					return Keyboard.rKey;
-					
-				case Key.RightAlt:
-					return Keyboard.rightAltKey;
-					
-				case Key.RightArrow:
-					return Keyboard.rightArrowKey;
-					
-				case Key.RightBracket:
-					return Keyboard.rightBracketKey;
-					
-				case Key.RightCtrl:
-					return Keyboard.rightCtrlKey;
-					
-				case Key.RightMeta:
-					return Keyboard.rightMetaKey;
-					
-				case Key.RightShift:
-					return Keyboard.rightShiftKey;
-					
-				case Key.S:
-					return Keyboard.sKey;
-					
-				case Key.ScrollLock:
-					return Keyboard.scrollLockKey;
-					
-				case Key.Semicolon:
-					return Keyboard.semicolonKey;
-					
-				case Key.Slash:
-					return Keyboard.slashKey;
-					
-				case Key.Space:
-					return Keyboard.spaceKey;
-					
-				case Key.T:
-					return Keyboard.tKey;
-					
-				case Key.Tab:
-					return Keyboard.tabKey;
-					
-				case Key.U:
-					return Keyboard.uKey;
-					
-				case Key.UpArrow:
-					return Keyboard.upArrowKey;
-					
-				case Key.V:
-					return Keyboard.vKey;
-					
-				case Key.W:
-					return Keyboard.wKey;
-					
-				case Key.X:
-					return Keyboard.xKey;
-					
-				case Key.Y:
-					return Keyboard.yKey;
-					
-				case Key.Z:
-					return Keyboard.zKey;
-
-				default:
-					return null;
-			}
 		}
 		public static Key KeyCodeToKey(KeyCode keyCode)
 		{
@@ -2187,12 +1759,10 @@ namespace Utilities.Inputs
 		}
 		public static string[] GetInputsNames()
 		{
-			string[] array = new string[Count];
+			if (dataChanged || inputNames == null || inputNames.Length != Inputs.Length)
+				inputNames = Inputs.Select(input => input.Name).ToArray();
 
-			for (int i = 0; i < Count; i++)
-				array[i] = Inputs[i].Name;
-
-			return array;
+			return inputNames;
 		}
 		public static Input GetInput(int index)
 		{
@@ -2206,7 +1776,7 @@ namespace Utilities.Inputs
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentException("The input name cannot be empty or `null`", "name");
 
-			Input input = Inputs.Find(query => query.Name == name);
+			Input input = Array.Find(Inputs, query => query.Name == name);
 
 			if (!input)
 				throw new ArgumentException($"We couldn't find an input with the name of `{name}` in the inputs list!");
@@ -2229,7 +1799,6 @@ namespace Utilities.Inputs
 				throw new ArgumentOutOfRangeException("index");
 
 			Inputs[index] = input;
-
 			dataChanged = true;
 		}
 		public static void SetInput(string name, Input input)
@@ -2271,8 +1840,10 @@ namespace Utilities.Inputs
 			if (IndexOf(input.Name) != -1)
 				throw new ArgumentException($"We couldn't add the input `{input.Name}` to the list because its name matches another one", "input");
 
-			Inputs.Add(input);
+			Array.Resize(ref inputs, Inputs.Length + 1);
+			Array.Resize(ref inputNames, inputNames.Length + 1);
 
+			Inputs[Inputs.Length - 1] = input;
 			dataChanged = true;
 
 			return input;
@@ -2290,8 +1861,10 @@ namespace Utilities.Inputs
 			Input oldInput = GetInput(name);
 			Input input = new Input(oldInput);
 
-			Inputs.Add(input);
+			Array.Resize(ref inputs, Inputs.Length + 1);
+			Array.Resize(ref inputNames, inputNames.Length + 1);
 
+			Inputs[Inputs.Length - 1] = input;
 			dataChanged = true;
 
 			return input;
@@ -2309,8 +1882,11 @@ namespace Utilities.Inputs
 			if (index < 0 || index > Count)
 				throw new ArgumentOutOfRangeException("index", input, $"We couldn't insert the `{input.Name}` because the index value is out range");
 
-			Inputs.Insert(index, input);
+			List<Input> inputsList = Inputs.ToList();
 
+			inputsList.Insert(index, input);
+
+			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
 		public static void RemoveInput(string name)
@@ -2322,8 +1898,11 @@ namespace Utilities.Inputs
 				return;
 			}
 
-			Inputs.Remove(GetInput(name));
+			List<Input> inputsList = Inputs.ToList();
 
+			inputsList.Remove(GetInput(name));
+
+			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
 		public static void RemoveInput(int index)
@@ -2338,8 +1917,11 @@ namespace Utilities.Inputs
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException("index");
 
-			Inputs.RemoveAt(index);
+			List<Input> inputsList = Inputs.ToList();
 
+			inputsList.RemoveAt(index);
+
+			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
 		public static void RemoveAll()
@@ -2351,7 +1933,7 @@ namespace Utilities.Inputs
 				return;
 			}
 
-			Inputs.Clear();
+			Array.Clear(inputs, 0, inputs.Length);
 
 			dataChanged = true;
 		}
@@ -2368,7 +1950,8 @@ namespace Utilities.Inputs
 			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>(directory, file);
 			DataSheet data = serializer.Load();
 
-			inputs = data.Inputs.ToList();
+			inputs = data.Inputs;
+			inputNames = inputs.Select(input => input.Name).ToArray();
 			interpolationTime = data.InterpolationTime;
 			holdTriggerTime = data.HoldTriggerTime;
 			holdWaitTime = data.HoldWaitTime;
@@ -2385,6 +1968,9 @@ namespace Utilities.Inputs
 		}
 		public static bool SaveData()
 		{
+			if (Application.isPlaying)
+				return false;
+
 			string fullPath = $"{Application.dataPath}/{DataAssetPath}";
 
 			if (File.Exists(fullPath))
@@ -2397,6 +1983,339 @@ namespace Utilities.Inputs
 			dataChanged = false;
 
 			return serializer.SaveOrCreate(new DataSheet());
+		}
+
+		private static KeyControl KeyToKeyControl(Key key)
+		{
+			switch (key)
+			{
+				case Key.A:
+					return Keyboard.aKey;
+
+				case Key.B:
+					return Keyboard.bKey;
+
+				case Key.Backquote:
+					return Keyboard.backquoteKey;
+
+				case Key.Backslash:
+					return Keyboard.backslashKey;
+
+				case Key.Backspace:
+					return Keyboard.backspaceKey;
+
+				case Key.C:
+					return Keyboard.cKey;
+
+				case Key.Comma:
+					return Keyboard.commaKey;
+
+				case Key.ContextMenu:
+					return Keyboard.contextMenuKey;
+
+				case Key.D:
+					return Keyboard.dKey;
+
+				case Key.Delete:
+					return Keyboard.deleteKey;
+
+				case Key.Digit0:
+					return Keyboard.digit0Key;
+
+				case Key.Digit1:
+					return Keyboard.digit1Key;
+
+				case Key.Digit2:
+					return Keyboard.digit2Key;
+
+				case Key.Digit3:
+					return Keyboard.digit3Key;
+
+				case Key.Digit4:
+					return Keyboard.digit4Key;
+
+				case Key.Digit5:
+					return Keyboard.digit5Key;
+
+				case Key.Digit6:
+					return Keyboard.digit6Key;
+
+				case Key.Digit7:
+					return Keyboard.digit7Key;
+
+				case Key.Digit8:
+					return Keyboard.digit8Key;
+
+				case Key.Digit9:
+					return Keyboard.digit9Key;
+
+				case Key.DownArrow:
+					return Keyboard.downArrowKey;
+
+				case Key.E:
+					return Keyboard.eKey;
+
+				case Key.End:
+					return Keyboard.endKey;
+
+				case Key.Enter:
+					return Keyboard.enterKey;
+
+				case Key.Equals:
+					return Keyboard.equalsKey;
+
+				case Key.Escape:
+					return Keyboard.escapeKey;
+
+				case Key.F:
+					return Keyboard.fKey;
+
+				case Key.F1:
+					return Keyboard.f1Key;
+
+				case Key.F2:
+					return Keyboard.f2Key;
+
+				case Key.F3:
+					return Keyboard.f3Key;
+
+				case Key.F4:
+					return Keyboard.f4Key;
+
+				case Key.F5:
+					return Keyboard.f5Key;
+
+				case Key.F6:
+					return Keyboard.f6Key;
+
+				case Key.F7:
+					return Keyboard.f7Key;
+
+				case Key.F8:
+					return Keyboard.f8Key;
+
+				case Key.F9:
+					return Keyboard.f9Key;
+
+				case Key.F10:
+					return Keyboard.f10Key;
+
+				case Key.F11:
+					return Keyboard.f11Key;
+
+				case Key.F12:
+					return Keyboard.f12Key;
+
+				case Key.G:
+					return Keyboard.gKey;
+
+				case Key.H:
+					return Keyboard.hKey;
+
+				case Key.Home:
+					return Keyboard.homeKey;
+
+				case Key.I:
+					return Keyboard.iKey;
+
+				case Key.Insert:
+					return Keyboard.insertKey;
+
+				case Key.J:
+					return Keyboard.jKey;
+
+				case Key.K:
+					return Keyboard.kKey;
+
+				case Key.L:
+					return Keyboard.lKey;
+
+				case Key.LeftAlt:
+					return Keyboard.leftAltKey;
+
+				case Key.LeftArrow:
+					return Keyboard.leftArrowKey;
+
+				case Key.LeftBracket:
+					return Keyboard.leftBracketKey;
+
+				case Key.LeftCtrl:
+					return Keyboard.leftCtrlKey;
+
+				case Key.LeftMeta:
+					return Keyboard.leftMetaKey;
+
+				case Key.LeftShift:
+					return Keyboard.leftShiftKey;
+
+				case Key.M:
+					return Keyboard.mKey;
+
+				case Key.Minus:
+					return Keyboard.minusKey;
+
+				case Key.N:
+					return Keyboard.nKey;
+
+				case Key.NumLock:
+					return Keyboard.numLockKey;
+
+				case Key.Numpad0:
+					return Keyboard.numpad0Key;
+
+				case Key.Numpad1:
+					return Keyboard.numpad1Key;
+
+				case Key.Numpad2:
+					return Keyboard.numpad2Key;
+
+				case Key.Numpad3:
+					return Keyboard.numpad3Key;
+
+				case Key.Numpad4:
+					return Keyboard.numpad4Key;
+
+				case Key.Numpad5:
+					return Keyboard.numpad5Key;
+
+				case Key.Numpad6:
+					return Keyboard.numpad6Key;
+
+				case Key.Numpad7:
+					return Keyboard.numpad7Key;
+
+				case Key.Numpad8:
+					return Keyboard.numpad8Key;
+
+				case Key.Numpad9:
+					return Keyboard.numpad9Key;
+
+				case Key.NumpadDivide:
+					return Keyboard.numpadDivideKey;
+
+				case Key.NumpadEnter:
+					return Keyboard.numpadEnterKey;
+
+				case Key.NumpadEquals:
+					return Keyboard.numpadEqualsKey;
+
+				case Key.NumpadMinus:
+					return Keyboard.numpadMinusKey;
+
+				case Key.NumpadMultiply:
+					return Keyboard.numpadMultiplyKey;
+
+				case Key.NumpadPeriod:
+					return Keyboard.numpadPeriodKey;
+
+				case Key.NumpadPlus:
+					return Keyboard.numpadPlusKey;
+
+				case Key.O:
+					return Keyboard.oKey;
+
+				case Key.OEM1:
+					return Keyboard.oem1Key;
+
+				case Key.OEM2:
+					return Keyboard.oem2Key;
+
+				case Key.OEM3:
+					return Keyboard.oem3Key;
+
+				case Key.OEM4:
+					return Keyboard.oem4Key;
+
+				case Key.OEM5:
+					return Keyboard.oem5Key;
+
+				case Key.P:
+					return Keyboard.pKey;
+
+				case Key.PageDown:
+					return Keyboard.pageDownKey;
+
+				case Key.PageUp:
+					return Keyboard.pageUpKey;
+
+				case Key.Pause:
+					return Keyboard.pauseKey;
+
+				case Key.Period:
+					return Keyboard.periodKey;
+
+				case Key.Q:
+					return Keyboard.qKey;
+
+				case Key.Quote:
+					return Keyboard.quoteKey;
+
+				case Key.R:
+					return Keyboard.rKey;
+
+				case Key.RightAlt:
+					return Keyboard.rightAltKey;
+
+				case Key.RightArrow:
+					return Keyboard.rightArrowKey;
+
+				case Key.RightBracket:
+					return Keyboard.rightBracketKey;
+
+				case Key.RightCtrl:
+					return Keyboard.rightCtrlKey;
+
+				case Key.RightMeta:
+					return Keyboard.rightMetaKey;
+
+				case Key.RightShift:
+					return Keyboard.rightShiftKey;
+
+				case Key.S:
+					return Keyboard.sKey;
+
+				case Key.ScrollLock:
+					return Keyboard.scrollLockKey;
+
+				case Key.Semicolon:
+					return Keyboard.semicolonKey;
+
+				case Key.Slash:
+					return Keyboard.slashKey;
+
+				case Key.Space:
+					return Keyboard.spaceKey;
+
+				case Key.T:
+					return Keyboard.tKey;
+
+				case Key.Tab:
+					return Keyboard.tabKey;
+
+				case Key.U:
+					return Keyboard.uKey;
+
+				case Key.UpArrow:
+					return Keyboard.upArrowKey;
+
+				case Key.V:
+					return Keyboard.vKey;
+
+				case Key.W:
+					return Keyboard.wKey;
+
+				case Key.X:
+					return Keyboard.xKey;
+
+				case Key.Y:
+					return Keyboard.yKey;
+
+				case Key.Z:
+					return Keyboard.zKey;
+
+				default:
+					return null;
+			}
 		}
 
 		#endregion

@@ -3,7 +3,7 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
-**Version:** 0.3-beta
+**Version:** 0.4-beta
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
@@ -14,6 +14,7 @@ Will be available soon...<br/>
 You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
 
 ## Features
+- High performance code
 - Easy inputs setup
 - Fully customizable API
 - Edit inputs at runtime
@@ -39,6 +40,9 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Vector Graphics: Any version
 
 ## Release Notes
+- 0.4-beta
+	- Fixed some performance issues
+	- Fixed some bugs
 - 0.3-beta
 	- Verified the Inputs Manager code
 	- Added the ability to check for inputs double press

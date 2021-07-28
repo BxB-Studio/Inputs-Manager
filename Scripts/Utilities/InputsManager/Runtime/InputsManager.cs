@@ -7,28 +7,65 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
 #if UNITY_2019_1_OR_NEWER
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 #else
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Utilities;
+#endif
 #endif
 
 #endregion
 
 namespace Utilities.Inputs
 {
+	#region Enumerators
+
+	public enum MouseButton { Left, Right, Middle }
+	public enum GamepadBinding
+	{
+		None = 0,
+		DpadUp = 1,
+		DpadDown = 2,
+		DpadLeft = 3,
+		DpadRight = 4,
+		ButtonNorth = 5,
+		ButtonEast = 6,
+		ButtonSouth = 7,
+		ButtonWest = 8,
+		LeftStickButton = 9,
+		LeftStickUp = 10,
+		LeftStickRight = 11,
+		LeftStickDown = 12,
+		LeftStickLeft = 13,
+		RightStickButton = 14,
+		RightStickUp = 15,
+		RightStickRight = 16,
+		RightStickDown = 17,
+		RightStickLeft = 18,
+		LeftShoulder = 19,
+		RightShoulder = 20,
+		LeftTrigger = 21,
+		RightTrigger = 22,
+		StartButton = 23,
+		SelectButton = 24,
+	}
+
+	#endregion
+
+	#region Modules
+
 	public static class InputsManager
 	{
-		#region Modules & Enumerators
+		#region Enumerators & Modules
 
 		#region Enumerators
 
-		public enum InputType { Axis, Button }
-		public enum InputAxisInterpolation { Instant = 2, Jump = 1, Smooth = 0 }
-		public enum InputAxisStrongSide { None, Positive, Negative, FirstPressing }
-		public enum InputMouseButton { Left, Right, Middle }
+		public enum InputSource { Keyboard, Gamepad }
 
 		#endregion
 
@@ -44,6 +81,13 @@ namespace Utilities.Inputs
 				get
 				{
 					return inputs;
+				}
+			}
+			public InputSource InputSourcePriority
+			{
+				get
+				{
+					return inputSourcePriority;
 				}
 			}
 			public float InterpolationTime
@@ -74,19 +118,28 @@ namespace Utilities.Inputs
 					return doublePressTimeout;
 				}
 			}
+			public float GamepadThreshold
+			{
+				get
+				{
+					return gamepadThreshold;
+				}
+			}
 
 			[SerializeField]
-			private Input[] inputs;
+			private readonly Input[] inputs;
 			[SerializeField]
-			private float interpolationTime;
+			private InputSource inputSourcePriority;
 			[SerializeField]
-			private float holdTriggerTime;
+			private readonly float interpolationTime;
 			[SerializeField]
-			private float holdWaitTime;
+			private readonly float holdTriggerTime;
 			[SerializeField]
-			private float doublePressTimeout;
+			private readonly float holdWaitTime;
 			[SerializeField]
-			private bool autoSave;
+			private readonly float doublePressTimeout;
+			[SerializeField]
+			private readonly float gamepadThreshold;
 
 			#endregion
 
@@ -96,11 +149,13 @@ namespace Utilities.Inputs
 
 			public DataSheet()
 			{
-				inputs = InputsManager.Inputs;
+				inputs = InputsManager.Inputs ?? new Input[] { };
+				inputSourcePriority = InputsManager.InputSourcePriority;
 				interpolationTime = InputsManager.InterpolationTime;
 				holdTriggerTime = InputsManager.HoldTriggerTime;
 				holdWaitTime = InputsManager.HoldWaitTime;
 				doublePressTimeout = InputsManager.DoublePressTimeout;
+				gamepadThreshold = InputsManager.GamepadThreshold;
 			}
 
 			#endregion
@@ -114,89 +169,178 @@ namespace Utilities.Inputs
 			#endregion
 		}
 		[Serializable]
-		public class InputAxis
-		{
-			#region Variables
-
-			public InputAxisStrongSide StrongSide
-			{
-				get
-				{
-					return strongSide;
-				}
-				set
-				{
-					if (Application.isPlaying)
-						return;
-
-					strongSide = value;
-					dataChanged = true;
-				}
-			}
-			public Key Positive
-			{
-				get
-				{
-					return positive;
-				}
-				set
-				{
-					positive = value;
-					dataChanged = true;
-				}
-			}
-			public Key Negative
-			{
-				get
-				{
-					return negative;
-				}
-				set
-				{
-					negative = value;
-					dataChanged = true;
-				}
-			}
-
-			[SerializeField]
-			private InputAxisStrongSide strongSide;
-			[SerializeField]
-			private Key positive;
-			[SerializeField]
-			private Key negative;
-
-			#endregion
-
-			#region Constructors & Opertators
-
-			#region  Constructors
-
-			public InputAxis()
-			{
-				strongSide = InputAxisStrongSide.None;
-				positive = Key.None;
-				negative = Key.None;
-			}
-			public InputAxis(InputAxis axis)
-			{
-				strongSide = axis.strongSide;
-				positive = axis.positive;
-				negative = axis.negative;
-			}
-
-			#endregion
-
-			#region Operators
-
-			public static implicit operator bool(InputAxis axis) => axis != null;
-
-			#endregion
-
-			#endregion
-		}
-		[Serializable]
 		public class Input
 		{
+			#region Modules & Enumerators
+
+			#region Enumerators
+
+			public enum InputType { Axis, Button }
+			public enum InputInterpolation { Instant = 2, Jump = 1, Smooth = 0 }
+
+			#endregion
+
+			#region Modules
+
+			[Serializable]
+			public class Axis
+			{
+				#region Enumerators
+
+				public enum Side { None, Positive, Negative, FirstPressing }
+
+				#endregion
+
+				#region Variables
+
+				public Side StrongSide
+				{
+					get
+					{
+						return strongSide;
+					}
+					set
+					{
+						if (Application.isPlaying)
+							return;
+
+						strongSide = value;
+						dataChanged = true;
+					}
+				}
+#if ENABLE_INPUT_SYSTEM
+				public Key Positive
+				{
+					get
+					{
+						return positive;
+					}
+					set
+					{
+						positive = value;
+						dataChanged = true;
+					}
+				}
+				public Key Negative
+				{
+					get
+					{
+						return negative;
+					}
+					set
+					{
+						negative = value;
+						dataChanged = true;
+					}
+				}
+#endif
+				public Side GamepadStrongSide
+				{
+					get
+					{
+						return gamepadStrongSide;
+					}
+					set
+					{
+						if (Application.isPlaying)
+							return;
+
+						gamepadStrongSide = value;
+						dataChanged = true;
+					}
+				}
+#if ENABLE_INPUT_SYSTEM
+				public GamepadBinding GamepadPositive
+				{
+					get
+					{
+						return gamepadPositive;
+					}
+					set
+					{
+						gamepadPositive = value;
+						dataChanged = true;
+					}
+				}
+				public GamepadBinding GamepadNegative
+				{
+					get
+					{
+						return gamepadNegative;
+					}
+					set
+					{
+						gamepadNegative = value;
+						dataChanged = true;
+					}
+				}
+#endif
+
+				[SerializeField]
+				private Side strongSide;
+#if ENABLE_INPUT_SYSTEM
+				[SerializeField]
+				private Key positive;
+				[SerializeField]
+				private Key negative;
+#endif
+				[SerializeField]
+				private Side gamepadStrongSide;
+#if ENABLE_INPUT_SYSTEM
+				[SerializeField]
+				private GamepadBinding gamepadPositive;
+				[SerializeField]
+				private GamepadBinding gamepadNegative;
+#endif
+
+				#endregion
+
+				#region Constructors & Opertators
+
+				#region  Constructors
+
+				public Axis()
+				{
+					strongSide = Side.None;
+#if ENABLE_INPUT_SYSTEM
+					positive = Key.None;
+					negative = Key.None;
+#endif
+					gamepadStrongSide = Side.None;
+#if ENABLE_INPUT_SYSTEM
+					gamepadPositive = GamepadBinding.None;
+					gamepadNegative = GamepadBinding.None;
+#endif
+				}
+				public Axis(Axis axis)
+				{
+					strongSide = axis.strongSide;
+#if ENABLE_INPUT_SYSTEM
+					positive = axis.positive;
+					negative = axis.negative;
+#endif
+					gamepadStrongSide = axis.gamepadStrongSide;
+#if ENABLE_INPUT_SYSTEM
+					gamepadPositive = axis.gamepadPositive;
+					gamepadNegative = axis.gamepadNegative;
+#endif
+				}
+
+				#endregion
+
+				#region Operators
+
+				public static implicit operator bool(Axis axis) => axis != null;
+
+				#endregion
+
+				#endregion
+			}
+
+			#endregion
+
+			#endregion
+
 			#region Variables
 
 			public string Name
@@ -228,15 +372,17 @@ namespace Utilities.Inputs
 					if (value == InputType.Button)
 					{
 						valueInterval.x = 0f;
+#if ENABLE_INPUT_SYSTEM
 						Main.Negative = Key.None;
 						Alt.Negative = Key.None;
+#endif
 					}
 
 					type = value;
 					dataChanged = true;
 				}
 			}
-			public InputAxisInterpolation Interpolation
+			public Input.InputInterpolation Interpolation
 			{
 				get
 				{
@@ -278,7 +424,7 @@ namespace Utilities.Inputs
 					dataChanged = true;
 				}
 			}
-			public InputAxis Main
+			public Axis Main
 			{
 				get
 				{
@@ -296,7 +442,7 @@ namespace Utilities.Inputs
 					dataChanged = true;
 				}
 			}
-			public InputAxis Alt
+			public Axis Alt
 			{
 				get
 				{
@@ -315,102 +461,233 @@ namespace Utilities.Inputs
 				}
 			}
 
-			internal float MainValue { get; private set; }
-			internal float AltValue { get; private set; }
-			internal float Value { get; private set; }
-			internal bool PositiveMainBindable { get; private set; }
-			internal bool NegativeMainBindable { get; private set; }
-			internal bool PositiveAltBindable { get; private set; }
-			internal bool NegativeAltBindable { get; private set; }
-			internal bool MainBindable { get; private set; }
-			internal bool AltBindable { get; private set; }
-			internal bool PositiveBindable { get; private set; }
-			internal bool NegativeBindable { get; private set; }
-			internal bool Bindable { get; private set; }
-			internal bool PositiveMainPress { get; private set; }
-			internal bool NegativeMainPress { get; private set; }
-			internal bool PositiveAltPress { get; private set; }
-			internal bool NegativeAltPress { get; private set; }
-			internal bool MainPress { get; private set; }
-			internal bool AltPress { get; private set; }
-			internal bool PositivePress { get; private set; }
-			internal bool NegativePress { get; private set; }
-			internal bool Press { get; private set; }
-			internal bool PositiveMainDown { get; private set; }
-			internal bool NegativeMainDown { get; private set; }
-			internal bool PositiveAltDown { get; private set; }
-			internal bool NegativeAltDown { get; private set; }
-			internal bool MainDown { get; private set; }
-			internal bool AltDown { get; private set; }
-			internal bool PositiveDown { get; private set; }
-			internal bool NegativeDown { get; private set; }
-			internal bool Down { get; private set; }
-			internal bool PositiveMainUp { get; private set; }
-			internal bool NegativeMainUp { get; private set; }
-			internal bool PositiveAltUp { get; private set; }
-			internal bool NegativeAltUp { get; private set; }
-			internal bool MainUp { get; private set; }
-			internal bool AltUp { get; private set; }
-			internal bool PositiveUp { get; private set; }
-			internal bool NegativeUp { get; private set; }
-			internal bool Up { get; private set; }
-			internal bool PositiveMainHeld { get; private set; }
-			internal bool NegativeMainHeld { get; private set; }
-			internal bool PositiveAltHeld { get; private set; }
-			internal bool NegativeAltHeld { get; private set; }
-			internal bool MainHeld { get; private set; }
-			internal bool AltHeld { get; private set; }
-			internal bool PositiveHeld { get; private set; }
-			internal bool NegativeHeld { get; private set; }
-			internal bool Held { get; private set; }
-			internal bool PositiveMainDoublePress { get; private set; }
-			internal bool NegativeMainDoublePress { get; private set; }
-			internal bool PositiveAltDoublePress { get; private set; }
-			internal bool NegativeAltDoublePress { get; private set; }
-			internal bool MainDoublePress { get; private set; }
-			internal bool AltDoublePress { get; private set; }
-			internal bool PositiveDoublePress { get; private set; }
-			internal bool NegativeDoublePress { get; private set; }
-			internal bool DoublePress { get; private set; }
+			public float KeyboardMainValue
+			{
+				get
+				{
+					return keyboardMainValue;
+				}
+			}
+			public float[] GamepadMainValues
+			{
+				get
+				{
+					return gamepadMainValues;
+				}
+			}
+			public float KeyboardAltValue
+			{
+				get
+				{
+					return keyboardAltValue;
+				}
+			}
+			public float[] GamepadAltValues
+			{
+				get
+				{
+					return gamepadAltValues;
+				}
+			}
+			public float KeyboardValue
+			{
+				get
+				{
+					return keyboardValue;
+				}
+			}
+			public float[] GamepadValues
+			{
+				get
+				{
+					return gamepadValues;
+				}
+			}
+			internal bool KeyboardPositiveMainBindable { get; private set; }
+			internal bool GamepadPositiveMainBindable { get; private set; }
+			internal bool KeyboardNegativeMainBindable { get; private set; }
+			internal bool GamepadNegativeMainBindable { get; private set; }
+			internal bool KeyboardPositiveAltBindable { get; private set; }
+			internal bool GamepadPositiveAltBindable { get; private set; }
+			internal bool KeyboardNegativeAltBindable { get; private set; }
+			internal bool GamepadNegativeAltBindable { get; private set; }
+			internal bool KeyboardMainBindable { get; private set; }
+			internal bool GamepadMainBindable { get; private set; }
+			internal bool KeyboardAltBindable { get; private set; }
+			internal bool GamepadAltBindable { get; private set; }
+			internal bool KeyboardPositiveBindable { get; private set; }
+			internal bool GamepadPositiveBindable { get; private set; }
+			internal bool KeyboardNegativeBindable { get; private set; }
+			internal bool GamepadNegativeBindable { get; private set; }
+			internal bool KeyboardBindable { get; private set; }
+			internal bool GamepadBindable { get; private set; }
+			internal bool KeyboardPositiveMainPress { get; private set; }
+			internal bool[] GamepadsPositiveMainPress { get; private set; }
+			internal bool KeyboardNegativeMainPress { get; private set; }
+			internal bool[] GamepadsNegativeMainPress { get; private set; }
+			internal bool KeyboardPositiveAltPress { get; private set; }
+			internal bool[] GamepadsPositiveAltPress { get; private set; }
+			internal bool KeyboardNegativeAltPress { get; private set; }
+			internal bool[] GamepadsNegativeAltPress { get; private set; }
+			internal bool KeyboardMainPress { get; private set; }
+			internal bool[] GamepadsMainPress { get; private set; }
+			internal bool KeyboardAltPress { get; private set; }
+			internal bool[] GamepadsAltPress { get; private set; }
+			internal bool KeyboardPositivePress { get; private set; }
+			internal bool[] GamepadsPositivePress { get; private set; }
+			internal bool KeyboardNegativePress { get; private set; }
+			internal bool[] GamepadsNegativePress { get; private set; }
+			internal bool KeyboardPress { get; private set; }
+			internal bool[] GamepadsPress { get; private set; }
+			internal bool KeyboardPositiveMainDown { get; private set; }
+			internal bool[] GamepadsPositiveMainDown { get; private set; }
+			internal bool KeyboardNegativeMainDown { get; private set; }
+			internal bool[] GamepadsNegativeMainDown { get; private set; }
+			internal bool KeyboardPositiveAltDown { get; private set; }
+			internal bool[] GamepadsPositiveAltDown { get; private set; }
+			internal bool KeyboardNegativeAltDown { get; private set; }
+			internal bool[] GamepadsNegativeAltDown { get; private set; }
+			internal bool KeyboardMainDown { get; private set; }
+			internal bool[] GamepadsMainDown { get; private set; }
+			internal bool KeyboardAltDown { get; private set; }
+			internal bool[] GamepadsAltDown { get; private set; }
+			internal bool KeyboardPositiveDown { get; private set; }
+			internal bool[] GamepadsPositiveDown { get; private set; }
+			internal bool KeyboardNegativeDown { get; private set; }
+			internal bool[] GamepadsNegativeDown { get; private set; }
+			internal bool KeyboardDown { get; private set; }
+			internal bool[] GamepadsDown { get; private set; }
+			internal bool KeyboardPositiveMainUp { get; private set; }
+			internal bool[] GamepadsPositiveMainUp { get; private set; }
+			internal bool KeyboardNegativeMainUp { get; private set; }
+			internal bool[] GamepadsNegativeMainUp { get; private set; }
+			internal bool KeyboardPositiveAltUp { get; private set; }
+			internal bool[] GamepadsPositiveAltUp { get; private set; }
+			internal bool KeyboardNegativeAltUp { get; private set; }
+			internal bool[] GamepadsNegativeAltUp { get; private set; }
+			internal bool KeyboardMainUp { get; private set; }
+			internal bool[] GamepadsMainUp { get; private set; }
+			internal bool KeyboardAltUp { get; private set; }
+			internal bool[] GamepadsAltUp { get; private set; }
+			internal bool KeyboardPositiveUp { get; private set; }
+			internal bool[] GamepadsPositiveUp { get; private set; }
+			internal bool KeyboardNegativeUp { get; private set; }
+			internal bool[] GamepadsNegativeUp { get; private set; }
+			internal bool KeyboardUp { get; private set; }
+			internal bool[] GamepadsUp { get; private set; }
+			internal bool KeyboardPositiveMainHeld { get; private set; }
+			internal bool[] GamepadsPositiveMainHeld { get; private set; }
+			internal bool KeyboardNegativeMainHeld { get; private set; }
+			internal bool[] GamepadsNegativeMainHeld { get; private set; }
+			internal bool KeyboardPositiveAltHeld { get; private set; }
+			internal bool[] GamepadsPositiveAltHeld { get; private set; }
+			internal bool KeyboardNegativeAltHeld { get; private set; }
+			internal bool[] GamepadsNegativeAltHeld { get; private set; }
+			internal bool KeyboardMainHeld { get; private set; }
+			internal bool[] GamepadsMainHeld { get; private set; }
+			internal bool KeyboardAltHeld { get; private set; }
+			internal bool[] GamepadsAltHeld { get; private set; }
+			internal bool KeyboardPositiveHeld { get; private set; }
+			internal bool[] GamepadsPositiveHeld { get; private set; }
+			internal bool KeyboardNegativeHeld { get; private set; }
+			internal bool[] GamepadsNegativeHeld { get; private set; }
+			internal bool KeyboardHeld { get; private set; }
+			internal bool[] GamepadsHeld { get; private set; }
+			internal bool KeyboardPositiveMainDoublePress { get; private set; }
+			internal bool[] GamepadsPositiveMainDoublePress { get; private set; }
+			internal bool KeyboardNegativeMainDoublePress { get; private set; }
+			internal bool[] GamepadsNegativeMainDoublePress { get; private set; }
+			internal bool KeyboardPositiveAltDoublePress { get; private set; }
+			internal bool[] GamepadsPositiveAltDoublePress { get; private set; }
+			internal bool KeyboardNegativeAltDoublePress { get; private set; }
+			internal bool[] GamepadsNegativeAltDoublePress { get; private set; }
+			internal bool KeyboardMainDoublePress { get; private set; }
+			internal bool[] GamepadsMainDoublePress { get; private set; }
+			internal bool KeyboardAltDoublePress { get; private set; }
+			internal bool[] GamepadsAltDoublePress { get; private set; }
+			internal bool KeyboardPositiveDoublePress { get; private set; }
+			internal bool[] GamepadsPositiveDoublePress { get; private set; }
+			internal bool KeyboardNegativeDoublePress { get; private set; }
+			internal bool[] GamepadsNegativeDoublePress { get; private set; }
+			internal bool KeyboardDoublePress { get; private set; }
+			internal bool[] GamepadsDoublePress { get; private set; }
 
 			[SerializeField]
 			private string name;
 			[SerializeField]
 			private InputType type;
 			[SerializeField]
-			private InputAxis main = new InputAxis();
+			private Axis main = new Axis();
 			[SerializeField]
-			private InputAxis alt = new InputAxis();
+			private Axis alt = new Axis();
 			[SerializeField]
-			private InputAxisInterpolation interpolation;
+			private Input.InputInterpolation interpolation;
 			[SerializeField]
 			private Utility.SerializableVector2 valueInterval;
 			[SerializeField]
 			private bool invert;
+#if ENABLE_INPUT_SYSTEM
 			[NonSerialized]
-			private KeyControl positiveMainControl;
+			private KeyControl keyboardPositiveMainControl;
 			[NonSerialized]
-			private KeyControl negativeMainControl;
+			private ButtonControl[] gamepadPositiveMainControls;
 			[NonSerialized]
-			private KeyControl positiveAltControl;
+			private KeyControl keyboardNegativeMainControl;
 			[NonSerialized]
-			private KeyControl negativeAltControl;
+			private ButtonControl[] gamepadNegativeMainControls;
 			[NonSerialized]
-			private float positiveMainHoldTimer;
+			private KeyControl keyboardPositiveAltControl;
 			[NonSerialized]
-			private float negativeMainHoldTimer;
+			private ButtonControl[] gamepadPositiveAltControls;
 			[NonSerialized]
-			private float positiveAltHoldTimer;
+			private KeyControl keyboardNegativeAltControl;
 			[NonSerialized]
-			private float negativeAltHoldTimer;
+			private ButtonControl[] gamepadNegativeAltControls;
+#endif
 			[NonSerialized]
-			private float positiveMainDoublePressTimer;
+			private float keyboardMainValue;
 			[NonSerialized]
-			private float negativeMainDoublePressTimer;
+			private float[] gamepadMainValues;
 			[NonSerialized]
-			private float positiveAltDoublePressTimer;
+			private float keyboardAltValue;
 			[NonSerialized]
-			private float negativeAltDoublePressTimer;
+			private float[] gamepadAltValues;
+			[NonSerialized]
+			private float keyboardValue;
+			[NonSerialized]
+			private float[] gamepadValues;
+			[NonSerialized]
+			private float keyboardPositiveMainHoldTimer;
+			[NonSerialized]
+			private float[] gamepadPositiveMainHoldTimers;
+			[NonSerialized]
+			private float keyboardNegativeMainHoldTimer;
+			[NonSerialized]
+			private float[] gamepadNegativeMainHoldTimers;
+			[NonSerialized]
+			private float keyboardPositiveAltHoldTimer;
+			[NonSerialized]
+			private float[] gamepadPositiveAltHoldTimers;
+			[NonSerialized]
+			private float keyboardNegativeAltHoldTimer;
+			[NonSerialized]
+			private float[] gamepadNegativeAltHoldTimers;
+			[NonSerialized]
+			private float keyboardPositiveMainDoublePressTimer;
+			[NonSerialized]
+			private float[] gamepadPositiveMainDoublePressTimers;
+			[NonSerialized]
+			private float keyboardNegativeMainDoublePressTimer;
+			[NonSerialized]
+			private float[] gamepadNegativeMainDoublePressTimers;
+			[NonSerialized]
+			private float keyboardPositiveAltDoublePressTimer;
+			[NonSerialized]
+			private float[] gamepadPositiveAltDoublePressTimers;
+			[NonSerialized]
+			private float keyboardNegativeAltDoublePressTimer;
+			[NonSerialized]
+			private float[] gamepadNegativeAltDoublePressTimers;
 			[NonSerialized]
 			private float positiveValue;
 			[NonSerialized]
@@ -428,13 +705,21 @@ namespace Utilities.Inputs
 			[NonSerialized]
 			private float target;
 			[NonSerialized]
-			private bool positiveMainDoublePressInitiated;
+			private bool keyboardPositiveMainDoublePressInitiated;
 			[NonSerialized]
-			private bool negativeMainDoublePressInitiated;
+			private bool[] gamepadsPositiveMainDoublePressInitiated;
 			[NonSerialized]
-			private bool positiveAltDoublePressInitiated;
+			private bool keyboardNegativeMainDoublePressInitiated;
 			[NonSerialized]
-			private bool negativeAltDoublePressInitiated;
+			private bool[] gamepadsNegativeMainDoublePressInitiated;
+			[NonSerialized]
+			private bool keyboardPositiveAltDoublePressInitiated;
+			[NonSerialized]
+			private bool[] gamepadsPositiveAltDoublePressInitiated;
+			[NonSerialized]
+			private bool keyboardNegativeAltDoublePressInitiated;
+			[NonSerialized]
+			private bool[] gamepadsNegativeAltDoublePressInitiated;
 			[NonSerialized]
 			private bool trimmed;
 
@@ -447,50 +732,65 @@ namespace Utilities.Inputs
 				if (!trimmed)
 					Trim();
 
-				PositiveMainBindable = Main.Positive != Key.None;
-				NegativeMainBindable = Main.Negative != Key.None;
-				PositiveAltBindable = Alt.Positive != Key.None;
-				NegativeAltBindable = Alt.Negative != Key.None;
-				MainBindable = PositiveMainBindable || NegativeMainBindable;
-				AltBindable = PositiveAltBindable || NegativeAltBindable;
-				PositiveBindable = PositiveMainBindable || PositiveAltBindable;
-				NegativeBindable = NegativeMainBindable || NegativeAltBindable;
-				Bindable = MainBindable || AltBindable;
+#if ENABLE_INPUT_SYSTEM
+				KeyboardPositiveMainBindable = Main.Positive != Key.None;
+				KeyboardNegativeMainBindable = Main.Negative != Key.None;
+				KeyboardPositiveAltBindable = Alt.Positive != Key.None;
+				KeyboardNegativeAltBindable = Alt.Negative != Key.None;
+				KeyboardMainBindable = KeyboardPositiveMainBindable || KeyboardNegativeMainBindable;
+				KeyboardAltBindable = KeyboardPositiveAltBindable || KeyboardNegativeAltBindable;
+				KeyboardPositiveBindable = KeyboardPositiveMainBindable || KeyboardPositiveAltBindable;
+				KeyboardNegativeBindable = KeyboardNegativeMainBindable || KeyboardNegativeAltBindable;
+				KeyboardBindable = KeyboardMainBindable || KeyboardAltBindable;
 
-				if (positiveMainControl == null && PositiveMainBindable)
-					positiveMainControl = KeyToKeyControl(Main.Positive);
+				if (keyboardPositiveMainControl == null && KeyboardPositiveMainBindable)
+					keyboardPositiveMainControl = KeyToKeyControl(Main.Positive);
 
-				if (negativeMainControl == null && NegativeMainBindable)
-					negativeMainControl = KeyToKeyControl(Main.Negative);
+				if (keyboardNegativeMainControl == null && KeyboardNegativeMainBindable)
+					keyboardNegativeMainControl = KeyToKeyControl(Main.Negative);
 
-				if (positiveAltControl == null && PositiveAltBindable)
-					positiveAltControl = KeyToKeyControl(Alt.Positive);
+				if (keyboardPositiveAltControl == null && KeyboardPositiveAltBindable)
+					keyboardPositiveAltControl = KeyToKeyControl(Alt.Positive);
 
-				if (negativeAltControl == null && NegativeAltBindable)
-					negativeAltControl = KeyToKeyControl(Alt.Negative);
+				if (keyboardNegativeAltControl == null && KeyboardNegativeAltBindable)
+					keyboardNegativeAltControl = KeyToKeyControl(Alt.Negative);
+#endif
+
+				GamepadPositiveMainBindable = Main.GamepadPositive != GamepadBinding.None;
+				GamepadNegativeMainBindable = Main.GamepadNegative != GamepadBinding.None;
+				GamepadPositiveAltBindable = Alt.GamepadPositive != GamepadBinding.None;
+				GamepadNegativeAltBindable = Alt.GamepadNegative != GamepadBinding.None;
+				GamepadMainBindable = GamepadPositiveMainBindable || GamepadNegativeMainBindable;
+				GamepadAltBindable = GamepadPositiveAltBindable || GamepadNegativeAltBindable;
+				GamepadPositiveBindable = GamepadPositiveMainBindable || GamepadPositiveAltBindable;
+				GamepadNegativeBindable = GamepadNegativeMainBindable || GamepadNegativeAltBindable;
+				GamepadBindable = GamepadMainBindable || GamepadAltBindable;
+
+				InitializeGamepads();
 			}
 			internal void Update()
 			{
-				positiveValue = Utility.BoolToNumber(PositiveMainPress);
-				negativeValue = Utility.BoolToNumber(NegativeMainPress);
+#if ENABLE_INPUT_SYSTEM
+				positiveValue = Utility.BoolToNumber(KeyboardPositiveMainPress);
+				negativeValue = Utility.BoolToNumber(KeyboardNegativeMainPress);
 				positiveCoeficient = 1f;
 				negativeCoeficient = 1f;
 
 				switch (Main.StrongSide)
 				{
-					case InputAxisStrongSide.FirstPressing:
-						if (MainValue > 0f)
+					case Input.Axis.Side.FirstPressing:
+						if (KeyboardMainValue > 0f)
 							positiveCoeficient = 2f;
-						else if (MainValue < 0f)
+						else if (KeyboardMainValue < 0f)
 							negativeCoeficient = 2f;
 
 						break;
 
-					case InputAxisStrongSide.Positive:
+					case Input.Axis.Side.Positive:
 						positiveCoeficient = 2f;
 						break;
 
-					case InputAxisStrongSide.Negative:
+					case Input.Axis.Side.Negative:
 						negativeCoeficient = 2f;
 						break;
 				}
@@ -509,33 +809,33 @@ namespace Utilities.Inputs
 				intervalB = invert ? valueInterval.x : valueInterval.y;
 				target = Mathf.Lerp(intervalA, intervalB, valueFactor);
 
-				if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
-					MainValue = Mathf.MoveTowards(MainValue, target, deltaTime / InterpolationTime);
-				else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
-					MainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(MainValue) ? 0f : Mathf.MoveTowards(MainValue, target, deltaTime / InterpolationTime);
+				if (interpolation == Input.InputInterpolation.Smooth && InterpolationTime > 0f)
+					keyboardMainValue = Mathf.MoveTowards(KeyboardMainValue, target, deltaTime / InterpolationTime);
+				else if (interpolation == Input.InputInterpolation.Jump && InterpolationTime > 0f)
+					keyboardMainValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(KeyboardMainValue) ? 0f : Mathf.MoveTowards(KeyboardMainValue, target, deltaTime / InterpolationTime);
 				else
-					MainValue = target;
-				
-				positiveValue = Utility.BoolToNumber(PositiveAltPress);
-				negativeValue = Utility.BoolToNumber(NegativeAltPress);
+					keyboardMainValue = target;
+
+				positiveValue = Utility.BoolToNumber(KeyboardPositiveAltPress);
+				negativeValue = Utility.BoolToNumber(KeyboardNegativeAltPress);
 				positiveCoeficient = 1f;
 				negativeCoeficient = 1f;
 
 				switch (Alt.StrongSide)
 				{
-					case InputAxisStrongSide.FirstPressing:
-						if (AltValue > 0f)
+					case Input.Axis.Side.FirstPressing:
+						if (KeyboardAltValue > 0f)
 							positiveCoeficient = 2f;
-						else if (AltValue < 0f)
+						else if (KeyboardAltValue < 0f)
 							negativeCoeficient = 2f;
 
 						break;
 
-					case InputAxisStrongSide.Positive:
+					case Input.Axis.Side.Positive:
 						positiveCoeficient = 2f;
 						break;
 
-					case InputAxisStrongSide.Negative:
+					case Input.Axis.Side.Negative:
 						negativeCoeficient = 2f;
 						break;
 				}
@@ -552,198 +852,477 @@ namespace Utilities.Inputs
 
 				target = Mathf.Lerp(intervalA, intervalB, valueFactor);
 
-				if (interpolation == InputAxisInterpolation.Smooth && InterpolationTime > 0f)
-					AltValue = Mathf.MoveTowards(AltValue, target, deltaTime / InterpolationTime);
-				else if (interpolation == InputAxisInterpolation.Jump && InterpolationTime > 0f)
-					AltValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(AltValue) ? 0f : Mathf.MoveTowards(AltValue, target, deltaTime / InterpolationTime);
+				if (interpolation == Input.InputInterpolation.Smooth && InterpolationTime > 0f)
+					keyboardAltValue = Mathf.MoveTowards(KeyboardAltValue, target, deltaTime / InterpolationTime);
+				else if (interpolation == Input.InputInterpolation.Jump && InterpolationTime > 0f)
+					keyboardAltValue = target != 0f && Mathf.Sign(target) != Mathf.Sign(KeyboardAltValue) ? 0f : Mathf.MoveTowards(KeyboardAltValue, target, deltaTime / InterpolationTime);
 				else
-					AltValue = target;
-				
-				if (MainValue != 0f)
-					Value = MainValue;
-				else
-					Value = AltValue;
+					keyboardAltValue = target;
 
-				if (Bindable)
+				if (KeyboardMainValue != 0f)
+					keyboardValue = KeyboardMainValue;
+				else
+					keyboardValue = KeyboardAltValue;
+
+				if (KeyboardBindable)
 				{
-					if (MainBindable)
+					if (KeyboardMainBindable)
 					{
-						PositiveMainPress = PositiveMainBindable && positiveMainControl.isPressed;
-						NegativeMainPress = NegativeMainBindable && negativeMainControl.isPressed;
-						MainPress = PositiveMainPress || NegativeMainPress;
-						PositiveMainDown = PositiveMainBindable && positiveMainControl.wasPressedThisFrame;
-						NegativeMainDown = NegativeMainBindable && negativeMainControl.wasPressedThisFrame;
-						MainDown = PositiveMainDown || NegativeMainDown;
-						PositiveMainUp = PositiveMainBindable && positiveMainControl.wasReleasedThisFrame;
-						NegativeMainUp = NegativeMainBindable && negativeMainControl.wasReleasedThisFrame;
-						MainUp = PositiveMainUp || NegativeMainUp;
-						PositiveMainHeld = false;
+						KeyboardPositiveMainPress = KeyboardPositiveMainBindable && keyboardPositiveMainControl.isPressed;
+						KeyboardNegativeMainPress = KeyboardNegativeMainBindable && keyboardNegativeMainControl.isPressed;
+						KeyboardMainPress = KeyboardPositiveMainPress || KeyboardNegativeMainPress;
+						KeyboardPositiveMainDown = KeyboardPositiveMainBindable && keyboardPositiveMainControl.wasPressedThisFrame;
+						KeyboardNegativeMainDown = KeyboardNegativeMainBindable && keyboardNegativeMainControl.wasPressedThisFrame;
+						KeyboardMainDown = KeyboardPositiveMainDown || KeyboardNegativeMainDown;
+						KeyboardPositiveMainUp = KeyboardPositiveMainBindable && keyboardPositiveMainControl.wasReleasedThisFrame;
+						KeyboardNegativeMainUp = KeyboardNegativeMainBindable && keyboardNegativeMainControl.wasReleasedThisFrame;
+						KeyboardMainUp = KeyboardPositiveMainUp || KeyboardNegativeMainUp;
+						KeyboardPositiveMainHeld = false;
 
-						if (PositiveMainPress)
+						if (KeyboardPositiveMainPress)
 						{
-							positiveMainHoldTimer -= deltaTime;
-							PositiveMainHeld = positiveMainHoldTimer <= 0f;
+							keyboardPositiveMainHoldTimer -= deltaTime;
+							KeyboardPositiveMainHeld = keyboardPositiveMainHoldTimer <= 0f;
 
-							if (PositiveMainHeld)
-								positiveMainHoldTimer = HoldWaitTime;
+							if (KeyboardPositiveMainHeld)
+								keyboardPositiveMainHoldTimer = HoldWaitTime;
 						}
-						else if (positiveMainHoldTimer != HoldTriggerTime)
-							positiveMainHoldTimer = HoldTriggerTime;
+						else if (keyboardPositiveMainHoldTimer != HoldTriggerTime)
+							keyboardPositiveMainHoldTimer = HoldTriggerTime;
 
-						NegativeMainHeld = false;
+						KeyboardNegativeMainHeld = false;
 
-						if (NegativeMainPress)
+						if (KeyboardNegativeMainPress)
 						{
-							negativeMainHoldTimer -= deltaTime;
-							NegativeMainHeld = negativeMainHoldTimer <= 0f;
+							keyboardNegativeMainHoldTimer -= deltaTime;
+							KeyboardNegativeMainHeld = keyboardNegativeMainHoldTimer <= 0f;
 
-							if (NegativeMainHeld)
-								negativeMainHoldTimer = HoldWaitTime;
+							if (KeyboardNegativeMainHeld)
+								keyboardNegativeMainHoldTimer = HoldWaitTime;
 						}
-						else if (negativeMainHoldTimer != HoldTriggerTime)
-							negativeMainHoldTimer = HoldTriggerTime;
+						else if (keyboardNegativeMainHoldTimer != HoldTriggerTime)
+							keyboardNegativeMainHoldTimer = HoldTriggerTime;
 
-						MainHeld = PositiveMainHeld || NegativeMainHeld;
-						positiveMainDoublePressTimer += positiveMainDoublePressTimer > 0f ? -deltaTime : positiveMainDoublePressTimer;
+						KeyboardMainHeld = KeyboardPositiveMainHeld || KeyboardNegativeMainHeld;
+						keyboardPositiveMainDoublePressTimer += keyboardPositiveMainDoublePressTimer > 0f ? -deltaTime : keyboardPositiveMainDoublePressTimer;
 
-						if (PositiveMainUp)
-							positiveMainDoublePressTimer = DoublePressTimeout;
+						if (KeyboardPositiveMainUp)
+							keyboardPositiveMainDoublePressTimer = DoublePressTimeout;
 
-						PositiveMainDoublePress = positiveMainDoublePressInitiated && PositiveMainUp;
+						KeyboardPositiveMainDoublePress = keyboardPositiveMainDoublePressInitiated && KeyboardPositiveMainUp;
 
-						if (PositiveMainUp && positiveMainDoublePressTimer > 0f)
-							positiveMainDoublePressInitiated = true;
+						if (KeyboardPositiveMainUp && keyboardPositiveMainDoublePressTimer > 0f)
+							keyboardPositiveMainDoublePressInitiated = true;
 
-						if (positiveMainDoublePressTimer <= 0f)
-							positiveMainDoublePressInitiated = false;
+						if (keyboardPositiveMainDoublePressTimer <= 0f)
+							keyboardPositiveMainDoublePressInitiated = false;
 
-						negativeMainDoublePressTimer += negativeMainDoublePressTimer > 0f ? -deltaTime : negativeMainDoublePressTimer;
+						keyboardNegativeMainDoublePressTimer += keyboardNegativeMainDoublePressTimer > 0f ? -deltaTime : keyboardNegativeMainDoublePressTimer;
 
-						if (NegativeMainUp)
-							negativeMainDoublePressTimer = DoublePressTimeout;
+						if (KeyboardNegativeMainUp)
+							keyboardNegativeMainDoublePressTimer = DoublePressTimeout;
 
-						NegativeMainDoublePress = negativeMainDoublePressInitiated && NegativeMainUp;
+						KeyboardNegativeMainDoublePress = keyboardNegativeMainDoublePressInitiated && KeyboardNegativeMainUp;
 
-						if (NegativeMainUp && negativeMainDoublePressTimer > 0f)
-							negativeMainDoublePressInitiated = true;
+						if (KeyboardNegativeMainUp && keyboardNegativeMainDoublePressTimer > 0f)
+							keyboardNegativeMainDoublePressInitiated = true;
 
-						if (negativeMainDoublePressTimer <= 0f)
-							negativeMainDoublePressInitiated = false;
+						if (keyboardNegativeMainDoublePressTimer <= 0f)
+							keyboardNegativeMainDoublePressInitiated = false;
 
-						MainDoublePress = PositiveMainDoublePress || NegativeMainDoublePress;
+						KeyboardMainDoublePress = KeyboardPositiveMainDoublePress || KeyboardNegativeMainDoublePress;
 					}
 
-					if (AltBindable)
+					if (KeyboardAltBindable)
 					{
-						PositiveAltPress = PositiveAltBindable && positiveAltControl.isPressed;
-						NegativeAltPress = NegativeAltBindable && negativeAltControl.isPressed;
-						AltPress = PositiveAltPress || NegativeAltPress;
-						PositiveAltDown = PositiveAltBindable && positiveAltControl.wasPressedThisFrame;
-						NegativeAltDown = NegativeAltBindable && negativeAltControl.wasPressedThisFrame;
-						AltDown = PositiveAltDown || NegativeAltDown;
-						PositiveAltUp = PositiveAltBindable && positiveAltControl.wasReleasedThisFrame;
-						NegativeAltUp = NegativeAltBindable && negativeAltControl.wasReleasedThisFrame;
-						AltUp = PositiveAltUp || NegativeAltUp;
-						PositiveAltHeld = false;
+						KeyboardPositiveAltPress = KeyboardPositiveAltBindable && keyboardPositiveAltControl.isPressed;
+						KeyboardNegativeAltPress = KeyboardNegativeAltBindable && keyboardNegativeAltControl.isPressed;
+						KeyboardAltPress = KeyboardPositiveAltPress || KeyboardNegativeAltPress;
+						KeyboardPositiveAltDown = KeyboardPositiveAltBindable && keyboardPositiveAltControl.wasPressedThisFrame;
+						KeyboardNegativeAltDown = KeyboardNegativeAltBindable && keyboardNegativeAltControl.wasPressedThisFrame;
+						KeyboardAltDown = KeyboardPositiveAltDown || KeyboardNegativeAltDown;
+						KeyboardPositiveAltUp = KeyboardPositiveAltBindable && keyboardPositiveAltControl.wasReleasedThisFrame;
+						KeyboardNegativeAltUp = KeyboardNegativeAltBindable && keyboardNegativeAltControl.wasReleasedThisFrame;
+						KeyboardAltUp = KeyboardPositiveAltUp || KeyboardNegativeAltUp;
+						KeyboardPositiveAltHeld = false;
 
-						if (PositiveAltPress)
+						if (KeyboardPositiveAltPress)
 						{
-							positiveAltHoldTimer -= deltaTime;
-							PositiveAltHeld = positiveAltHoldTimer <= 0f;
+							keyboardPositiveAltHoldTimer -= deltaTime;
+							KeyboardPositiveAltHeld = keyboardPositiveAltHoldTimer <= 0f;
 
-							if (PositiveAltHeld)
-								positiveAltHoldTimer = HoldWaitTime;
+							if (KeyboardPositiveAltHeld)
+								keyboardPositiveAltHoldTimer = HoldWaitTime;
 						}
-						else if (positiveAltHoldTimer != HoldTriggerTime)
-							positiveAltHoldTimer = HoldTriggerTime;
+						else if (keyboardPositiveAltHoldTimer != HoldTriggerTime)
+							keyboardPositiveAltHoldTimer = HoldTriggerTime;
 
-						NegativeAltHeld = false;
+						KeyboardNegativeAltHeld = false;
 
-						if (NegativeAltPress)
+						if (KeyboardNegativeAltPress)
 						{
-							negativeAltHoldTimer -= deltaTime;
-							NegativeAltHeld = negativeAltHoldTimer <= 0f;
+							keyboardNegativeAltHoldTimer -= deltaTime;
+							KeyboardNegativeAltHeld = keyboardNegativeAltHoldTimer <= 0f;
 
-							if (NegativeAltHeld)
-								negativeAltHoldTimer = HoldWaitTime;
+							if (KeyboardNegativeAltHeld)
+								keyboardNegativeAltHoldTimer = HoldWaitTime;
 						}
-						else if (negativeAltHoldTimer != HoldTriggerTime)
-							negativeAltHoldTimer = HoldTriggerTime;
+						else if (keyboardNegativeAltHoldTimer != HoldTriggerTime)
+							keyboardNegativeAltHoldTimer = HoldTriggerTime;
 
-						AltHeld = PositiveAltHeld || NegativeAltHeld;
-						positiveAltDoublePressTimer += positiveAltDoublePressTimer > 0f ? -deltaTime : positiveAltDoublePressTimer;
+						KeyboardAltHeld = KeyboardPositiveAltHeld || KeyboardNegativeAltHeld;
+						keyboardPositiveAltDoublePressTimer += keyboardPositiveAltDoublePressTimer > 0f ? -deltaTime : keyboardPositiveAltDoublePressTimer;
 
-						if (PositiveAltUp)
-							positiveAltDoublePressTimer = DoublePressTimeout;
+						if (KeyboardPositiveAltUp)
+							keyboardPositiveAltDoublePressTimer = DoublePressTimeout;
 
-						PositiveAltDoublePress = positiveAltDoublePressInitiated && PositiveAltUp;
+						KeyboardPositiveAltDoublePress = keyboardPositiveAltDoublePressInitiated && KeyboardPositiveAltUp;
 
-						if (PositiveAltUp && positiveAltDoublePressTimer > 0f)
-							positiveAltDoublePressInitiated = true;
+						if (KeyboardPositiveAltUp && keyboardPositiveAltDoublePressTimer > 0f)
+							keyboardPositiveAltDoublePressInitiated = true;
 
-						if (positiveAltDoublePressTimer <= 0f)
-							positiveAltDoublePressInitiated = false;
+						if (keyboardPositiveAltDoublePressTimer <= 0f)
+							keyboardPositiveAltDoublePressInitiated = false;
 
-						negativeAltDoublePressTimer += negativeAltDoublePressTimer > 0f ? -deltaTime : negativeAltDoublePressTimer;
+						keyboardNegativeAltDoublePressTimer += keyboardNegativeAltDoublePressTimer > 0f ? -deltaTime : keyboardNegativeAltDoublePressTimer;
 
-						if (NegativeAltUp)
-							negativeAltDoublePressTimer = DoublePressTimeout;
+						if (KeyboardNegativeAltUp)
+							keyboardNegativeAltDoublePressTimer = DoublePressTimeout;
 
-						NegativeAltDoublePress = negativeAltDoublePressInitiated && NegativeAltUp;
+						KeyboardNegativeAltDoublePress = keyboardNegativeAltDoublePressInitiated && KeyboardNegativeAltUp;
 
-						if (NegativeAltUp && negativeAltDoublePressTimer > 0f)
-							negativeAltDoublePressInitiated = true;
+						if (KeyboardNegativeAltUp && keyboardNegativeAltDoublePressTimer > 0f)
+							keyboardNegativeAltDoublePressInitiated = true;
 
-						if (negativeAltDoublePressTimer <= 0f)
-							negativeAltDoublePressInitiated = false;
+						if (keyboardNegativeAltDoublePressTimer <= 0f)
+							keyboardNegativeAltDoublePressInitiated = false;
 
-						AltDoublePress = PositiveAltDoublePress || NegativeAltDoublePress;
+						KeyboardAltDoublePress = KeyboardPositiveAltDoublePress || KeyboardNegativeAltDoublePress;
 					}
 
-					if (PositiveBindable)
+					if (KeyboardPositiveBindable)
 					{
-						PositivePress = PositiveMainPress || PositiveAltPress;
-						PositiveDown = PositiveMainDown || PositiveAltDown;
-						PositiveUp = PositiveMainUp || PositiveAltUp;
-						PositiveHeld = PositiveMainHeld || PositiveAltHeld;
-						PositiveDoublePress = PositiveMainDoublePress || PositiveAltDoublePress;
+						KeyboardPositivePress = KeyboardPositiveMainPress || KeyboardPositiveAltPress;
+						KeyboardPositiveDown = KeyboardPositiveMainDown || KeyboardPositiveAltDown;
+						KeyboardPositiveUp = KeyboardPositiveMainUp || KeyboardPositiveAltUp;
+						KeyboardPositiveHeld = KeyboardPositiveMainHeld || KeyboardPositiveAltHeld;
+						KeyboardPositiveDoublePress = KeyboardPositiveMainDoublePress || KeyboardPositiveAltDoublePress;
 					}
 
-					if (NegativeBindable)
+					if (KeyboardNegativeBindable)
 					{
-						NegativePress = NegativeMainPress || NegativeAltPress;
-						NegativeDown = NegativeMainDown || NegativeAltDown;
-						NegativeUp = NegativeMainUp || NegativeAltUp;
-						NegativeHeld = NegativeMainHeld || NegativeAltHeld;
-						NegativeDoublePress = NegativeMainDoublePress || NegativeAltDoublePress;
+						KeyboardNegativePress = KeyboardNegativeMainPress || KeyboardNegativeAltPress;
+						KeyboardNegativeDown = KeyboardNegativeMainDown || KeyboardNegativeAltDown;
+						KeyboardNegativeUp = KeyboardNegativeMainUp || KeyboardNegativeAltUp;
+						KeyboardNegativeHeld = KeyboardNegativeMainHeld || KeyboardNegativeAltHeld;
+						KeyboardNegativeDoublePress = KeyboardNegativeMainDoublePress || KeyboardNegativeAltDoublePress;
 					}
 
-					Press = MainPress || AltPress;
-					Down = MainDown || AltDown;
-					Up = MainUp || AltUp;
-					Held = MainHeld || AltHeld;
-					DoublePress = MainDoublePress || AltDoublePress;
+					KeyboardPress = KeyboardMainPress || KeyboardAltPress;
+					KeyboardDown = KeyboardMainDown || KeyboardAltDown;
+					KeyboardUp = KeyboardMainUp || KeyboardAltUp;
+					KeyboardHeld = KeyboardMainHeld || KeyboardAltHeld;
+					KeyboardDoublePress = KeyboardMainDoublePress || KeyboardAltDoublePress;
 				}
+
+				if (gamepadsCount != GamepadsCount)
+					InitializeGamepads();
+
+				for (int i = 0; i < GamepadsCount; i++)
+				{
+					positiveValue = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].ReadValue() : 0f;
+					negativeValue = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].ReadValue() : 0f;
+					positiveCoeficient = 1f;
+					negativeCoeficient = 1f;
+
+					switch (Main.GamepadStrongSide)
+					{
+						case Input.Axis.Side.FirstPressing:
+							if (GamepadMainValues[i] > 0f)
+								positiveCoeficient = 2f;
+							else if (GamepadMainValues[i] < 0f)
+								negativeCoeficient = 2f;
+
+							break;
+
+						case Input.Axis.Side.Positive:
+							positiveCoeficient = 2f;
+							break;
+
+						case Input.Axis.Side.Negative:
+							negativeCoeficient = 2f;
+							break;
+					}
+
+					positiveValue *= positiveCoeficient;
+					negativeValue *= negativeCoeficient;
+					valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
+
+					if (Type == InputType.Axis)
+					{
+						valueFactor += 1f;
+						valueFactor *= .5f;
+					}
+
+					intervalA = invert ? valueInterval.y : valueInterval.x;
+					intervalB = invert ? valueInterval.x : valueInterval.y;
+					target = Mathf.Lerp(intervalA, intervalB, valueFactor);
+
+					if (interpolation == Input.InputInterpolation.Smooth && InterpolationTime > 0f)
+						GamepadMainValues[i] = Mathf.MoveTowards(GamepadMainValues[i], target, deltaTime / InterpolationTime);
+					else if (interpolation == Input.InputInterpolation.Jump && InterpolationTime > 0f)
+						GamepadMainValues[i] = target != 0f && Mathf.Sign(target) != Mathf.Sign(GamepadMainValues[i]) ? 0f : Mathf.MoveTowards(GamepadMainValues[i], target, deltaTime / InterpolationTime);
+					else
+						GamepadMainValues[i] = target;
+
+					positiveValue = GamepadPositiveAltBindable ? gamepadPositiveAltControls[i].ReadValue() : 0f;
+					negativeValue = GamepadNegativeAltBindable ? gamepadNegativeAltControls[i].ReadValue() : 0f;
+					positiveCoeficient = 1f;
+					negativeCoeficient = 1f;
+
+					switch (Alt.GamepadStrongSide)
+					{
+						case Input.Axis.Side.FirstPressing:
+							if (GamepadAltValues[i] > 0f)
+								positiveCoeficient = 2f;
+							else if (GamepadAltValues[i] < 0f)
+								negativeCoeficient = 2f;
+
+							break;
+
+						case Input.Axis.Side.Positive:
+							positiveCoeficient = 2f;
+							break;
+
+						case Input.Axis.Side.Negative:
+							negativeCoeficient = 2f;
+							break;
+					}
+
+					positiveValue *= positiveCoeficient;
+					negativeValue *= negativeCoeficient;
+					valueFactor = Mathf.Clamp(positiveValue - negativeValue, -1f, 1f);
+
+					if (Type == InputType.Axis)
+					{
+						valueFactor += 1f;
+						valueFactor *= .5f;
+					}
+
+					intervalA = invert ? valueInterval.y : valueInterval.x;
+					intervalB = invert ? valueInterval.x : valueInterval.y;
+					target = Mathf.Lerp(intervalA, intervalB, valueFactor);
+
+					if (interpolation == Input.InputInterpolation.Smooth && InterpolationTime > 0f)
+						gamepadAltValues[i] = Mathf.MoveTowards(GamepadAltValues[i], target, deltaTime / InterpolationTime);
+					else if (interpolation == Input.InputInterpolation.Jump && InterpolationTime > 0f)
+						gamepadAltValues[i] = target != 0f && Mathf.Sign(target) != Mathf.Sign(GamepadAltValues[i]) ? 0f : Mathf.MoveTowards(GamepadAltValues[i], target, deltaTime / InterpolationTime);
+					else
+						gamepadAltValues[i] = target;
+
+					if (GamepadMainValues[i] != 0f)
+						gamepadValues[i] = GamepadMainValues[i];
+					else
+						gamepadValues[i] = GamepadAltValues[i];
+
+					if (GamepadBindable)
+					{
+						if (GamepadMainBindable)
+						{
+							GamepadsPositiveMainPress[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].isPressed : false;
+							GamepadsNegativeMainPress[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].isPressed : false;
+							GamepadsMainPress[i] = GamepadsPositiveMainPress[i] || GamepadsNegativeMainPress[i];
+							GamepadsPositiveMainDown[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].wasPressedThisFrame : false;
+							GamepadsNegativeMainDown[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].wasPressedThisFrame : false;
+							GamepadsMainDown[i] = GamepadsPositiveMainDown[i] || GamepadsNegativeMainDown[i];
+							GamepadsPositiveMainUp[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].wasReleasedThisFrame : false;
+							GamepadsNegativeMainUp[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].wasReleasedThisFrame : false;
+							GamepadsMainUp[i] = GamepadsPositiveMainUp[i] || GamepadsNegativeMainUp[i];
+							GamepadsPositiveMainHeld[i] = false;
+
+							if (GamepadsPositiveMainPress[i])
+							{
+								gamepadPositiveMainHoldTimers[i] -= deltaTime;
+								GamepadsPositiveMainHeld[i] = gamepadPositiveMainHoldTimers[i] <= 0f;
+
+								if (GamepadsPositiveMainHeld[i])
+									gamepadPositiveMainHoldTimers[i] = HoldWaitTime;
+							}
+							else if (gamepadPositiveMainHoldTimers[i] != HoldTriggerTime)
+								gamepadPositiveMainHoldTimers[i] = HoldTriggerTime;
+
+							GamepadsNegativeMainHeld[i] = false;
+
+							if (GamepadsNegativeMainPress[i])
+							{
+								gamepadNegativeMainHoldTimers[i] -= deltaTime;
+								GamepadsNegativeMainHeld[i] = gamepadNegativeMainHoldTimers[i] <= 0f;
+
+								if (GamepadsNegativeMainHeld[i])
+									gamepadNegativeMainHoldTimers[i] = HoldWaitTime;
+							}
+							else if (gamepadNegativeMainHoldTimers[i] != HoldTriggerTime)
+								gamepadNegativeMainHoldTimers[i] = HoldTriggerTime;
+
+							GamepadsMainHeld[i] = GamepadsPositiveMainHeld[i] || GamepadsNegativeMainHeld[i];
+							gamepadPositiveMainDoublePressTimers[i] += gamepadPositiveMainDoublePressTimers[i] > 0f ? -deltaTime : gamepadPositiveMainDoublePressTimers[i];
+
+							if (GamepadsPositiveMainUp[i])
+								gamepadPositiveMainDoublePressTimers[i] = DoublePressTimeout;
+
+							GamepadsPositiveMainDoublePress[i] = gamepadsPositiveMainDoublePressInitiated[i] && GamepadsPositiveMainUp[i];
+
+							if (GamepadsPositiveMainUp[i] && gamepadPositiveMainDoublePressTimers[i] > 0f)
+								gamepadsPositiveMainDoublePressInitiated[i] = true;
+
+							if (gamepadPositiveMainDoublePressTimers[i] <= 0f)
+								gamepadsPositiveMainDoublePressInitiated[i] = false;
+
+							gamepadNegativeMainDoublePressTimers[i] += gamepadNegativeMainDoublePressTimers[i] > 0f ? -deltaTime : gamepadNegativeMainDoublePressTimers[i];
+
+							if (GamepadsNegativeMainUp[i])
+								gamepadNegativeMainDoublePressTimers[i] = DoublePressTimeout;
+
+							GamepadsNegativeMainDoublePress[i] = gamepadsNegativeMainDoublePressInitiated[i] && GamepadsNegativeMainUp[i];
+
+							if (GamepadsNegativeMainUp[i] && gamepadNegativeMainDoublePressTimers[i] > 0f)
+								gamepadsNegativeMainDoublePressInitiated[i] = true;
+
+							if (gamepadNegativeMainDoublePressTimers[i] <= 0f)
+								gamepadsNegativeMainDoublePressInitiated[i] = false;
+
+							GamepadsMainDoublePress[i] = GamepadsPositiveMainDoublePress[i] || GamepadsNegativeMainDoublePress[i];
+						}
+
+						if (GamepadAltBindable)
+						{
+							GamepadsPositiveAltPress[i] = GamepadPositiveAltBindable && gamepadPositiveAltControls[i].isPressed;
+							GamepadsNegativeAltPress[i] = GamepadNegativeAltBindable && gamepadNegativeAltControls[i].isPressed;
+							GamepadsAltPress[i] = GamepadsPositiveAltPress[i] || GamepadsNegativeAltPress[i];
+							GamepadsPositiveAltDown[i] = GamepadPositiveAltBindable && gamepadPositiveAltControls[i].wasPressedThisFrame;
+							GamepadsNegativeAltDown[i] = GamepadNegativeAltBindable && gamepadNegativeAltControls[i].wasPressedThisFrame;
+							GamepadsAltDown[i] = GamepadsPositiveAltDown[i] || GamepadsNegativeAltDown[i];
+							GamepadsPositiveAltUp[i] = GamepadPositiveAltBindable && gamepadPositiveAltControls[i].wasReleasedThisFrame;
+							GamepadsNegativeAltUp[i] = GamepadNegativeAltBindable && gamepadNegativeAltControls[i].wasReleasedThisFrame;
+							GamepadsAltUp[i] = GamepadsPositiveAltUp[i] || GamepadsNegativeAltUp[i];
+							GamepadsPositiveAltHeld[i] = false;
+
+							if (GamepadsPositiveAltPress[i])
+							{
+								gamepadPositiveAltHoldTimers[i] -= deltaTime;
+								GamepadsPositiveAltHeld[i] = gamepadPositiveAltHoldTimers[i] <= 0f;
+
+								if (GamepadsPositiveAltHeld[i])
+									gamepadPositiveAltHoldTimers[i] = HoldWaitTime;
+							}
+							else if (gamepadPositiveAltHoldTimers[i] != HoldTriggerTime)
+								gamepadPositiveAltHoldTimers[i] = HoldTriggerTime;
+
+							GamepadsNegativeAltHeld[i] = false;
+
+							if (GamepadsNegativeAltPress[i])
+							{
+								gamepadNegativeAltHoldTimers[i] -= deltaTime;
+								GamepadsNegativeAltHeld[i] = gamepadNegativeAltHoldTimers[i] <= 0f;
+
+								if (GamepadsNegativeAltHeld[i])
+									gamepadNegativeAltHoldTimers[i] = HoldWaitTime;
+							}
+							else if (gamepadNegativeAltHoldTimers[i] != HoldTriggerTime)
+								gamepadNegativeAltHoldTimers[i] = HoldTriggerTime;
+
+							GamepadsAltHeld[i] = GamepadsPositiveAltHeld[i] || GamepadsNegativeAltHeld[i];
+							gamepadPositiveAltDoublePressTimers[i] += gamepadPositiveAltDoublePressTimers[i] > 0f ? -deltaTime : gamepadPositiveAltDoublePressTimers[i];
+
+							if (GamepadsPositiveAltUp[i])
+								gamepadPositiveAltDoublePressTimers[i] = DoublePressTimeout;
+
+							GamepadsPositiveAltDoublePress[i] = gamepadsPositiveAltDoublePressInitiated[i] && GamepadsPositiveAltUp[i];
+
+							if (GamepadsPositiveAltUp[i] && gamepadPositiveAltDoublePressTimers[i] > 0f)
+								gamepadsPositiveAltDoublePressInitiated[i] = true;
+
+							if (gamepadPositiveAltDoublePressTimers[i] <= 0f)
+								gamepadsPositiveAltDoublePressInitiated[i] = false;
+
+							gamepadNegativeAltDoublePressTimers[i] += gamepadNegativeAltDoublePressTimers[i] > 0f ? -deltaTime : gamepadNegativeAltDoublePressTimers[i];
+
+							if (GamepadsNegativeAltUp[i])
+								gamepadNegativeAltDoublePressTimers[i] = DoublePressTimeout;
+
+							GamepadsNegativeAltDoublePress[i] = gamepadsNegativeAltDoublePressInitiated[i] && GamepadsNegativeAltUp[i];
+
+							if (GamepadsNegativeAltUp[i] && gamepadNegativeAltDoublePressTimers[i] > 0f)
+								gamepadsNegativeAltDoublePressInitiated[i] = true;
+
+							if (gamepadNegativeAltDoublePressTimers[i] <= 0f)
+								gamepadsNegativeAltDoublePressInitiated[i] = false;
+
+							GamepadsAltDoublePress[i] = GamepadsPositiveAltDoublePress[i] || GamepadsNegativeAltDoublePress[i];
+						}
+
+						if (GamepadPositiveBindable)
+						{
+							GamepadsPositivePress[i] = GamepadsPositiveMainPress[i] || GamepadsPositiveAltPress[i];
+							GamepadsPositiveDown[i] = GamepadsPositiveMainDown[i] || GamepadsPositiveAltDown[i];
+							GamepadsPositiveUp[i] = GamepadsPositiveMainUp[i] || GamepadsPositiveAltUp[i];
+							GamepadsPositiveHeld[i] = GamepadsPositiveMainHeld[i] || GamepadsPositiveAltHeld[i];
+							GamepadsPositiveDoublePress[i] = GamepadsPositiveMainDoublePress[i] || GamepadsPositiveAltDoublePress[i];
+						}
+
+						if (GamepadNegativeBindable)
+						{
+							GamepadsNegativePress[i] = GamepadsNegativeMainPress[i] || GamepadsNegativeAltPress[i];
+							GamepadsNegativeDown[i] = GamepadsNegativeMainDown[i] || GamepadsNegativeAltDown[i];
+							GamepadsNegativeUp[i] = GamepadsNegativeMainUp[i] || GamepadsNegativeAltUp[i];
+							GamepadsNegativeHeld[i] = GamepadsNegativeMainHeld[i] || GamepadsNegativeAltHeld[i];
+							GamepadsNegativeDoublePress[i] = GamepadsNegativeMainDoublePress[i] || GamepadsNegativeAltDoublePress[i];
+						}
+
+						GamepadsPress[i] = GamepadsMainPress[i] || GamepadsAltPress[i];
+						GamepadsDown[i] = GamepadsMainDown[i] || GamepadsAltDown[i];
+						GamepadsUp[i] = GamepadsMainUp[i] || GamepadsAltUp[i];
+						GamepadsHeld[i] = GamepadsMainHeld[i] || GamepadsAltHeld[i];
+						GamepadsDoublePress[i] = GamepadsMainDoublePress[i] || GamepadsAltDoublePress[i];
+					}
+				}
+#endif
 			}
 
 			private void Trim()
 			{
 				if (!Main)
-					main = new InputAxis();
+					main = new Axis();
 
 				if (!Alt)
-					alt = new InputAxis();
+					alt = new Axis();
 
+#if ENABLE_INPUT_SYSTEM
 				if (Main.Positive == Key.None && Alt.Positive != Key.None)
 				{
 					Main.Positive = Alt.Positive;
 					Alt.Positive = Key.None;
 				}
+#endif
 
+				if (Main.GamepadPositive == GamepadBinding.None && Alt.GamepadPositive != GamepadBinding.None)
+				{
+					Main.GamepadPositive = Alt.GamepadPositive;
+					Alt.GamepadPositive = GamepadBinding.None;
+				}
+
+#if ENABLE_INPUT_SYSTEM
 				if (Main.Negative == Key.None && Alt.Negative != Key.None)
 				{
 					Main.Negative = Alt.Negative;
 					Alt.Negative = Key.None;
+				}
+#endif
+
+				if (Main.GamepadNegative == GamepadBinding.None && Alt.GamepadNegative != GamepadBinding.None)
+				{
+					Main.GamepadNegative = Alt.GamepadNegative;
+					Alt.GamepadNegative = GamepadBinding.None;
 				}
 
 				if (Type == InputType.Button)
@@ -751,12 +1330,256 @@ namespace Utilities.Inputs
 					if (valueInterval.x != 0f)
 						valueInterval.x = 0f;
 
+#if ENABLE_INPUT_SYSTEM
 					if (Main.Negative != Key.None)
 						Main.Negative = Key.None;
+#endif
+
+					if (Main.GamepadNegative != GamepadBinding.None)
+						Main.GamepadNegative = GamepadBinding.None;
+
+#if ENABLE_INPUT_SYSTEM
+					if (Alt.Negative != Key.None)
+						Alt.Negative = Key.None;
+#endif
+
+					if (Alt.GamepadNegative != GamepadBinding.None)
+						Alt.GamepadNegative = GamepadBinding.None;
 				}
 
 				if (Application.isPlaying)
 					trimmed = true;
+			}
+			private void InitializeGamepads()
+			{
+				if (GamepadsPositiveMainPress == null || GamepadsPositiveMainPress.Length != GamepadsCount)
+					GamepadsPositiveMainPress = new bool[GamepadsCount];
+
+				if (GamepadsNegativeMainPress == null || GamepadsNegativeMainPress.Length != GamepadsCount)
+					GamepadsNegativeMainPress = new bool[GamepadsCount];
+
+				if (GamepadsMainPress == null || GamepadsMainPress.Length != GamepadsCount)
+					GamepadsMainPress = new bool[GamepadsCount];
+
+				if (GamepadsPositiveAltPress == null || GamepadsPositiveAltPress.Length != GamepadsCount)
+					GamepadsPositiveAltPress = new bool[GamepadsCount];
+
+				if (GamepadsNegativeAltPress == null || GamepadsNegativeAltPress.Length != GamepadsCount)
+					GamepadsNegativeAltPress = new bool[GamepadsCount];
+
+				if (GamepadsAltPress == null || GamepadsAltPress.Length != GamepadsCount)
+					GamepadsAltPress = new bool[GamepadsCount];
+
+				if (GamepadsPositivePress == null || GamepadsPositivePress.Length != GamepadsCount)
+					GamepadsPositivePress = new bool[GamepadsCount];
+
+				if (GamepadsNegativePress == null || GamepadsNegativePress.Length != GamepadsCount)
+					GamepadsNegativePress = new bool[GamepadsCount];
+
+				if (GamepadsPress == null || GamepadsPress.Length != GamepadsCount)
+					GamepadsPress = new bool[GamepadsCount];
+
+				if (GamepadsPositiveMainDown == null || GamepadsPositiveMainDown.Length != GamepadsCount)
+					GamepadsPositiveMainDown = new bool[GamepadsCount];
+
+				if (GamepadsNegativeMainDown == null || GamepadsNegativeMainDown.Length != GamepadsCount)
+					GamepadsNegativeMainDown = new bool[GamepadsCount];
+
+				if (GamepadsMainDown == null || GamepadsMainDown.Length != GamepadsCount)
+					GamepadsMainDown = new bool[GamepadsCount];
+
+				if (GamepadsPositiveAltDown == null || GamepadsPositiveAltDown.Length != GamepadsCount)
+					GamepadsPositiveAltDown = new bool[GamepadsCount];
+
+				if (GamepadsNegativeAltDown == null || GamepadsNegativeAltDown.Length != GamepadsCount)
+					GamepadsNegativeAltDown = new bool[GamepadsCount];
+
+				if (GamepadsAltDown == null || GamepadsAltDown.Length != GamepadsCount)
+					GamepadsAltDown = new bool[GamepadsCount];
+
+				if (GamepadsPositiveDown == null || GamepadsPositiveDown.Length != GamepadsCount)
+					GamepadsPositiveDown = new bool[GamepadsCount];
+
+				if (GamepadsNegativeDown == null || GamepadsNegativeDown.Length != GamepadsCount)
+					GamepadsNegativeDown = new bool[GamepadsCount];
+
+				if (GamepadsDown == null || GamepadsDown.Length != GamepadsCount)
+					GamepadsDown = new bool[GamepadsCount];
+
+				if (GamepadsPositiveMainUp == null || GamepadsPositiveMainUp.Length != GamepadsCount)
+					GamepadsPositiveMainUp = new bool[GamepadsCount];
+
+				if (GamepadsNegativeMainUp == null || GamepadsNegativeMainUp.Length != GamepadsCount)
+					GamepadsNegativeMainUp = new bool[GamepadsCount];
+
+				if (GamepadsMainUp == null || GamepadsMainUp.Length != GamepadsCount)
+					GamepadsMainUp = new bool[GamepadsCount];
+
+				if (GamepadsPositiveAltUp == null || GamepadsPositiveAltUp.Length != GamepadsCount)
+					GamepadsPositiveAltUp = new bool[GamepadsCount];
+
+				if (GamepadsNegativeAltUp == null || GamepadsNegativeAltUp.Length != GamepadsCount)
+					GamepadsNegativeAltUp = new bool[GamepadsCount];
+
+				if (GamepadsAltUp == null || GamepadsAltUp.Length != GamepadsCount)
+					GamepadsAltUp = new bool[GamepadsCount];
+
+				if (GamepadsPositiveUp == null || GamepadsPositiveUp.Length != GamepadsCount)
+					GamepadsPositiveUp = new bool[GamepadsCount];
+
+				if (GamepadsNegativeUp == null || GamepadsNegativeUp.Length != GamepadsCount)
+					GamepadsNegativeUp = new bool[GamepadsCount];
+
+				if (GamepadsUp == null || GamepadsUp.Length != GamepadsCount)
+					GamepadsUp = new bool[GamepadsCount];
+
+				if (GamepadsPositiveMainHeld == null || GamepadsPositiveMainHeld.Length != GamepadsCount)
+					GamepadsPositiveMainHeld = new bool[GamepadsCount];
+
+				if (GamepadsNegativeMainHeld == null || GamepadsNegativeMainHeld.Length != GamepadsCount)
+					GamepadsNegativeMainHeld = new bool[GamepadsCount];
+
+				if (GamepadsMainHeld == null || GamepadsMainHeld.Length != GamepadsCount)
+					GamepadsMainHeld = new bool[GamepadsCount];
+
+				if (GamepadsPositiveAltHeld == null || GamepadsPositiveAltHeld.Length != GamepadsCount)
+					GamepadsPositiveAltHeld = new bool[GamepadsCount];
+
+				if (GamepadsNegativeAltHeld == null || GamepadsNegativeAltHeld.Length != GamepadsCount)
+					GamepadsNegativeAltHeld = new bool[GamepadsCount];
+
+				if (GamepadsAltHeld == null || GamepadsAltHeld.Length != GamepadsCount)
+					GamepadsAltHeld = new bool[GamepadsCount];
+
+				if (GamepadsPositiveHeld == null || GamepadsPositiveHeld.Length != GamepadsCount)
+					GamepadsPositiveHeld = new bool[GamepadsCount];
+
+				if (GamepadsNegativeHeld == null || GamepadsNegativeHeld.Length != GamepadsCount)
+					GamepadsNegativeHeld = new bool[GamepadsCount];
+
+				if (GamepadsHeld == null || GamepadsHeld.Length != GamepadsCount)
+					GamepadsHeld = new bool[GamepadsCount];
+
+				if (GamepadsPositiveMainDoublePress == null || GamepadsPositiveMainDoublePress.Length != GamepadsCount)
+					GamepadsPositiveMainDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsNegativeMainDoublePress == null || GamepadsNegativeMainDoublePress.Length != GamepadsCount)
+					GamepadsNegativeMainDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsMainDoublePress == null || GamepadsMainDoublePress.Length != GamepadsCount)
+					GamepadsMainDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsPositiveAltDoublePress == null || GamepadsPositiveAltDoublePress.Length != GamepadsCount)
+					GamepadsPositiveAltDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsNegativeAltDoublePress == null || GamepadsNegativeAltDoublePress.Length != GamepadsCount)
+					GamepadsNegativeAltDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsAltDoublePress == null || GamepadsAltDoublePress.Length != GamepadsCount)
+					GamepadsAltDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsPositiveDoublePress == null || GamepadsPositiveDoublePress.Length != GamepadsCount)
+					GamepadsPositiveDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsNegativeDoublePress == null || GamepadsNegativeDoublePress.Length != GamepadsCount)
+					GamepadsNegativeDoublePress = new bool[GamepadsCount];
+
+				if (GamepadsDoublePress == null || GamepadsDoublePress.Length != GamepadsCount)
+					GamepadsDoublePress = new bool[GamepadsCount];
+
+				if (gamepadPositiveMainControls == null)
+					gamepadPositiveMainControls = new ButtonControl[] { };
+
+				if (gamepadNegativeMainControls == null)
+					gamepadNegativeMainControls = new ButtonControl[] { };
+
+				if (gamepadMainValues == null)
+					gamepadMainValues = new float[] { };
+
+				if (gamepadPositiveAltControls == null)
+					gamepadPositiveAltControls = new ButtonControl[] { };
+
+				if (gamepadNegativeAltControls == null)
+					gamepadNegativeAltControls = new ButtonControl[] { };
+
+				if (gamepadAltValues == null)
+					gamepadAltValues = new float[] { };
+
+				if (gamepadValues == null)
+					gamepadValues = new float[] { };
+
+				if (gamepadPositiveMainHoldTimers == null)
+					gamepadPositiveMainHoldTimers = new float[] { };
+
+				if (gamepadNegativeMainHoldTimers == null)
+					gamepadNegativeMainHoldTimers = new float[] { };
+
+				if (gamepadPositiveAltHoldTimers == null)
+					gamepadPositiveAltHoldTimers = new float[] { };
+
+				if (gamepadNegativeAltHoldTimers == null)
+					gamepadNegativeAltHoldTimers = new float[] { };
+
+				if (gamepadPositiveMainDoublePressTimers == null)
+					gamepadPositiveMainDoublePressTimers = new float[] { };
+
+				if (gamepadNegativeMainDoublePressTimers == null)
+					gamepadNegativeMainDoublePressTimers = new float[] { };
+
+				if (gamepadPositiveAltDoublePressTimers == null)
+					gamepadPositiveAltDoublePressTimers = new float[] { };
+
+				if (gamepadNegativeAltDoublePressTimers == null)
+					gamepadNegativeAltDoublePressTimers = new float[] { };
+
+				if (gamepadsPositiveMainDoublePressInitiated == null)
+					gamepadsPositiveMainDoublePressInitiated = new bool[] { };
+
+				if (gamepadsNegativeMainDoublePressInitiated == null)
+					gamepadsNegativeMainDoublePressInitiated = new bool[] { };
+
+				if (gamepadsPositiveAltDoublePressInitiated == null)
+					gamepadsPositiveAltDoublePressInitiated = new bool[] { };
+
+				if (gamepadsNegativeAltDoublePressInitiated == null)
+					gamepadsNegativeAltDoublePressInitiated = new bool[] { };
+
+				Array.Resize(ref gamepadPositiveMainControls, GamepadsCount);
+				Array.Resize(ref gamepadNegativeMainControls, GamepadsCount);
+				Array.Resize(ref gamepadMainValues, GamepadsCount);
+				Array.Resize(ref gamepadPositiveAltControls, GamepadsCount);
+				Array.Resize(ref gamepadNegativeAltControls, GamepadsCount);
+				Array.Resize(ref gamepadAltValues, GamepadsCount);
+				Array.Resize(ref gamepadValues, GamepadsCount);
+				Array.Resize(ref gamepadPositiveMainHoldTimers, GamepadsCount);
+				Array.Resize(ref gamepadNegativeMainHoldTimers, GamepadsCount);
+				Array.Resize(ref gamepadPositiveAltHoldTimers, GamepadsCount);
+				Array.Resize(ref gamepadNegativeAltHoldTimers, GamepadsCount);
+				Array.Resize(ref gamepadPositiveMainDoublePressTimers, GamepadsCount);
+				Array.Resize(ref gamepadNegativeMainDoublePressTimers, GamepadsCount);
+				Array.Resize(ref gamepadPositiveAltDoublePressTimers, GamepadsCount);
+				Array.Resize(ref gamepadNegativeAltDoublePressTimers, GamepadsCount);
+				Array.Resize(ref gamepadsPositiveMainDoublePressInitiated, GamepadsCount);
+				Array.Resize(ref gamepadsNegativeMainDoublePressInitiated, GamepadsCount);
+				Array.Resize(ref gamepadsPositiveAltDoublePressInitiated, GamepadsCount);
+				Array.Resize(ref gamepadsNegativeAltDoublePressInitiated, GamepadsCount);
+
+				for (int i = 0; i < GamepadsCount; i++)
+				{
+					if (gamepadPositiveMainControls[i] == null && GamepadPositiveMainBindable)
+						gamepadPositiveMainControls[i] = GamepadBindingToButtonControl(Gamepads[i], Main.GamepadPositive);
+
+					if (gamepadNegativeMainControls[i] == null && GamepadNegativeMainBindable)
+						gamepadNegativeMainControls[i] = GamepadBindingToButtonControl(Gamepads[i], Main.GamepadNegative);
+
+					if (gamepadPositiveAltControls[i] == null && GamepadPositiveAltBindable)
+						gamepadPositiveAltControls[i] = GamepadBindingToButtonControl(Gamepads[i], Alt.GamepadPositive);
+
+					if (gamepadNegativeAltControls[i] == null && GamepadNegativeAltBindable)
+						gamepadNegativeAltControls[i] = GamepadBindingToButtonControl(Gamepads[i], Alt.GamepadNegative);
+				}
+
+				gamepadsCount = GamepadsCount;
 			}
 
 			#endregion
@@ -769,8 +1592,8 @@ namespace Utilities.Inputs
 			{
 				this.name = name;
 				valueInterval = new Vector2(-1f, 1f);
-				main = new InputAxis();
-				alt = new InputAxis();
+				main = new Axis();
+				alt = new Axis();
 			}
 			public Input(Input input)
 			{
@@ -778,8 +1601,8 @@ namespace Utilities.Inputs
 				type = input.type;
 				interpolation = input.interpolation;
 				valueInterval = input.valueInterval;
-				main = new InputAxis(input.main);
-				alt = new InputAxis(input.alt);
+				main = new Axis(input.main);
+				alt = new Axis(input.alt);
 
 				Trim();
 			}
@@ -801,7 +1624,26 @@ namespace Utilities.Inputs
 
 		#region Variables
 
-		public static readonly string DataAssetPath = "Resources/Assets/InputsManager_Data";
+		public static InputSource InputSourcePriority
+		{
+			get
+			{
+				if (!Application.isPlaying && inputSourcePriority == 0f)
+					LoadData();
+
+				return inputSourcePriority;
+			}
+			set
+			{
+				if (Application.isPlaying || inputSourcePriority == value)
+					return;
+
+				inputSourcePriority = value;
+
+				SaveData();
+			}
+		}
+		public static readonly string DataAssetPath = "Assets/InputsManager_Data";
 		public static float InterpolationTime
 		{
 			get
@@ -878,17 +1720,42 @@ namespace Utilities.Inputs
 				SaveData();
 			}
 		}
+		public static float GamepadThreshold
+		{
+			get
+			{
+				if (!Application.isPlaying && gamepadThreshold == 0f)
+					LoadData();
+
+				return gamepadThreshold;
+			}
+			set
+			{
+				if (Application.isPlaying || gamepadThreshold == value)
+					return;
+
+				gamepadThreshold = Mathf.Clamp01(value);
+
+				SaveData();
+			}
+		}
 		public static bool DataLoaded
 		{
 			get
 			{
-				return DataAssetExists && File.GetLastWriteTime($"{Application.dataPath}/{DataAssetPath}") == dataLastWriteTime;
+				if (!Application.isEditor)
+					return dataLoadedOnBuild;
+
+				return DataAssetExists && File.GetLastWriteTime($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") == dataLastWriteTime;
 			}
 		}
 		public static bool DataChanged
 		{
 			get
 			{
+				if (!Application.isEditor)
+					return false;
+
 				return DataLoaded && dataChanged;
 			}
 		}
@@ -896,7 +1763,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return File.Exists($"{Application.dataPath}/{DataAssetPath}");
+				return Application.isEditor ? File.Exists($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") : Resources.Load<TextAsset>(DataAssetPath);
 			}
 		}
 		public static int Count
@@ -921,6 +1788,7 @@ namespace Utilities.Inputs
 			}
 		}
 		private static string[] inputNames;
+#if ENABLE_INPUT_SYSTEM
 		private static Keyboard Keyboard
 		{
 			get
@@ -935,12 +1803,36 @@ namespace Utilities.Inputs
 				return Mouse.current;
 			}
 		}
+		private static ReadOnlyArray<Gamepad> Gamepads
+		{
+			get
+			{
+				return Gamepad.all;
+			}
+		}
+		private static int GamepadsCount
+		{
+			get
+			{
+				return Gamepads.Count;
+			}
+		}
+		private static int GamepadCurrentIndex
+		{
+			get
+			{
+				return Gamepads.IndexOf(gamepad => gamepad == Gamepad.current);
+			}
+		}
+#endif
 		private static DateTime dataLastWriteTime;
 		private static Input[] inputs;
+		private static InputSource inputSourcePriority;
 		private static float interpolationTime = .25f;
 		private static float holdTriggerTime = .3f;
 		private static float holdWaitTime = .1f;
 		private static float doublePressTimeout = .2f;
+		private static float gamepadThreshold = .1f;
 		private static float mouseLeftHoldTimer;
 		private static float mouseMiddleHoldTimer;
 		private static float mouseRightHoldTimer;
@@ -948,6 +1840,9 @@ namespace Utilities.Inputs
 		private static float mouseMiddleDoublePressTimer;
 		private static float mouseRightDoublePressTimer;
 		private static float deltaTime;
+#if !UNITY_2019_1_OR_NEWER
+		private static bool anyKeyPressed;
+#endif
 		private static bool mouseLeftHeld;
 		private static bool mouseMiddleHeld;
 		private static bool mouseRightHeld;
@@ -959,6 +1854,8 @@ namespace Utilities.Inputs
 		private static bool mouseRightDoublePressInitiated;
 		private static bool mousePressed;
 		private static bool dataChanged;
+		private static bool dataLoadedOnBuild;
+		private static int gamepadsCount;
 
 		#endregion
 
@@ -966,164 +1863,685 @@ namespace Utilities.Inputs
 
 		#region Inputs
 
-		public static Vector2 InputMouseMovement() => Mouse.delta.ReadValue();
-		public static Vector2 InputMousePosition() => Mouse.position.ReadValue();
-		public static Vector2 InputMouseScrollWheelVector() => Mouse.scroll.ReadValue();
-		public static float InputValue(Input input) => input.Value;
-		public static float InputValue(string name) => GetInput(name).Value;
-		public static float InputValue(int index) => GetInput(index).Value;
-		public static float InputMainAxisValue(Input input) => input.MainValue;
-		public static float InputMainAxisValue(string name) => GetInput(name).MainValue;
-		public static float InputMainAxisValue(int index) => GetInput(index).MainValue;
-		public static float InputAltAxisValue(Input input) => input.AltValue;
-		public static float InputAltAxisValue(string name) => GetInput(name).AltValue;
-		public static float InputAltAxisValue(int index) => GetInput(index).AltValue;
-		public static float InputMouseScrollWheel() => Mouse.scroll.ReadValue().magnitude;
-		public static float InputMouseScrollWheelHorizontal() => Mouse.scroll.ReadValue().x;
-		public static float InputMouseScrollWheelVertical() => Mouse.scroll.ReadValue().y;
-		public static bool InputPress(Input input) => input.Press;
-		public static bool InputPress(string name) => GetInput(name).Press;
-		public static bool InputPress(int index) => GetInput(index).Press;
-		public static bool InputMainAxisPress(Input input) => input.MainPress;
-		public static bool InputMainAxisPress(string name) => GetInput(name).MainPress;
-		public static bool InputMainAxisPress(int index) => GetInput(index).MainPress;
-		public static bool InputAltAxisPress(Input input) => input.AltPress;
-		public static bool InputAltAxisPress(string name) => GetInput(name).AltPress;
-		public static bool InputAltAxisPress(int index) => GetInput(index).AltPress;
-		public static bool InputPositivePress(Input input) => input.PositivePress;
-		public static bool InputPositivePress(string name) => GetInput(name).PositivePress;
-		public static bool InputPositivePress(int index) => GetInput(index).PositivePress;
-		public static bool InputNegativePress(Input input) => input.NegativePress;
-		public static bool InputNegativePress(string name) => GetInput(name).NegativePress;
-		public static bool InputNegativePress(int index) => GetInput(index).NegativePress;
-		public static bool InputPositiveMainAxisPress(Input input) => input.PositiveMainPress;
-		public static bool InputPositiveMainAxisPress(string name) => GetInput(name).PositiveMainPress;
-		public static bool InputPositiveMainAxisPress(int index) => GetInput(index).PositiveMainPress;
-		public static bool InputNegativeMainAxisPress(Input input) => input.NegativeMainPress;
-		public static bool InputNegativeMainAxisPress(string name) => GetInput(name).NegativeMainPress;
-		public static bool InputNegativeMainAxisPress(int index) => GetInput(index).NegativeMainPress;
-		public static bool InputPositiveAltAxisPress(Input input) => input.PositiveAltPress;
-		public static bool InputPositiveAltAxisPress(string name) => GetInput(name).PositiveAltPress;
-		public static bool InputPositiveAltAxisPress(int index) => GetInput(index).PositiveAltPress;
-		public static bool InputNegativeAltAxisPress(Input input) => input.NegativeAltPress;
-		public static bool InputNegativeAltAxisPress(string name) => GetInput(name).NegativeAltPress;
-		public static bool InputNegativeAltAxisPress(int index) => GetInput(index).NegativeAltPress;
-		public static bool InputDown(Input input) => input.Down;
-		public static bool InputDown(string name) => GetInput(name).Down;
-		public static bool InputDown(int index) => GetInput(index).Down;
-		public static bool InputMainAxisDown(Input input) => input.MainDown;
-		public static bool InputMainAxisDown(string name) => GetInput(name).MainDown;
-		public static bool InputMainAxisDown(int index) => GetInput(index).MainDown;
-		public static bool InputAltAxisDown(Input input) => input.AltDown;
-		public static bool InputAltAxisDown(string name) => GetInput(name).AltDown;
-		public static bool InputAltAxisDown(int index) => GetInput(index).AltDown;
-		public static bool InputPositiveDown(Input input) => input.PositiveDown;
-		public static bool InputPositiveDown(string name) => GetInput(name).PositiveDown;
-		public static bool InputPositiveDown(int index) => GetInput(index).PositiveDown;
-		public static bool InputNegativeDown(Input input) => input.NegativeDown;
-		public static bool InputNegativeDown(string name) => GetInput(name).NegativeDown;
-		public static bool InputNegativeDown(int index) => GetInput(index).NegativeDown;
-		public static bool InputPositiveMainAxisDown(Input input) => input.PositiveMainDown;
-		public static bool InputPositiveMainAxisDown(string name) => GetInput(name).PositiveMainDown;
-		public static bool InputPositiveMainAxisDown(int index) => GetInput(index).PositiveMainDown;
-		public static bool InputNegativeMainAxisDown(Input input) => input.NegativeMainDown;
-		public static bool InputNegativeMainAxisDown(string name) => GetInput(name).NegativeMainDown;
-		public static bool InputNegativeMainAxisDown(int index) => GetInput(index).NegativeMainDown;
-		public static bool InputPositiveAltAxisDown(Input input) => input.PositiveAltDown;
-		public static bool InputPositiveAltAxisDown(string name) => GetInput(name).PositiveAltDown;
-		public static bool InputPositiveAltAxisDown(int index) => GetInput(index).PositiveAltDown;
-		public static bool InputNegativeAltAxisDown(Input input) => input.NegativeAltDown;
-		public static bool InputNegativeAltAxisDown(string name) => GetInput(name).NegativeAltDown;
-		public static bool InputNegativeAltAxisDown(int index) => GetInput(index).NegativeAltDown;
-		public static bool InputUp(Input input) => input.Up;
-		public static bool InputUp(string name) => GetInput(name).Up;
-		public static bool InputUp(int index) => GetInput(index).Up;
-		public static bool InputMainAxisUp(Input input) => input.MainUp;
-		public static bool InputMainAxisUp(string name) => GetInput(name).MainUp;
-		public static bool InputMainAxisUp(int index) => GetInput(index).MainUp;
-		public static bool InputAltAxisUp(Input input) => input.AltUp;
-		public static bool InputAltAxisUp(string name) => GetInput(name).AltUp;
-		public static bool InputAltAxisUp(int index) => GetInput(index).AltUp;
-		public static bool InputPositiveUp(Input input) => input.PositiveUp;
-		public static bool InputPositiveUp(string name) => GetInput(name).PositiveUp;
-		public static bool InputPositiveUp(int index) => GetInput(index).PositiveUp;
-		public static bool InputNegativeUp(Input input) => input.NegativeUp;
-		public static bool InputNegativeUp(string name) => GetInput(name).NegativeUp;
-		public static bool InputNegativeUp(int index) => GetInput(index).NegativeUp;
-		public static bool InputPositiveMainAxisUp(Input input) => input.PositiveMainUp;
-		public static bool InputPositiveMainAxisUp(string name) => GetInput(name).PositiveMainUp;
-		public static bool InputPositiveMainAxisUp(int index) => GetInput(index).PositiveMainUp;
-		public static bool InputNegativeMainAxisUp(Input input) => input.NegativeMainUp;
-		public static bool InputNegativeMainAxisUp(string name) => GetInput(name).NegativeMainUp;
-		public static bool InputNegativeMainAxisUp(int index) => GetInput(index).NegativeMainUp;
-		public static bool InputPositiveAltAxisUp(Input input) => input.PositiveAltUp;
-		public static bool InputPositiveAltAxisUp(string name) => GetInput(name).PositiveAltUp;
-		public static bool InputPositiveAltAxisUp(int index) => GetInput(index).PositiveAltUp;
-		public static bool InputNegativeAltAxisUp(Input input) => input.NegativeAltUp;
-		public static bool InputNegativeAltAxisUp(string name) => GetInput(name).NegativeAltUp;
-		public static bool InputNegativeAltAxisUp(int index) => GetInput(index).NegativeAltUp;
-		public static bool InputHold(Input input) => input.Held;
-		public static bool InputHold(string name) => GetInput(name).Held;
-		public static bool InputHold(int index) => GetInput(index).Held;
-		public static bool InputMainAxisHold(Input input) => input.MainHeld;
-		public static bool InputMainAxisHold(string name) => GetInput(name).MainHeld;
-		public static bool InputMainAxisHold(int index) => GetInput(index).MainHeld;
-		public static bool InputAltAxisHold(Input input) => input.AltHeld;
-		public static bool InputAltAxisHold(string name) => GetInput(name).AltHeld;
-		public static bool InputAltAxisHold(int index) => GetInput(index).AltHeld;
-		public static bool InputPositiveHold(Input input) => input.PositiveHeld;
-		public static bool InputPositiveHold(string name) => GetInput(name).PositiveHeld;
-		public static bool InputPositiveHold(int index) => GetInput(index).PositiveHeld;
-		public static bool InputNegativeHold(Input input) => input.NegativeHeld;
-		public static bool InputNegativeHold(string name) => GetInput(name).NegativeHeld;
-		public static bool InputNegativeHold(int index) => GetInput(index).NegativeHeld;
-		public static bool InputPositiveMainAxisHold(Input input) => input.PositiveMainHeld;
-		public static bool InputPositiveMainAxisHold(string name) => GetInput(name).PositiveMainHeld;
-		public static bool InputPositiveMainAxisHold(int index) => GetInput(index).PositiveMainHeld;
-		public static bool InputNegativeMainAxisHold(Input input) => input.NegativeMainHeld;
-		public static bool InputNegativeMainAxisHold(string name) => GetInput(name).NegativeMainHeld;
-		public static bool InputNegativeMainAxisHold(int index) => GetInput(index).NegativeMainHeld;
-		public static bool InputPositiveAltAxisHold(Input input) => input.PositiveAltHeld;
-		public static bool InputPositiveAltAxisHold(string name) => GetInput(name).PositiveAltHeld;
-		public static bool InputPositiveAltAxisHold(int index) => GetInput(index).PositiveAltHeld;
-		public static bool InputNegativeAltAxisHold(Input input) => input.NegativeAltHeld;
-		public static bool InputNegativeAltAxisHold(string name) => GetInput(name).NegativeAltHeld;
-		public static bool InputNegativeAltAxisHold(int index) => GetInput(index).NegativeAltHeld;
-		public static bool InputDoublePress(Input input) => input.DoublePress;
-		public static bool InputDoublePress(string name) => GetInput(name).DoublePress;
-		public static bool InputDoublePress(int index) => GetInput(index).DoublePress;
-		public static bool InputMainAxisDoublePress(Input input) => input.MainDoublePress;
-		public static bool InputMainAxisDoublePress(string name) => GetInput(name).MainDoublePress;
-		public static bool InputMainAxisDoublePress(int index) => GetInput(index).MainDoublePress;
-		public static bool InputAltAxisDoublePress(Input input) => input.AltDoublePress;
-		public static bool InputAltAxisDoublePress(string name) => GetInput(name).AltDoublePress;
-		public static bool InputAltAxisDoublePress(int index) => GetInput(index).AltDoublePress;
-		public static bool InputPositiveDoublePress(Input input) => input.PositiveDoublePress;
-		public static bool InputPositiveDoublePress(string name) => GetInput(name).PositiveDoublePress;
-		public static bool InputPositiveDoublePress(int index) => GetInput(index).PositiveDoublePress;
-		public static bool InputNegativeDoublePress(Input input) => input.NegativeDoublePress;
-		public static bool InputNegativeDoublePress(string name) => GetInput(name).NegativeDoublePress;
-		public static bool InputNegativeDoublePress(int index) => GetInput(index).NegativeDoublePress;
-		public static bool InputPositiveMainAxisDoublePress(Input input) => input.PositiveMainDoublePress;
-		public static bool InputPositiveMainAxisDoublePress(string name) => GetInput(name).PositiveMainDoublePress;
-		public static bool InputPositiveMainAxisDoublePress(int index) => GetInput(index).PositiveMainDoublePress;
-		public static bool InputNegativeMainAxisDoublePress(Input input) => input.NegativeMainDoublePress;
-		public static bool InputNegativeMainAxisDoublePress(string name) => GetInput(name).NegativeMainDoublePress;
-		public static bool InputNegativeMainAxisDoublePress(int index) => GetInput(index).NegativeMainDoublePress;
-		public static bool InputPositiveAltAxisDoublePress(Input input) => input.PositiveAltDoublePress;
-		public static bool InputPositiveAltAxisDoublePress(string name) => GetInput(name).PositiveAltDoublePress;
-		public static bool InputPositiveAltAxisDoublePress(int index) => GetInput(index).PositiveAltDoublePress;
-		public static bool InputNegativeAltAxisDoublePress(Input input) => input.NegativeAltDoublePress;
-		public static bool InputNegativeAltAxisDoublePress(string name) => GetInput(name).NegativeAltDoublePress;
-		public static bool InputNegativeAltAxisDoublePress(int index) => GetInput(index).NegativeAltDoublePress;
-		public static bool InputKeyPress(Key key) => KeyToKeyControl(key).isPressed;
-		public static bool InputKeyDown(Key key) => KeyToKeyControl(key).wasPressedThisFrame;
-		public static bool InputKeyUp(Key key) => KeyToKeyControl(key).wasReleasedThisFrame;
+		public static Vector2 InputMouseMovement()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.delta.ReadValue();
+#else
+			return Vector2.zero;
+#endif
+		}
+		public static Vector2 InputMousePosition()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.position.ReadValue();
+#else
+			return Vector2.zero;
+#endif
+		}
+		public static Vector2 InputMouseScrollWheelVector()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.scroll.ReadValue();
+#else
+			return Vector2.zero;
+#endif
+		}
+		public static float InputValue(Input input, int gamepadIndex = 0)
+		{
+			bool gamepadUsed = gamepadIndex < GamepadsCount && input.GamepadValues[gamepadIndex] != 0f;
+			bool keyboardUsed = input.KeyboardValue != 0f;
+			bool gamepadPerioritized = InputSourcePriority == InputSource.Gamepad;
+
+			if ((gamepadPerioritized || !keyboardUsed) && gamepadUsed)
+				return input.GamepadValues[gamepadIndex];
+			else
+				return input.KeyboardValue;
+		}
+		public static float InputValue(string name, int gamepadIndex = 0) => InputValue(GetInput(name), gamepadIndex);
+		public static float InputValue(int index, int gamepadIndex = 0) => InputValue(GetInput(index), gamepadIndex);
+		public static float InputMainAxisValue(Input input, int gamepadIndex = 0)
+		{
+			bool gamepadUsed = gamepadIndex < GamepadsCount && input.GamepadMainValues[gamepadIndex] != 0f;
+			bool keyboardUsed = input.KeyboardMainValue != 0f;
+			bool gamepadPerioritized = InputSourcePriority == InputSource.Gamepad;
+
+			if ((gamepadPerioritized || !keyboardUsed) && gamepadUsed)
+				return input.GamepadMainValues[gamepadIndex];
+			else
+				return input.KeyboardMainValue;
+		}
+		public static float InputMainAxisValue(string name, int gamepadIndex = 0) => InputMainAxisValue(GetInput(name), gamepadIndex);
+		public static float InputMainAxisValue(int index, int gamepadIndex = 0) => InputMainAxisValue(GetInput(index), gamepadIndex);
+		public static float InputAltAxisValue(Input input, int gamepadIndex = 0)
+		{
+			bool gamepadUsed = gamepadIndex < GamepadsCount && input.GamepadAltValues[gamepadIndex] != 0f;
+			bool keyboardUsed = input.KeyboardAltValue != 0f;
+			bool gamepadPerioritized = InputSourcePriority == InputSource.Gamepad;
+
+			if ((gamepadPerioritized || !keyboardUsed) && gamepadUsed)
+				return input.GamepadAltValues[gamepadIndex];
+			else
+				return input.KeyboardAltValue;
+		}
+		public static float InputAltAxisValue(string name, int gamepadIndex = 0) => InputAltAxisValue(GetInput(name), gamepadIndex);
+		public static float InputAltAxisValue(int index, int gamepadIndex = 0) => InputAltAxisValue(GetInput(index), gamepadIndex);
+		public static float InputMouseScrollWheel()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.scroll.ReadValue().magnitude;
+#else
+			return 0f;
+#endif
+		}
+		public static float InputMouseScrollWheelHorizontal()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.scroll.ReadValue().x;
+#else
+			return 0f;
+#endif
+		}
+		public static float InputMouseScrollWheelVertical()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Mouse.scroll.ReadValue().y;
+#else
+			return 0f;
+#endif
+		}
+		public static bool AnyInputPress()
+		{
+#if ENABLE_INPUT_SYSTEM
+			return Keyboard.anyKey.isPressed;
+#else
+			return false;
+#endif
+		}
+		public static bool AnyInputDown()
+		{
+#if ENABLE_INPUT_SYSTEM
+#if UNITY_2019_1_OR_NEWER
+			return Keyboard.anyKey.wasPressedThisFrame;
+#else
+			return Utility.IsDownFromLastState(Keyboard.anyKey.isPressed, anyKeyPressed);
+#endif
+#else
+			return false;
+#endif
+		}
+		public static bool AnyInputUp()
+		{
+#if ENABLE_INPUT_SYSTEM
+#if UNITY_2019_1_OR_NEWER
+			return Keyboard.anyKey.wasReleasedThisFrame;
+#else
+			return Utility.IsUpFromLastState(Keyboard.anyKey.isPressed, anyKeyPressed);
+#endif
+#else
+			return false;
+#endif
+		}
+		public static bool InputPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPress || gamepadIndex < GamepadsCount && input.GamepadsPress[gamepadIndex];
+		}
+		public static bool InputPress(string name, int gamepadIndex = 0)
+		{
+			return InputPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPress(int index, int gamepadIndex = 0)
+		{
+			return InputPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputMainAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardMainPress || gamepadIndex < GamepadsCount && input.GamepadsMainPress[gamepadIndex];
+		}
+		public static bool InputMainAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputMainAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputMainAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputMainAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputAltAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardAltPress || gamepadIndex < GamepadsCount && input.GamepadsAltPress[gamepadIndex];
+		}
+		public static bool InputAltAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputAltAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputAltAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputAltAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositivePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositivePress || gamepadIndex < GamepadsCount && input.GamepadsPositivePress[gamepadIndex];
+		}
+		public static bool InputPositivePress(string name, int gamepadIndex = 0)
+		{
+			return InputPositivePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositivePress(int index, int gamepadIndex = 0)
+		{
+			return InputPositivePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativePress || gamepadIndex < GamepadsCount && input.GamepadsNegativePress[gamepadIndex];
+		}
+		public static bool InputNegativePress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativePress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveMainPress || gamepadIndex < GamepadsCount && input.GamepadsPositiveMainPress[gamepadIndex];
+		}
+		public static bool InputPositiveMainAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeMainPress || gamepadIndex < GamepadsCount && input.GamepadsNegativeMainPress[gamepadIndex];
+		}
+		public static bool InputNegativeMainAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveAltPress || gamepadIndex < GamepadsCount && input.GamepadsPositiveAltPress[gamepadIndex];
+		}
+		public static bool InputPositiveAltAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisPress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeAltPress || gamepadIndex < GamepadsCount && input.GamepadsNegativeAltPress[gamepadIndex];
+		}
+		public static bool InputNegativeAltAxisPress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisPress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisPress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisPress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardDown || gamepadIndex < GamepadsCount && input.GamepadsDown[gamepadIndex];
+		}
+		public static bool InputDown(string name, int gamepadIndex = 0)
+		{
+			return InputDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputDown(int index, int gamepadIndex = 0)
+		{
+			return InputDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputMainAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardMainDown || gamepadIndex < GamepadsCount && input.GamepadsMainDown[gamepadIndex];
+		}
+		public static bool InputMainAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputMainAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputMainAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputMainAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputAltAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardAltDown || gamepadIndex < GamepadsCount && input.GamepadsAltDown[gamepadIndex];
+		}
+		public static bool InputAltAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputAltAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputAltAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputAltAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveDown || gamepadIndex < GamepadsCount && input.GamepadsPositiveDown[gamepadIndex];
+		}
+		public static bool InputPositiveDown(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveDown(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeDown || gamepadIndex < GamepadsCount && input.GamepadsNegativeDown[gamepadIndex];
+		}
+		public static bool InputNegativeDown(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeDown(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveMainDown || gamepadIndex < GamepadsCount && input.GamepadsPositiveMainDown[gamepadIndex];
+		}
+		public static bool InputPositiveMainAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeMainDown || gamepadIndex < GamepadsCount && input.GamepadsNegativeMainDown[gamepadIndex];
+		}
+		public static bool InputNegativeMainAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveAltDown || gamepadIndex < GamepadsCount && input.GamepadsPositiveAltDown[gamepadIndex];
+		}
+		public static bool InputPositiveAltAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisDown(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeAltDown || gamepadIndex < GamepadsCount && input.GamepadsNegativeAltDown[gamepadIndex];
+		}
+		public static bool InputNegativeAltAxisDown(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisDown(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisDown(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisDown(GetInput(index), gamepadIndex);
+		}
+		public static bool InputUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardUp || gamepadIndex < GamepadsCount && input.GamepadsUp[gamepadIndex];
+		}
+		public static bool InputUp(string name, int gamepadIndex = 0)
+		{
+			return InputUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputUp(int index, int gamepadIndex = 0)
+		{
+			return InputUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputMainAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardMainUp || gamepadIndex < GamepadsCount && input.GamepadsMainUp[gamepadIndex];
+		}
+		public static bool InputMainAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputMainAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputMainAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputMainAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputAltAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardAltUp || gamepadIndex < GamepadsCount && input.GamepadsAltUp[gamepadIndex];
+		}
+		public static bool InputAltAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputAltAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputAltAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputAltAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveUp || gamepadIndex < GamepadsCount && input.GamepadsPositiveUp[gamepadIndex];
+		}
+		public static bool InputPositiveUp(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveUp(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeUp || gamepadIndex < GamepadsCount && input.GamepadsNegativeUp[gamepadIndex];
+		}
+		public static bool InputNegativeUp(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeUp(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveMainUp || gamepadIndex < GamepadsCount && input.GamepadsPositiveMainUp[gamepadIndex];
+		}
+		public static bool InputPositiveMainAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeMainUp || gamepadIndex < GamepadsCount && input.GamepadsNegativeMainUp[gamepadIndex];
+		}
+		public static bool InputNegativeMainAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveAltUp || gamepadIndex < GamepadsCount && input.GamepadsPositiveAltUp[gamepadIndex];
+		}
+		public static bool InputPositiveAltAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisUp(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeAltUp || gamepadIndex < GamepadsCount && input.GamepadsNegativeAltUp[gamepadIndex];
+		}
+		public static bool InputNegativeAltAxisUp(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisUp(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisUp(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisUp(GetInput(index), gamepadIndex);
+		}
+		public static bool InputHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardHeld || gamepadIndex < GamepadsCount && input.GamepadsHeld[gamepadIndex];
+		}
+		public static bool InputHold(string name, int gamepadIndex = 0)
+		{
+			return InputHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputHold(int index, int gamepadIndex = 0)
+		{
+			return InputHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputMainAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardMainHeld || gamepadIndex < GamepadsCount && input.GamepadsMainHeld[gamepadIndex];
+		}
+		public static bool InputMainAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputMainAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputMainAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputMainAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputAltAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardAltHeld || gamepadIndex < GamepadsCount && input.GamepadsAltHeld[gamepadIndex];
+		}
+		public static bool InputAltAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputAltAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputAltAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputAltAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveHeld || gamepadIndex < GamepadsCount && input.GamepadsPositiveHeld[gamepadIndex];
+		}
+		public static bool InputPositiveHold(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveHold(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeHeld || gamepadIndex < GamepadsCount && input.GamepadsNegativeHeld[gamepadIndex];
+		}
+		public static bool InputNegativeHold(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeHold(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveMainHeld || gamepadIndex < GamepadsCount && input.GamepadsPositiveMainHeld[gamepadIndex];
+		}
+		public static bool InputPositiveMainAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeMainHeld || gamepadIndex < GamepadsCount && input.GamepadsNegativeMainHeld[gamepadIndex];
+		}
+		public static bool InputNegativeMainAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveAltHeld || gamepadIndex < GamepadsCount && input.GamepadsPositiveAltHeld[gamepadIndex];
+		}
+		public static bool InputPositiveAltAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisHold(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeAltHeld || gamepadIndex < GamepadsCount && input.GamepadsNegativeAltHeld[gamepadIndex];
+		}
+		public static bool InputNegativeAltAxisHold(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisHold(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisHold(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisHold(GetInput(index), gamepadIndex);
+		}
+		public static bool InputDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardDoublePress || gamepadIndex < GamepadsCount && input.GamepadsDoublePress[gamepadIndex];
+		}
+		public static bool InputDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputMainAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardMainDoublePress || gamepadIndex < GamepadsCount && input.GamepadsMainDoublePress[gamepadIndex];
+		}
+		public static bool InputMainAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputMainAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputMainAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputMainAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputAltAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardAltDoublePress || gamepadIndex < GamepadsCount && input.GamepadsAltDoublePress[gamepadIndex];
+		}
+		public static bool InputAltAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputAltAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputAltAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputAltAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveDoublePress || gamepadIndex < GamepadsCount && input.GamepadsPositiveDoublePress[gamepadIndex];
+		}
+		public static bool InputPositiveDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeDoublePress || gamepadIndex < GamepadsCount && input.GamepadsNegativeDoublePress[gamepadIndex];
+		}
+		public static bool InputNegativeDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveMainDoublePress || gamepadIndex < GamepadsCount && input.GamepadsPositiveMainDoublePress[gamepadIndex];
+		}
+		public static bool InputPositiveMainAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveMainAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveMainAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeMainDoublePress || gamepadIndex < GamepadsCount && input.GamepadsNegativeMainDoublePress[gamepadIndex];
+		}
+		public static bool InputNegativeMainAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeMainAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeMainAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardPositiveAltDoublePress || gamepadIndex < GamepadsCount && input.GamepadsPositiveAltDoublePress[gamepadIndex];
+		}
+		public static bool InputPositiveAltAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputPositiveAltAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputPositiveAltAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisDoublePress(Input input, int gamepadIndex = 0)
+		{
+			return input.KeyboardNegativeAltDoublePress || gamepadIndex < GamepadsCount && input.GamepadsNegativeAltDoublePress[gamepadIndex];
+		}
+		public static bool InputNegativeAltAxisDoublePress(string name, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisDoublePress(GetInput(name), gamepadIndex);
+		}
+		public static bool InputNegativeAltAxisDoublePress(int index, int gamepadIndex = 0)
+		{
+			return InputNegativeAltAxisDoublePress(GetInput(index), gamepadIndex);
+		}
+#if ENABLE_INPUT_SYSTEM
+		public static bool InputKeyPress(Key key)
+		{
+			return KeyToKeyControl(key).isPressed;
+		}
+		public static bool InputKeyDown(Key key)
+		{
+			return KeyToKeyControl(key).wasPressedThisFrame;
+		}
+		public static bool InputKeyUp(Key key)
+		{
+			return KeyToKeyControl(key).wasReleasedThisFrame;
+		}
+#endif
 		public static bool InputMouseButtonPress(int type)
 		{
 			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
+#if ENABLE_INPUT_SYSTEM
 			switch (type)
 			{
 				case 0:
@@ -1135,20 +2553,21 @@ namespace Utilities.Inputs
 				case 2:
 					return Mouse.middleButton.isPressed;
 			}
-			
+#endif
+
 			return false;
 		}
-		public static bool InputMouseButtonPress(InputMouseButton type)
+		public static bool InputMouseButtonPress(MouseButton type)
 		{
 			switch (type)
 			{
-				case InputMouseButton.Left:
+				case MouseButton.Left:
 					return InputMouseButtonPress(0);
 
-				case InputMouseButton.Right:
+				case MouseButton.Right:
 					return InputMouseButtonPress(1);
 
-				case InputMouseButton.Middle:
+				case MouseButton.Middle:
 					return InputMouseButtonPress(2);
 
 				default:
@@ -1160,6 +2579,7 @@ namespace Utilities.Inputs
 			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
+#if ENABLE_INPUT_SYSTEM
 			switch (type)
 			{
 				case 0:
@@ -1171,20 +2591,21 @@ namespace Utilities.Inputs
 				case 2:
 					return Mouse.middleButton.wasPressedThisFrame;
 			}
-			
+#endif
+
 			return false;
 		}
-		public static bool InputMouseButtonDown(InputMouseButton type)
+		public static bool InputMouseButtonDown(MouseButton type)
 		{
 			switch (type)
 			{
-				case InputMouseButton.Left:
+				case MouseButton.Left:
 					return InputMouseButtonPress(0);
 
-				case InputMouseButton.Right:
+				case MouseButton.Right:
 					return InputMouseButtonPress(1);
 
-				case InputMouseButton.Middle:
+				case MouseButton.Middle:
 					return InputMouseButtonPress(2);
 
 				default:
@@ -1196,6 +2617,7 @@ namespace Utilities.Inputs
 			if (type < 0 || type > 2)
 				throw new ArgumentException("The `type` argument has to be within the `InputMouseButton` enum range", "type");
 
+#if ENABLE_INPUT_SYSTEM
 			switch (type)
 			{
 				case 0:
@@ -1207,20 +2629,21 @@ namespace Utilities.Inputs
 				case 2:
 					return Mouse.middleButton.wasReleasedThisFrame;
 			}
+#endif
 
 			return false;
 		}
-		public static bool InputMouseButtonUp(InputMouseButton type)
+		public static bool InputMouseButtonUp(MouseButton type)
 		{
 			switch (type)
 			{
-				case InputMouseButton.Left:
+				case MouseButton.Left:
 					return InputMouseButtonUp(0);
 
-				case InputMouseButton.Right:
+				case MouseButton.Right:
 					return InputMouseButtonUp(1);
 
-				case InputMouseButton.Middle:
+				case MouseButton.Middle:
 					return InputMouseButtonUp(2);
 
 				default:
@@ -1246,17 +2669,17 @@ namespace Utilities.Inputs
 
 			return false;
 		}
-		public static bool InputMouseButtonHold(InputMouseButton type)
+		public static bool InputMouseButtonHold(MouseButton type)
 		{
 			switch (type)
 			{
-				case InputMouseButton.Left:
+				case MouseButton.Left:
 					return InputMouseButtonHold(0);
 
-				case InputMouseButton.Right:
+				case MouseButton.Right:
 					return InputMouseButtonHold(1);
 
-				case InputMouseButton.Middle:
+				case MouseButton.Middle:
 					return InputMouseButtonHold(2);
 
 				default:
@@ -1282,17 +2705,17 @@ namespace Utilities.Inputs
 
 			return false;
 		}
-		public static bool InputMouseButtonDoublePress(InputMouseButton type)
+		public static bool InputMouseButtonDoublePress(MouseButton type)
 		{
 			switch (type)
 			{
-				case InputMouseButton.Left:
+				case MouseButton.Left:
 					return InputMouseButtonDoublePress(0);
 
-				case InputMouseButton.Right:
+				case MouseButton.Right:
 					return InputMouseButtonDoublePress(1);
 
-				case InputMouseButton.Middle:
+				case MouseButton.Middle:
 					return InputMouseButtonDoublePress(2);
 
 				default:
@@ -1308,7 +2731,7 @@ namespace Utilities.Inputs
 		{
 			LoadData();
 
-			if (Inputs == null || Inputs.Length == 0)
+			if (Inputs == null || Inputs.Length < 1)
 				return;
 
 			for (int i = 0; i < Inputs.Length; i++)
@@ -1317,9 +2740,12 @@ namespace Utilities.Inputs
 		public static void Update()
 		{
 			deltaTime = Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+#if ENABLE_INPUT_SYSTEM && !UNITY_2019_1_OR_NEWER
+			anyKeyPressed = Keyboard.anyKey.isPressed;
+#endif
 			mouseLeftHeld = false;
 
-			if (InputMouseButtonPress(InputMouseButton.Left))
+			if (InputMouseButtonPress(MouseButton.Left))
 			{
 				mouseLeftHoldTimer -= deltaTime;
 				mouseLeftHeld = mouseLeftHoldTimer <= 0f;
@@ -1331,7 +2757,7 @@ namespace Utilities.Inputs
 				mouseLeftHoldTimer = HoldTriggerTime;
 
 			mouseLeftDoublePressTimer += mouseLeftDoublePressTimer > 0f ? -deltaTime : mouseLeftDoublePressTimer;
-			mousePressed = InputMouseButtonUp(InputMouseButton.Left);
+			mousePressed = InputMouseButtonUp(MouseButton.Left);
 
 			if (mousePressed)
 				mouseLeftDoublePressTimer = DoublePressTimeout;
@@ -1346,7 +2772,7 @@ namespace Utilities.Inputs
 
 			mouseMiddleHeld = false;
 
-			if (InputMouseButtonPress(InputMouseButton.Middle))
+			if (InputMouseButtonPress(MouseButton.Middle))
 			{
 				mouseMiddleHoldTimer -= deltaTime;
 				mouseMiddleHeld = mouseMiddleHoldTimer <= 0f;
@@ -1358,7 +2784,7 @@ namespace Utilities.Inputs
 				mouseMiddleHoldTimer = HoldTriggerTime;
 
 			mouseMiddleDoublePressTimer += mouseMiddleDoublePressTimer > 0f ? -deltaTime : mouseMiddleDoublePressTimer;
-			mousePressed = InputMouseButtonUp(InputMouseButton.Middle);
+			mousePressed = InputMouseButtonUp(MouseButton.Middle);
 
 			if (mousePressed)
 				mouseMiddleDoublePressTimer = DoublePressTimeout;
@@ -1373,7 +2799,7 @@ namespace Utilities.Inputs
 
 			mouseRightHeld = false;
 
-			if (InputMouseButtonPress(InputMouseButton.Right))
+			if (InputMouseButtonPress(MouseButton.Right))
 			{
 				mouseRightHoldTimer -= deltaTime;
 				mouseRightHeld = mouseRightHoldTimer <= 0f;
@@ -1385,7 +2811,7 @@ namespace Utilities.Inputs
 				mouseRightHoldTimer = HoldTriggerTime;
 
 			mouseRightDoublePressTimer += mouseRightDoublePressTimer > 0f ? -deltaTime : mouseRightDoublePressTimer;
-			mousePressed = InputMouseButtonUp(InputMouseButton.Right);
+			mousePressed = InputMouseButtonUp(MouseButton.Right);
 
 			if (mousePressed)
 				mouseRightDoublePressTimer = DoublePressTimeout;
@@ -1398,12 +2824,13 @@ namespace Utilities.Inputs
 			if (mouseRightDoublePressTimer <= 0f)
 				mouseRightDoublePressInitiated = false;
 
-			if (Inputs == null || Inputs.Length == 0)
+			if (Inputs == null || Inputs.Length < 1)
 				return;
 
 			for (int i = 0; i < Inputs.Length; i++)
 				Inputs[i].Update();
 		}
+#if ENABLE_INPUT_SYSTEM
 		public static Input[] KeyUsed(Key key)
 		{
 			if (key == Key.None)
@@ -1413,6 +2840,19 @@ namespace Utilities.Inputs
 
 			for (int i = 0; i < Count; i++)
 				if (Inputs[i].Main.Positive == key || Inputs[i].Main.Negative == key || Inputs[i].Alt.Positive == key || Inputs[i].Alt.Negative == key)
+					inputs.Add(Inputs[i]);
+
+			return inputs.ToArray();
+		}
+		public static Input[] GamepadBindingUsed(GamepadBinding binding)
+		{
+			if (binding == GamepadBinding.None)
+				return new Input[] { };
+
+			List<Input> inputs = new List<Input>();
+
+			for (int i = 0; i < Count; i++)
+				if (Inputs[i].Main.GamepadPositive == binding || Inputs[i].Main.GamepadNegative == binding || Inputs[i].Alt.GamepadPositive == binding || Inputs[i].Alt.GamepadNegative == binding)
 					inputs.Add(Inputs[i]);
 
 			return inputs.ToArray();
@@ -1746,6 +3186,7 @@ namespace Utilities.Inputs
 					return Key.None;
 			}
 		}
+#endif
 		public static int IndexOf(string name)
 		{
 			if (string.IsNullOrEmpty(name))
@@ -1787,7 +3228,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot set input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot set input in Play Mode");
 
 				return;
 			}
@@ -1805,7 +3246,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot set input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot set input in Play Mode");
 
 				return;
 			}
@@ -1815,9 +3256,9 @@ namespace Utilities.Inputs
 
 			int index = IndexOf(name);
 
-			if (index == -1)
+			if (index < 0)
 			{
-				Debug.LogError($"Inputs Manager: We couldn't set the `{name}` input because it doesn't exist!");
+				Debug.LogError($"<b>Inputs Manager:</b> We couldn't set the `{name}` input because it doesn't exist!");
 
 				return;
 			}
@@ -1829,15 +3270,15 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot add input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot add input in Play Mode");
 
 				return null;
 			}
 
-			if (string.IsNullOrEmpty(input.Name))
+			if (string.IsNullOrEmpty(input.Name) || string.IsNullOrWhiteSpace(input.Name))
 				throw new ArgumentException("The input name cannot be empty or `null`", "input.name");
 
-			if (IndexOf(input.Name) != -1)
+			if (IndexOf(input.Name) > -1)
 				throw new ArgumentException($"We couldn't add the input `{input.Name}` to the list because its name matches another one", "input");
 
 			Array.Resize(ref inputs, Inputs.Length + 1);
@@ -1853,7 +3294,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot duplicate input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot duplicate input in Play Mode");
 
 				return null;
 			}
@@ -1874,7 +3315,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot insert input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot insert input in Play Mode");
 
 				return;
 			}
@@ -1893,7 +3334,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot remove input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot remove input in Play Mode");
 
 				return;
 			}
@@ -1909,7 +3350,7 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot remove input in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot remove input in Play Mode");
 
 				return;
 			}
@@ -1928,13 +3369,14 @@ namespace Utilities.Inputs
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError($"Inputs Manager: Cannot remove inputs in Play Mode");
+				Debug.LogError("<b>Inputs Manager:</b> Cannot remove inputs in Play Mode");
 
 				return;
 			}
 
 			Array.Clear(inputs, 0, inputs.Length);
 
+			inputs = new Input[] { };
 			dataChanged = true;
 		}
 		public static bool LoadData()
@@ -1945,46 +3387,53 @@ namespace Utilities.Inputs
 			if (DataLoaded)
 				return true;
 
-			string directory = $"{Application.dataPath}/{Path.GetDirectoryName(DataAssetPath)}";
-			string file = Path.GetFileName(DataAssetPath);
-			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>(directory, file);
+			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>($"{(Application.isEditor ? $"{Application.dataPath}/Resources/" : "")}{DataAssetPath}{(Application.isEditor ? ".bytes" : "")}", !Application.isEditor);
 			DataSheet data = serializer.Load();
+
+			if (!data)
+			{
+				Debug.LogError("<b>Inputs Manager:</b> We've had some issues while loading data!");
+
+				return false;
+			}
 
 			inputs = data.Inputs;
 			inputNames = inputs.Select(input => input.Name).ToArray();
+			inputSourcePriority = data.InputSourcePriority;
 			interpolationTime = data.InterpolationTime;
 			holdTriggerTime = data.HoldTriggerTime;
 			holdWaitTime = data.HoldWaitTime;
 			doublePressTimeout = data.DoublePressTimeout;
-			dataLastWriteTime = File.GetLastWriteTime($"{Application.dataPath}/{DataAssetPath}");
+			gamepadThreshold = data.GamepadThreshold;
+			dataLastWriteTime = Application.isEditor ? File.GetLastWriteTime($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") : DateTime.Now;
 			dataChanged = false;
+			dataLoadedOnBuild = !Application.isEditor;
 
 			return data;
 		}
-		public static void UnloadData()
+		public static void ForceLoadData()
 		{
 			dataLastWriteTime = DateTime.MinValue;
 			dataChanged = false;
 		}
 		public static bool SaveData()
 		{
-			if (Application.isPlaying)
+			if (Application.isPlaying || !Application.isEditor)
 				return false;
 
-			string fullPath = $"{Application.dataPath}/{DataAssetPath}";
+			string fullPath = $"{Application.dataPath}/Resources/{DataAssetPath}";
 
 			if (File.Exists(fullPath))
 				File.Delete(fullPath);
 
-			string directory = Path.GetDirectoryName(fullPath);
-			string file = Path.GetFileName(DataAssetPath);
-			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>(directory, file);
+			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>(fullPath, true);
 
 			dataChanged = false;
 
 			return serializer.SaveOrCreate(new DataSheet());
 		}
 
+#if ENABLE_INPUT_SYSTEM
 		private static KeyControl KeyToKeyControl(Key key)
 		{
 			switch (key)
@@ -2317,9 +3766,92 @@ namespace Utilities.Inputs
 					return null;
 			}
 		}
+		private static ButtonControl GamepadBindingToButtonControl(Gamepad gamepad, GamepadBinding binding)
+		{
+			switch (binding)
+			{
+				case GamepadBinding.DpadUp:
+					return gamepad.dpad.up;
+
+				case GamepadBinding.DpadRight:
+					return gamepad.dpad.right;
+
+				case GamepadBinding.DpadDown:
+					return gamepad.dpad.down;
+
+				case GamepadBinding.DpadLeft:
+					return gamepad.dpad.left;
+
+				case GamepadBinding.ButtonNorth:
+					return gamepad.buttonNorth;
+
+				case GamepadBinding.ButtonEast:
+					return gamepad.buttonEast;
+
+				case GamepadBinding.ButtonSouth:
+					return gamepad.buttonSouth;
+
+				case GamepadBinding.ButtonWest:
+					return gamepad.buttonWest;
+
+				case GamepadBinding.LeftStickButton:
+					return gamepad.leftStickButton;
+
+				case GamepadBinding.LeftStickUp:
+					return gamepad.leftStick.up;
+
+				case GamepadBinding.LeftStickRight:
+					return gamepad.leftStick.right;
+
+				case GamepadBinding.LeftStickDown:
+					return gamepad.leftStick.down;
+
+				case GamepadBinding.LeftStickLeft:
+					return gamepad.leftStick.left;
+
+				case GamepadBinding.RightStickButton:
+					return gamepad.rightStickButton;
+
+				case GamepadBinding.RightStickUp:
+					return gamepad.rightStick.up;
+
+				case GamepadBinding.RightStickRight:
+					return gamepad.rightStick.right;
+
+				case GamepadBinding.RightStickDown:
+					return gamepad.rightStick.down;
+
+				case GamepadBinding.RightStickLeft:
+					return gamepad.rightStick.left;
+
+				case GamepadBinding.LeftShoulder:
+					return gamepad.leftShoulder;
+
+				case GamepadBinding.RightShoulder:
+					return gamepad.rightShoulder;
+
+				case GamepadBinding.LeftTrigger:
+					return gamepad.leftTrigger;
+
+				case GamepadBinding.RightTrigger:
+					return gamepad.rightTrigger;
+
+				case GamepadBinding.StartButton:
+					return gamepad.startButton;
+
+				case GamepadBinding.SelectButton:
+					return gamepad.selectButton;
+
+				default:
+					return null;
+			}
+		}
+#endif
 
 		#endregion
 
 		#endregion
 	}
+
+	#endregion
 }

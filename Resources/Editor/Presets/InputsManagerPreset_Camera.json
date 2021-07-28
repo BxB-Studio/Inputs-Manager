@@ -1,0 +1,82 @@
+{
+    "items": [
+        {
+            "name": "Change Camera",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 17,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 14,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Camera Forward",
+            "type": 0,
+            "main": {
+                "strongSide": 3,
+                "positive": 92,
+                "negative": 86,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 15,
+                "gamepadNegative": 17
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Camera Sideways",
+            "type": 0,
+            "main": {
+                "strongSide": 3,
+                "positive": 90,
+                "negative": 88,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 16,
+                "gamepadNegative": 18
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
+        }
+    ]
+}

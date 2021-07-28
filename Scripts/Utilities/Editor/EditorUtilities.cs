@@ -31,7 +31,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("Button");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = UnityEngine.Color.white;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -55,7 +55,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButton");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = UnityEngine.Color.white;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -79,7 +79,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonMid");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = UnityEngine.Color.white;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -103,7 +103,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonLeft");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = UnityEngine.Color.white;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -127,7 +127,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonRight");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = UnityEngine.Color.white;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -160,6 +160,7 @@ namespace Utilities
 			public static Texture2D Eye => Resources.Load($"{IconsPath}/{IconsThemeFolder}/eye") as Texture2D;
 			public static Texture2D Info => Resources.Load($"{IconsPath}/exclamation-square") as Texture2D;
 			public static Texture2D Pencil => Resources.Load($"{IconsPath}/{IconsThemeFolder}/pencil") as Texture2D;
+			public static Texture2D Reload => Resources.Load($"{IconsPath}/{IconsThemeFolder}/reload") as Texture2D;
 			public static Texture2D Settings => Resources.Load($"{IconsPath}/{IconsThemeFolder}/cog") as Texture2D;
 			public static Texture2D Save => Resources.Load($"{IconsPath}/{IconsThemeFolder}/save") as Texture2D;
 			public static Texture2D Sort => Resources.Load($"{IconsPath}/{IconsThemeFolder}/sort") as Texture2D;
@@ -220,8 +221,10 @@ namespace Utilities
 					vertices += meshFilters[i].sharedMesh.vertexCount;
 					triangles += meshFilters[i].sharedMesh.triangles.Length;
 
+#if UNITY_2019_3_OR_NEWER
 					for (int j = 0; j < meshFilters[i].sharedMesh.subMeshCount; j++)
 						vertices += meshFilters[i].sharedMesh.GetSubMesh(j).vertexCount;
+#endif
 				}
 
 			Debug.Log($"{Selection.activeGameObject.name} Mesh Details (Click to see more...)\r\n\r\nVertices: {vertices}\r\nTriangles: {triangles}", Selection.activeGameObject);

@@ -3,10 +3,12 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-namespace Utilities
+namespace Utilities.Editor
 {
 	internal class DataSerializationSample : EditorWindow
 	{
+		#region Modules
+
 		[Serializable]
 		private class DataSample
 		{
@@ -15,33 +17,35 @@ namespace Utilities
 			public int age;
 		}
 
+		#endregion
+
+		#region Variables
+
 		private DataSerializationUtility<DataSample> serializationUtility;
 		private DataSample data;
 		private string DataPath => $"{Application.dataPath}/Resources/Assets/DataSample.data";
 
+		#endregion
+
+		#region Methods
+
 		[MenuItem("Tools/Utilities/Debug/Data File Sample...")]
 		public static void ShowWindow()
 		{
-			GetWindow<DataSerializationSample>("Data File Sample").Show();
+			GetWindow<DataSerializationSample>(true, "Data File Sample").Show();
 		}
 
 		private void Load()
 		{
-			string directory = Path.GetDirectoryName(DataPath);
-			string fileName = Path.GetFileName(DataPath);
-
 			if (!serializationUtility)
-				serializationUtility = new DataSerializationUtility<DataSample>(directory, fileName);
+				serializationUtility = new DataSerializationUtility<DataSample>(DataPath, false);
 
 			data = serializationUtility.Load();
 		}
 		private void Save()
 		{
-			string directory = Path.GetDirectoryName(DataPath);
-			string fileName = Path.GetFileName(DataPath);
-
 			if (!serializationUtility)
-				serializationUtility = new DataSerializationUtility<DataSample>(directory, fileName);
+				serializationUtility = new DataSerializationUtility<DataSample>(DataPath, false);
 
 			serializationUtility.SaveOrCreate(data);
 
@@ -87,5 +91,7 @@ namespace Utilities
 
 			EditorGUILayout.EndVertical();
 		}
+
+		#endregion
 	}
 }

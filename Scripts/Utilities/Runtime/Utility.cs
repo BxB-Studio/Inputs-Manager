@@ -14,7 +14,51 @@ using System.IO;
 
 namespace Utilities
 {
-	public static class Utility
+	public static class Extensions
+	{
+		public static Transform Find(this Transform transform, string name, bool caseSensitive = true)
+		{
+			for (int i = 0; i < transform.childCount; i++)
+				if (!caseSensitive && transform.GetChild(i).name.ToUpper() == name.ToUpper() || transform.GetChild(i).name == name)
+					return transform.GetChild(i);
+
+			return null;
+		}
+		public static Transform FindStartsWith(this Transform transform, string name, bool caseSensitive = true)
+		{
+			for (int i = 0; i < transform.childCount; i++)
+				if (!caseSensitive && transform.GetChild(i).name.ToUpper().StartsWith(name.ToUpper()) || transform.GetChild(i).name.StartsWith(name))
+					return transform.GetChild(i);
+
+			return null;
+		}
+		public static Transform FindEndsWith(this Transform transform, string name, bool caseSensitive = true)
+		{
+			for (int i = 0; i < transform.childCount; i++)
+				if (!caseSensitive && transform.GetChild(i).name.ToUpper().EndsWith(name.ToUpper()) || transform.GetChild(i).name.EndsWith(name))
+					return transform.GetChild(i);
+
+			return null;
+		}
+		public static Transform FindContains(this Transform transform, string name, bool caseSensitive = true)
+		{
+			for (int i = 0; i < transform.childCount; i++)
+				if (!caseSensitive && transform.GetChild(i).name.ToUpper().Contains(name.ToUpper()) || transform.GetChild(i).name.Contains(name))
+					return transform.GetChild(i);
+
+			return null;
+		}
+		public static T[] ToArray<T>(this Array array)
+		{
+			T[] newArray = new T[array.Length];
+
+			for (int i = 0; i < array.Length; i++)
+				newArray[i] = (T)array.GetValue(i);
+
+			return newArray;
+		}
+	}
+	public struct Utility
 	{
 		#region Modules & Enumerators
 
@@ -22,9 +66,13 @@ namespace Utilities
 
 		public enum Precision { Simple, Advanced }
 		public enum UnitType { Metric, Imperial }
-		public enum Units { Area, AreaAccurate, AreaLarge, Distance, DistanceAccurate, DistanceLong, Force, Liquid, Power, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
-		public enum RenderPipeline { Standard, URP, HDRP, Custom }
+		public enum Units { Area, AreaAccurate, AreaLarge, Density, Distance, DistanceAccurate, DistanceLong, Force, Frequency, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
+		public enum RenderPipeline { Standard, UniversalRenderPipeline, HighDefinitionRenderPipeline, CustomRenderPipeline }
 		public enum TextureEncodingType { EXR, JPG, PNG, TGA }
+		public enum WorldSurface { XY, XZ, YZ }
+		public enum Axis2 { X, Y }
+		public enum Axis3 { X, Y, Z }
+		public enum Axis4 { X, Y, Z, W }
 
 		#endregion
 
@@ -69,7 +117,7 @@ namespace Utilities
 
 			public JsonArray(T[] array)
 			{
-				items = array;
+				items = array.Distinct().ToArray();
 			}
 
 			#endregion
@@ -87,7 +135,7 @@ namespace Utilities
 				}
 				set
 				{
-					min = Mathf.Clamp(value, -Mathf.Infinity, max);
+					min = Mathf.Clamp(value, Mathf.NegativeInfinity, OverrideBorders ? Mathf.Infinity : max);
 				}
 			}
 			public float Max
@@ -98,7 +146,24 @@ namespace Utilities
 				}
 				set
 				{
-					max = Mathf.Clamp(value, min, Mathf.Infinity);
+					max = Mathf.Clamp(value, OverrideBorders ? Mathf.NegativeInfinity : min, Mathf.Infinity);
+				}
+			}
+			public bool OverrideBorders
+			{
+				get
+				{
+					return overrideBorders;
+				}
+				set
+				{
+					if (!overrideBorders)
+					{
+						min = Mathf.Clamp(min, Mathf.NegativeInfinity, max);
+						max = Mathf.Clamp(max, min, Mathf.Infinity);
+					}
+
+					overrideBorders = value;
 				}
 			}
 
@@ -106,15 +171,15 @@ namespace Utilities
 			private float min;
 			[SerializeField]
 			private float max;
+			[SerializeField]
+			private bool overrideBorders;
 
 			#endregion
 
 			#region Methods
 
-			public bool InRange(float value)
-			{
-				return value >= min && value <= max;
-			}
+			#region Virtual Methods
+
 			public override bool Equals(object obj)
 			{
 				return obj is Interval interval &&
@@ -131,14 +196,32 @@ namespace Utilities
 
 			#endregion
 
+			#region Global Methods
+
+			public bool InRange(float value)
+			{
+				return value >= min && value <= max;
+			}
+
+			#endregion
+
+			#endregion
+
 			#region Constructors & Operators
 
 			#region Constructors
 
-			public Interval(float min, float max)
+			public Interval(float min, float max, bool overrideBorders = false)
 			{
-				this.min = min;
-				this.max = max;
+				this.min = Mathf.Clamp(min, Mathf.NegativeInfinity, max);
+				this.max = Mathf.Clamp(max, min, Mathf.Infinity);
+				this.overrideBorders = overrideBorders;
+			}
+			public Interval(Interval interval)
+			{
+				min = interval.Min;
+				max = interval.Max;
+				overrideBorders = interval.OverrideBorders;
 			}
 
 			#endregion
@@ -190,6 +273,192 @@ namespace Utilities
 
 			#endregion
 
+		}
+		[Serializable]
+		public struct Interval2
+		{
+			#region Variables
+
+			public Interval x;
+			public Interval y;
+
+			#endregion
+
+			#region Methods
+
+			#region Virtual Methods
+
+			public override bool Equals(object obj)
+			{
+				return obj is Interval2 interval &&
+					   EqualityComparer<Interval>.Default.Equals(x, interval.x) &&
+					   EqualityComparer<Interval>.Default.Equals(y, interval.y);
+			}
+			public override int GetHashCode()
+			{
+				int hashCode = 1502939027;
+
+				hashCode = hashCode * -1521134295 + x.GetHashCode();
+				hashCode = hashCode * -1521134295 + y.GetHashCode();
+
+				return hashCode;
+			}
+
+			#endregion
+
+			#region Global Methods
+
+			public bool InRange(float value)
+			{
+				return x.InRange(value) && y.InRange(value);
+			}
+			public bool InRange(Vector2 value)
+			{
+				return x.InRange(value.x) && y.InRange(value.y);
+			}
+
+			#endregion
+
+			#endregion
+
+			#region Constructors & Operators
+
+			#region Constructors
+
+			public Interval2(float xMin, float xMax, float yMin, float yMax)
+			{
+				x = new Interval(xMin, xMax);
+				y = new Interval(yMin, yMax);
+			}
+			public Interval2(Interval x, Interval y)
+			{
+				this.x = x;
+				this.y = y;
+			}
+			public Interval2(Interval2 interval)
+			{
+				x = new Interval(interval.x);
+				y = new Interval(interval.y);
+			}
+
+			#endregion
+
+			#region Operators
+
+			public static bool operator ==(Interval2 a, Interval2 b)
+			{
+				return a.Equals(b);
+			}
+			public static bool operator !=(Interval2 a, Interval2 b)
+			{
+				return !(a == b);
+			}
+			public static implicit operator Interval(Interval2 interval)
+			{
+				return new Interval(interval.x);
+			}
+
+			#endregion
+
+			#endregion
+		}
+		[Serializable]
+		public struct Interval3
+		{
+			#region Variables
+
+			public Interval x;
+			public Interval y;
+			public Interval z;
+
+			#endregion
+
+			#region Methods
+
+			#region Virtual Methods
+
+			public override bool Equals(object obj)
+			{
+				return obj is Interval3 interval &&
+					   EqualityComparer<Interval>.Default.Equals(x, interval.x) &&
+					   EqualityComparer<Interval>.Default.Equals(y, interval.y) &&
+					   EqualityComparer<Interval>.Default.Equals(z, interval.z);
+			}
+			public override int GetHashCode()
+			{
+				int hashCode = 373119288;
+
+				hashCode = hashCode * -1521134295 + x.GetHashCode();
+				hashCode = hashCode * -1521134295 + y.GetHashCode();
+				hashCode = hashCode * -1521134295 + z.GetHashCode();
+
+				return hashCode;
+			}
+
+			#endregion
+
+			#region Global Methods
+
+			public bool InRange(float value)
+			{
+				return x.InRange(value) && y.InRange(value) && z.InRange(value);
+			}
+			public bool InRange(Vector3 value)
+			{
+				return x.InRange(value.x) && y.InRange(value.y) && z.InRange(value.z);
+			}
+
+			#endregion
+
+			#endregion
+
+			#region Constructors & Operators
+
+			#region Constructors
+
+			public Interval3(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax)
+			{
+				x = new Interval(xMin, xMax);
+				y = new Interval(yMin, yMax);
+				z = new Interval(zMin, zMax);
+			}
+			public Interval3(Interval x, Interval y, Interval z)
+			{
+				this.x = x;
+				this.y = y;
+				this.z = z;
+			}
+			public Interval3(Interval3 interval)
+			{
+				x = new Interval(interval.x);
+				y = new Interval(interval.y);
+				z = new Interval(interval.z);
+			}
+
+			#endregion
+
+			#region Operators
+
+			public static bool operator ==(Interval3 a, Interval3 b)
+			{
+				return a.Equals(b);
+			}
+			public static bool operator !=(Interval3 a, Interval3 b)
+			{
+				return !(a == b);
+			}
+			public static implicit operator Interval2(Interval3 interval)
+			{
+				return new Interval2(interval.x, interval.y);
+			}
+			public static implicit operator Interval(Interval3 interval)
+			{
+				return new Interval(interval.x);
+			}
+
+			#endregion
+
+			#endregion
 		}
 		[Serializable]
 		public struct SerializableVector2
@@ -345,10 +614,10 @@ namespace Utilities
 			{
 				int hashCode = -383408880;
 
-				hashCode *= -1521134295 + name.GetHashCode();
-				hashCode *= -1521134295 + EqualityComparer<SerializableColor>.Default.GetHashCode(color);
-				hashCode *= -1521134295 + metallic.GetHashCode();
-				hashCode *= -1521134295 + smoothness.GetHashCode();
+				hashCode = hashCode * -1521134295 + name.GetHashCode();
+				hashCode = hashCode * -1521134295 + EqualityComparer<SerializableColor>.Default.GetHashCode(color);
+				hashCode = hashCode * -1521134295 + metallic.GetHashCode();
+				hashCode = hashCode * -1521134295 + smoothness.GetHashCode();
 
 				return hashCode;
 			}
@@ -903,6 +1172,9 @@ namespace Utilities
 				case Units.AreaLarge:
 					return unitType == UnitType.Metric ? 1f : 1f / 2.59f;
 
+				case Units.Density:
+					return unitType == UnitType.Metric ? 1f : 0.06242796f;
+
 				case Units.Distance:
 					return unitType == UnitType.Metric ? 1f : 3.28084f;
 
@@ -917,6 +1189,9 @@ namespace Utilities
 
 				case Units.Power:
 					return unitType == UnitType.Metric ? 1f : 0.7457f;
+
+				case Units.Pressure:
+					return unitType == UnitType.Metric ? 1f : 14.503773773f;
 
 				case Units.Size:
 					return unitType == UnitType.Metric ? 1f : 1f / 2.54f;
@@ -959,6 +1234,9 @@ namespace Utilities
 				case Units.AreaLarge:
 					return unitType == UnitType.Metric ? "km²" : "m²";
 
+				case Units.Density:
+					return unitType == UnitType.Metric ? "kg/m³" : "lbᵐ/ft³";
+
 				case Units.Distance:
 					return unitType == UnitType.Metric ? "m" : "ft";
 
@@ -971,11 +1249,17 @@ namespace Utilities
 				case Units.Force:
 					return unitType == UnitType.Metric ? "N" : "N";
 
+				case Units.Frequency:
+					return unitType == UnitType.Metric ? "Hz" : "Hz";
+
 				case Units.Liquid:
 					return unitType == UnitType.Metric ? "L" : "gal";
 
 				case Units.Power:
 					return unitType == UnitType.Metric ? "hp" : "kW";
+
+				case Units.Pressure:
+					return unitType == UnitType.Metric ? "bar" : "psi";
 
 				case Units.Size:
 					return unitType == UnitType.Metric ? "cm" : "in";
@@ -1027,8 +1311,11 @@ namespace Utilities
 				case Units.AreaLarge:
 					return unitType == UnitType.Metric ? "Square Kilometre" : "Square Mile";
 
+				case Units.Density:
+					return unitType == UnitType.Metric ? "Kilogram per Cubic Metre" : "Pound-mass per Cubic Foot";
+
 				case Units.Distance:
-					return unitType == UnitType.Metric ? "Metre" : "Feet";
+					return unitType == UnitType.Metric ? "Metre" : "Foot";
 
 				case Units.DistanceAccurate:
 					return unitType == UnitType.Metric ? "Metre" : "Yard";
@@ -1039,11 +1326,17 @@ namespace Utilities
 				case Units.Force:
 					return unitType == UnitType.Metric ? "Newton" : "Newton";
 
+				case Units.Frequency:
+					return unitType == UnitType.Metric ? "Hertz" : "Hertz";
+
 				case Units.Liquid:
 					return unitType == UnitType.Metric ? "Litre" : "Gallon";
 
 				case Units.Power:
 					return unitType == UnitType.Metric ? "Horsepower" : "Kilowatt";
+
+				case Units.Pressure:
+					return unitType == UnitType.Metric ? "Bar" : "Pounds per Square Inch";
 
 				case Units.Size:
 					return unitType == UnitType.Metric ? "Centimetre" : "Inch";
@@ -1061,10 +1354,10 @@ namespace Utilities
 					return unitType == UnitType.Metric ? "Millisecond" : "Millisecond";
 
 				case Units.Torque:
-					return unitType == UnitType.Metric ? "Newton⋅Meter" : "Pound⋅Feet";
+					return unitType == UnitType.Metric ? "Newton⋅Metre" : "Pound⋅Feet";
 
 				case Units.Velocity:
-					return unitType == UnitType.Metric ? "Meters per Second" : "Feet per Second";
+					return unitType == UnitType.Metric ? "Metres per Second" : "Feet per Second";
 
 				case Units.Volume:
 					return unitType == UnitType.Metric ? "Cubic Metre" : "Cubic Foot";
@@ -1084,7 +1377,7 @@ namespace Utilities
 		}
 		public static float ValueWithUnitToNumber(string value)
 		{
-			string[] valueArray = value.Trim().Split(' ');
+			string[] valueArray = value.Split(' ');
 
 			value = "";
 
@@ -1092,11 +1385,11 @@ namespace Utilities
 				if (float.TryParse(valueArray[i], out float number))
 					value += number + (i < valueArray.Length - 1 ? " " : "");
 
-			return !string.IsNullOrEmpty(value) && float.TryParse(value, out float result) ? result : 0f;
+			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? result : 0f;
 		}
 		public static float ValueWithUnitToNumber(string value, Units unit, UnitType unitType)
 		{
-			string[] valueArray = value.Trim().Split(' ');
+			string[] valueArray = value.Split(' ');
 
 			value = "";
 
@@ -1104,20 +1397,32 @@ namespace Utilities
 				if (float.TryParse(valueArray[i], out float number))
 					value += number + (i < valueArray.Length - 1 ? " " : "");
 
-			return !string.IsNullOrEmpty(value) && float.TryParse(value, out float result) ? result / UnitMultiplier(unit, unitType) : 0f;
+			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? result / UnitMultiplier(unit, unitType) : 0f;
 		}
 		public static string NumberToValueWithUnit(float number, string unit, bool rounded)
 		{
+			if (number == Mathf.Infinity)
+				return "Infinity";
+			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+				return "-Infinity";
+
 			return $"{(rounded ? Mathf.Round(number) : number)} {unit}";
 		}
 		public static string NumberToValueWithUnit(float number, string unit, uint decimals)
 		{
-			return $"{Utility.Round(number, decimals)} {unit}";
+			if (number == Mathf.Infinity)
+				return "Infinity";
+			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+				return "-Infinity";
+
+			return $"{Round(number, decimals)} {unit}";
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, bool rounded)
 		{
-			if (Mathf.Abs(number) == Mathf.Infinity)
+			if (number == Mathf.Infinity)
 				return "Infinity";
+			else if (number == Mathf.NegativeInfinity)
+				return "-Infinity";
 
 			number *= UnitMultiplier(unit, unitType);
 
@@ -1125,8 +1430,10 @@ namespace Utilities
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, uint decimals)
 		{
-			if (Mathf.Abs(number) == Mathf.Infinity)
+			if (number == Mathf.Infinity)
 				return "Infinity";
+			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+				return "-Infinity";
 
 			number *= UnitMultiplier(unit, unitType);
 
@@ -1158,16 +1465,16 @@ namespace Utilities
 			switch (refMaterial.frictionCombine)
 			{
 				case PhysicMaterialCombine.Average:
-					return !Mathf.Approximately(slip, 0f) ? (refMaterial.dynamicFriction + material.dynamicFriction) * .5f : (refMaterial.staticFriction + material.staticFriction) * .5f;
+					return Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + material.dynamicFriction) * .5f : (refMaterial.staticFriction + material.staticFriction) * .5f;
 
 				case PhysicMaterialCombine.Multiply:
-					return !Mathf.Approximately(slip, 0f) ? refMaterial.dynamicFriction * material.dynamicFriction : refMaterial.staticFriction * material.staticFriction;
+					return Round(slip, 2) != 0f ? refMaterial.dynamicFriction * material.dynamicFriction : refMaterial.staticFriction * material.staticFriction;
 
 				case PhysicMaterialCombine.Minimum:
-					return !Mathf.Approximately(slip, 0f) ? Mathf.Min(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
+					return Round(slip, 2) != 0f ? Mathf.Min(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
 
 				case PhysicMaterialCombine.Maximum:
-					return !Mathf.Approximately(slip, 0f) ? Mathf.Max(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
+					return Round(slip, 2) != 0f ? Mathf.Max(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
 
 				default:
 					return 0f;
@@ -1178,16 +1485,16 @@ namespace Utilities
 			switch (refMaterial.frictionCombine)
 			{
 				case PhysicMaterialCombine.Average:
-					return !Mathf.Approximately(slip, 0f) ? (refMaterial.dynamicFriction + stiffness) * .5f : (refMaterial.staticFriction + stiffness) * .5f;
+					return Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + stiffness) * .5f : (refMaterial.staticFriction + stiffness) * .5f;
 
 				case PhysicMaterialCombine.Multiply:
-					return !Mathf.Approximately(slip, 0f) ? refMaterial.dynamicFriction * stiffness : refMaterial.staticFriction * stiffness;
+					return Round(slip, 2) != 0f ? refMaterial.dynamicFriction * stiffness : refMaterial.staticFriction * stiffness;
 
 				case PhysicMaterialCombine.Minimum:
-					return !Mathf.Approximately(slip, 0f) ? Mathf.Min(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
+					return Round(slip, 2) != 0f ? Mathf.Min(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
 
 				case PhysicMaterialCombine.Maximum:
-					return !Mathf.Approximately(slip, 0f) ? Mathf.Max(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
+					return Round(slip, 2) != 0f ? Mathf.Max(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
 
 				default:
 					return 0f;
@@ -1199,6 +1506,9 @@ namespace Utilities
 		}
 		public static float SpeedToRPM(float speed, float radius)
 		{
+			if (radius <= 0f)
+				return speed / .377f;
+
 			return speed / radius / .377f;
 		}
 		public static bool MaskHasLayer(LayerMask mask, int layer)
@@ -1252,6 +1562,48 @@ namespace Utilities
 
 			return (hours == 0 ? minutes.ToString() : (hours + ":" + minutes.ToString("00"))) + ":" + seconds.ToString("00");
 		}
+		public static bool IsAlphabet(char c)
+		{
+			c = char.ToUpper(c);
+
+			return c == 'A' || c == 'B' || c == 'C' || c == 'D' || c == 'E' || c == 'F' || c == 'G' || c == 'H' || c == 'I' || c == 'J' || c == 'K' || c == 'L'
+				|| c == 'M' || c == 'N' || c == 'O' || c == 'P' || c == 'Q' || c == 'R' || c == 'S' || c == 'T' || c == 'U' || c == 'V' || c == 'W' || c == 'X'
+				|| c == 'Y' || c == 'Z';
+		}
+		public static bool IsNumber(char c)
+		{
+			return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9';
+		}
+		public static bool IsSymbol(char c)
+		{
+			return !IsAlphabet(c) && !IsNumber(c);
+		}
+		public static string RandomString(int length, bool upperChars = true, bool lowerChars = true, bool numbers = true, bool symbols = true)
+		{
+			string chars = "";
+
+			chars += upperChars ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "";
+			chars += lowerChars ? "abcdefghijklmnopqrstuvwxyz" : "";
+			chars += numbers ? "0123456789" : "";
+			chars += symbols ? "!@#$%^&()_+-{}[],.;" : "";
+
+			return new string(Enumerable.Repeat(chars, length).Select(s => s[UnityEngine.Random.Range(0, s.Length)]).ToArray());
+		}
+		public static string GetReadableSize(long length)
+		{
+			string[] sizes = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", "BB" };
+			float size = length;
+			int index = 0;
+
+			while (size >= 1024f && index < sizes.Length - 1)
+			{
+				size /= 1024f;
+
+				index++;
+			}
+
+			return $"{Round(size, 2):0.00} {sizes[index]}";
+		}
 		public static void DrawArrowForGizmos(Vector3 pos, Vector3 direction, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
 		{
 			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
@@ -1294,15 +1646,43 @@ namespace Utilities
 			Debug.DrawRay(pos + direction, right * arrowHeadLength, color);
 			Debug.DrawRay(pos + direction, left * arrowHeadLength, color);
 		}
-		public static Vector3 PointFromCircle(Vector3 center, float radius, float angle, float angleOffset = 0f)
+		public static bool PointInTriangle(Vector2 point, Vector2 point1, Vector2 point2, Vector2 point3)
 		{
-			Vector3 newPosition;
+			float d1, d2, d3;
+			bool isNegative, isPositive;
 
-			newPosition.x = center.x + radius * Mathf.Sin((angle + angleOffset) * Mathf.Deg2Rad);
-			newPosition.y = center.y + radius * Mathf.Cos((angle + angleOffset) * Mathf.Deg2Rad);
-			newPosition.z = center.z;
+			d1 = PointSign(point, point1, point2);
+			d2 = PointSign(point, point2, point3);
+			d3 = PointSign(point, point3, point1);
 
-			return newPosition;
+			isNegative = (d1 < 0) || (d2 < 0) || (d3 < 0);
+			isPositive = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+			return !(isNegative && isPositive);
+		}
+		public static Vector3 PointFromCircle(Vector3 center, float radius, float angle, WorldSurface surface, Quaternion rotation)
+		{
+			Vector3 newPosition = Vector3.zero;
+
+			switch (surface)
+			{
+				case WorldSurface.XY:
+					newPosition.x += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+					newPosition.y += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+					break;
+
+				case WorldSurface.XZ:
+					newPosition.x += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+					newPosition.z += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+					break;
+
+				case WorldSurface.YZ:
+					newPosition.y += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+					newPosition.z += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+					break;
+			}
+
+			return center + rotation * newPosition;
 		}
 		public static Vector3 PointFromLine(Vector3 start, Vector3 direction, float length, float position)
 		{
@@ -1322,6 +1702,18 @@ namespace Utilities
 		{
 			return new Vector3(Mathf.Round(vector.x), Mathf.Round(vector.y), Mathf.Round(vector.z));
 		}
+		public static Vector2 Round(Vector2 vector)
+		{
+			return new Vector2(Mathf.Round(vector.x), Mathf.Round(vector.y));
+		}
+		public static Vector3Int RoundToInt(Vector3 vector)
+		{
+			return new Vector3Int(Mathf.RoundToInt(vector.x), Mathf.RoundToInt(vector.y), Mathf.RoundToInt(vector.z));
+		}
+		public static Vector2Int RoundToInt(Vector2 vector)
+		{
+			return new Vector2Int(Mathf.RoundToInt(vector.x), Mathf.RoundToInt(vector.y));
+		}
 		public static float Round(float number, uint decimals)
 		{
 			float multiplier = Mathf.Pow(10, decimals);
@@ -1338,7 +1730,7 @@ namespace Utilities
 		}
 		public static Vector3 DirectionRight(Vector3 forward, Vector3 up)
 		{
-			return Vector3.Cross(forward, up).normalized;
+			return Quaternion.AngleAxis(90f, up) * forward;
 		}
 		public static float AngleAroundAxis(Vector3 direction, Vector3 axis, Vector3 forward)
 		{
@@ -1386,17 +1778,6 @@ namespace Utilities
 				b = Mathf.MoveTowards(a.b, b.b, maxDelta.b),
 				a = Mathf.MoveTowards(a.a, b.a, maxDelta.a)
 			};
-		}
-		public static string RandomString(int length, bool upperChars = true, bool lowerChars = true, bool numbers = true, bool symbols = true)
-		{
-			string chars = "";
-
-			chars += upperChars ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "";
-			chars += lowerChars ? "abcdefghijklmnopqrstuvwxyz" : "";
-			chars += numbers ? "0123456789" : "";
-			chars += symbols ? "!@#$%^&()_+-{}[],.;" : "";
-
-			return new string(Enumerable.Repeat(chars, length).Select(s => s[UnityEngine.Random.Range(0, s.Length)]).ToArray());
 		}
 		public static float Distance(params Vector3[] vectors)
 		{
@@ -1466,7 +1847,7 @@ namespace Utilities
 		}
 		public static Vector3 Average(params Vector3[] vectors)
 		{
-			if (vectors.Length == 0)
+			if (vectors.Length < 1)
 				return Vector3.zero;
 
 			return new Vector3()
@@ -1476,9 +1857,34 @@ namespace Utilities
 				z = vectors.Average(vector => vector.z)
 			};
 		}
+		public static Vector2 Average(params Vector2[] vectors)
+		{
+			if (vectors.Length < 1)
+				return Vector2.zero;
+
+			return new Vector2()
+			{
+				x = vectors.Average(vector => vector.x),
+				y = vectors.Average(vector => vector.y)
+			};
+		}
+		public static Vector3Int Average(params Vector3Int[] vectors)
+		{
+			if (vectors.Length < 1)
+				return Vector3Int.zero;
+
+			return RoundToInt(Average(vectors));
+		}
+		public static Vector2Int Average(params Vector2Int[] vectors)
+		{
+			if (vectors.Length < 1)
+				return Vector2Int.zero;
+
+			return RoundToInt(Average(vectors));
+		}
 		public static Quaternion Average(params Quaternion[] quaternions)
 		{
-			if (quaternions.Length == 0)
+			if (quaternions.Length < 1)
 				return Quaternion.identity;
 
 			Quaternion average = quaternions[0];
@@ -1494,14 +1900,14 @@ namespace Utilities
 		}
 		public static float Average(params float[] floats)
 		{
-			if (floats.Length == 0)
+			if (floats.Length < 1)
 				return 0f;
 
 			return floats.Average();
 		}
 		public static int Average(params int[] ints)
 		{
-			if (ints.Length == 0)
+			if (ints.Length < 1)
 				return 0;
 
 			return Mathf.RoundToInt((float)ints.Average());
@@ -1510,13 +1916,29 @@ namespace Utilities
 		{
 			return min >= 0f ? Mathf.Max(number, min) : Mathf.Min(number, min);
 		}
+		public static int ClampInfinity(int number, int min = 0)
+		{
+			return min >= 0 ? Mathf.Max(number, min) : Mathf.Min(number, min);
+		}
 		public static Vector3 ClampInfinity(Vector3 vector, float min = 0f)
 		{
 			return min >= 0f ? new Vector3(Mathf.Max(vector.x, min), Mathf.Max(vector.y, min), Mathf.Max(vector.z, min)) : new Vector3(Mathf.Min(vector.x, min), Mathf.Min(vector.y, min), Mathf.Min(vector.z, min));
 		}
-		public static int ClampInfinity(int number, int min = 0)
+		public static Vector3 ClampInfinity(Vector3 vector, Vector3 min)
 		{
-			return min >= 0 ? Mathf.Max(number, min) : Mathf.Min(number, min);
+			return Utility.Average(min.x, min.y, min.z) >= 0f ? new Vector3(Mathf.Max(vector.x, min.x), Mathf.Max(vector.y, min.y), Mathf.Max(vector.z, min.z)) : new Vector3(Mathf.Min(vector.x, min.x), Mathf.Min(vector.y, min.y), Mathf.Min(vector.z, min.z));
+		}
+		public static long GetTimestamp(DateTime dateTime)
+		{
+			return long.Parse(dateTime.ToString("yyyyMMddHHmmssffff"));
+		}
+		public static long GetTimestamp(bool UTC = false)
+		{
+			return GetTimestamp(UTC ? DateTime.UtcNow : DateTime.Now);
+		}
+		public static bool IsPointInsideCollider(Collider collider, Vector3 point)
+		{
+			return Round(Distance(collider.ClosestPointOnBounds(point), point), 2) <= 0f;
 		}
 		public static bool FindIntersection(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4, out Vector3 intersection)
 		{
@@ -1551,14 +1973,14 @@ namespace Utilities
 		{
 			string newPath = string.Join("/", path);
 
-			while (newPath.IndexOf('\\') != -1)
+			while (newPath.IndexOf('\\') > -1)
 				newPath = newPath.Replace('\\', '/');
 
-			string[] pathArray = newPath.Split('/').Where(s => !string.IsNullOrEmpty(s)).ToArray();
+			string[] pathArray = newPath.Split('/').Where(s => !string.IsNullOrEmpty(s) && !string.IsNullOrWhiteSpace(s)).ToArray();
 
 			var index = Array.IndexOf(pathArray, '.');
 
-			while (index != -1)
+			while (index > -1)
 			{
 				pathArray = new ArraySegment<string>(pathArray, index, 1).Array;
 
@@ -1567,7 +1989,7 @@ namespace Utilities
 
 			index = Array.IndexOf(pathArray, "..");
 
-			while (index != -1)
+			while (index > -1)
 			{
 				pathArray = new ArraySegment<string>(pathArray, index > 0 ? index - 1 : index, index > 0 ? 2 : 1).Array;
 
@@ -1580,8 +2002,8 @@ namespace Utilities
 		{
 			IEnumerable<string> items = Directory.EnumerateFileSystemEntries(path);
 
-			using (IEnumerator<string> en = items.GetEnumerator())
-				return !en.MoveNext();
+			using (IEnumerator<string> entry = items.GetEnumerator())
+				return !entry.MoveNext();
 		}
 		public static AudioSource NewAudioSource(string sourceName, float minDistance, float maxDistance, float volume, AudioClip clip, bool loop, bool playNow, bool destroyAfterFinished, bool mute = false, Transform parent = null, AudioMixerGroup mixer = null, bool spatialize = false)
 		{
@@ -1607,9 +2029,9 @@ namespace Utilities
 			if (destroyAfterFinished)
 			{
 				if (clip)
-					UnityEngine.Object.Destroy(source.gameObject, clip.length * 5f);
+					Destroy(source.gameObject, clip.length * 5f);
 				else
-					UnityEngine.Object.Destroy(source.gameObject);
+					Destroy(false, source.gameObject);
 			}
 
 			return source;
@@ -1651,35 +2073,48 @@ namespace Utilities
 		}
 		public static Texture2D GetTextureArrayItem(Texture2DArray array, int index)
 		{
-			if (!array.isReadable)
+			bool isReadable = array.isReadable;
+
+			if (!isReadable)
 				array.Apply(false, false);
 
-			Texture2D texture = new Texture2D(array.width, array.height, array.format, array.mipmapCount > 1);
+			Texture2D texture = new Texture2D(array.width, array.height, array.format, array.mipMapBias > 0f);
 
-			texture.SetPixels(array.GetPixels(index));
+			texture.SetPixels32(array.GetPixels32(index));
 			texture.Apply();
+
+			if (!isReadable)
+				array.Apply(false, true);
 
 			return texture;
 		}
 		public static Texture2D[] GetTextureArrayItems(Texture2DArray array)
 		{
-			if (!array.isReadable)
+			bool isReadable = array.isReadable;
+
+			if (!isReadable)
 				array.Apply(false, false);
 
 			Texture2D[] textures = new Texture2D[array.depth];
 
 			for (int i = 0; i < array.depth; i++)
 			{
-				textures[i] = new Texture2D(array.width, array.height, TextureFormat.RGBA32, array.mipmapCount > 1);
+				textures[i] = new Texture2D(array.width, array.height, array.format, array.mipMapBias > 0f);
 
-				textures[i].SetPixels(array.GetPixels(i));
+				textures[i].SetPixels32(array.GetPixels32(i));
 				textures[i].Apply(true, false);
 			}
+
+			if (!isReadable)
+				array.Apply(false, true);
 
 			return textures;
 		}
 		public static void SaveTexture2D(Texture2D texture, TextureEncodingType type, string path)
 		{
+			if (!texture)
+				return;
+
 			byte[] bytes;
 
 			switch (type)
@@ -1715,13 +2150,11 @@ namespace Utilities
 			RenderTexture renderTexture = new RenderTexture(size.x, size.y, depth);
 
 			camera.targetTexture = renderTexture;
+			RenderTexture.active = renderTexture;
 
 			Texture2D texture = new Texture2D(size.x, size.y, TextureFormat.RGB24, false);
 
 			camera.Render();
-
-			RenderTexture.active = renderTexture;
-
 			texture.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0);
 
 			camera.targetTexture = null;
@@ -1738,16 +2171,26 @@ namespace Utilities
 		}
 		public static RenderPipeline GetCurrentRenderPipeline()
 		{
+#if UNITY_2019_3_OR_NEWER
+			if (!GraphicsSettings.currentRenderPipeline)
+#else
 			if (!GraphicsSettings.renderPipelineAsset)
+#endif
 				return RenderPipeline.Standard;
+#if UNITY_2019_3_OR_NEWER
+			else if (GraphicsSettings.currentRenderPipeline.GetType().Name.Contains("HDRenderPipelineAsset"))
+#else
 			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("HDRenderPipelineAsset"))
-				return RenderPipeline.HDRP;
-			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("LightweightRenderPipelineAsset"))
-				return RenderPipeline.URP;
-			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("UniversalRenderPipelineAsset"))
-				return RenderPipeline.URP;
+#endif
+				return RenderPipeline.HighDefinitionRenderPipeline;
+#if UNITY_2019_3_OR_NEWER
+			else if (GraphicsSettings.currentRenderPipeline.GetType().Name.Contains("LightweightRenderPipelineAsset") || GraphicsSettings.currentRenderPipeline.GetType().Name.Contains("UniversalRenderPipelineAsset"))
+#else
+			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("LightweightRenderPipelineAsset") || GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("UniversalRenderPipelineAsset"))
+#endif
+				return RenderPipeline.UniversalRenderPipeline;
 			else
-				return RenderPipeline.Custom;
+				return RenderPipeline.CustomRenderPipeline;
 		}
 		public static Bounds GetObjectBounds(GameObject gameObject, bool keepRotation = false, bool keepScale = true)
 		{
@@ -1779,12 +2222,25 @@ namespace Utilities
 
 			return bounds;
 		}
-		public static void Destroy(UnityEngine.Object obj)
+		public static void Destroy(bool immediate, UnityEngine.Object obj)
 		{
-			if (Application.isPlaying)
-				UnityEngine.Object.Destroy(obj);
-			else
+			if (immediate)
 				UnityEngine.Object.DestroyImmediate(obj);
+			else
+				UnityEngine.Object.Destroy(obj);
+		}
+		public static void Destroy(UnityEngine.Object obj, float time)
+		{
+			UnityEngine.Object.Destroy(obj, time);
+		}
+		public static void Destroy(UnityEngine.Object obj, bool allowDestroyingAssets)
+		{
+			UnityEngine.Object.DestroyImmediate(obj, allowDestroyingAssets);
+		}
+
+		private static float PointSign(Vector2 point1, Vector2 point2, Vector2 point3)
+		{
+			return (point1.x - point3.x) * (point2.y - point3.y) - (point2.x - point3.x) * (point1.y - point3.y);
 		}
 
 		#endregion

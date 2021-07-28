@@ -1,0 +1,108 @@
+{
+    "items": [
+        {
+            "name": "Vertical",
+            "type": 0,
+            "main": {
+                "strongSide": 3,
+                "positive": 63,
+                "negative": 64,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 10,
+                "gamepadNegative": 12
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 37,
+                "negative": 33,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 1,
+                "gamepadNegative": 2
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Horizontal",
+            "type": 0,
+            "main": {
+                "strongSide": 3,
+                "positive": 62,
+                "negative": 61,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 11,
+                "gamepadNegative": 13
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 18,
+                "negative": 15,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 4,
+                "gamepadNegative": 3
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Submit",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 2,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 7,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 77,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Cancel",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 60,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 6,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        }
+    ]
+}

@@ -5,10 +5,14 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
+#if ENABLE_INPUT_SYSTEM
 #if UNITY_2019_1_OR_NEWER
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 #else
 using UnityEngine.Experimental.Input;
+using UnityEngine.Expirimental.Input.LowLevel;
+#endif
 #endif
 
 #endregion
@@ -19,17 +23,74 @@ namespace Utilities.Inputs
 	{
 		#region Enumerators
 
-		private enum BindTarget { None, Positive, Negative }
+		private enum BindTarget { None, Positive, Negative, GamepadPositive, GamepadNegative }
+		private static string[] Keys
+		{
+			get
+			{
+				if (keys == null || keys.Length < 1)
+				{
+					keys = new string[Enum.GetValues(typeof(Key)).Length];
+
+					int firstIntValue = keys.Length;
+
+					for (int i = 0; i < keys.Length; i++)
+					{
+						string key = ((Key)i).ToString();
+
+						if (!int.TryParse(key, out int _))
+							keys[i] = key;
+						else
+							firstIntValue = Mathf.Min(firstIntValue, i);
+					}
+
+					if (firstIntValue != keys.Length)
+						Array.Resize(ref keys, firstIntValue);
+				}
+
+				return keys;
+			}
+		}
+		private static string[] keys;
+		private static string[] GamepadBindings
+		{
+			get
+			{
+				if (gamepadBindings == null || gamepadBindings.Length < 1)
+				{
+					gamepadBindings = new string[Enum.GetValues(typeof(GamepadBinding)).Length];
+
+					int firstIntValue = gamepadBindings.Length;
+
+					for (int i = 0; i < gamepadBindings.Length; i++)
+					{
+						string binding = ((GamepadBinding)i).ToString();
+
+						if (!int.TryParse(binding, out int _))
+							gamepadBindings[i] = binding;
+						else
+							firstIntValue = Mathf.Min(firstIntValue, i);
+					}
+
+					if (firstIntValue != gamepadBindings.Length)
+						Array.Resize(ref gamepadBindings, firstIntValue);
+				}
+
+				return gamepadBindings;
+			}
+		}
+		private static string[] gamepadBindings;
 
 		#endregion
 
 		#region Variables
 
 		private static InputsManagerEditor editorInstance;
-		private static InputsManager.InputAxis bindingAxis;
+		private static InputsManager.Input.Axis bindingAxis;
 		private static InputsManager.Input input;
 		private static BindTarget bindingTarget;
 		private static Event bindingEvent;
+		private static GamepadBinding bindedGamepadBind;
 		private readonly static string inittializerKey = "InputsManager_Init";
 		private static string inputName;
 		private static bool addingInput;
@@ -45,7 +106,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return !string.IsNullOrEmpty(importJson) && importInputs != null;
+				return !string.IsNullOrEmpty(importJson) && !string.IsNullOrWhiteSpace(importJson) && importInputs != null;
 			}
 		}
 		private static bool importAll = true;
@@ -63,23 +124,12 @@ namespace Utilities.Inputs
 
 		#region Utilities
 
-		[MenuItem("Tools/Utilities/Inputs Manager/Debug/Available Joysticks", false, 0)]
-		public static void DebugJoysticks()
-		{
-			string[] availableJoysticks = Gamepad.all.Select(gamepad => $"{gamepad.name} ({gamepad.displayName}: {gamepad.shortDisplayName}): {gamepad.description}").ToArray();
-			string message = $"Available Joysticks ({availableJoysticks.Length})\r\n";
-
-			for (int i = 0; i < availableJoysticks.Length; i++)
-				message += $"{i}. {availableJoysticks[i]}\r\n";
-
-			Debug.Log(message);
-		}
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
 		public static void OpenInputsManager()
 		{
 			if (!EditorPrefs.HasKey(inittializerKey))
 			{
-				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we're looking forward to improve it based on your honorable reviews and reports in case of any problems!", "Okay!");
+				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honorable reviews and reports in case of any problems!", "Okay!");
 				CreateInputsManager();
 
 				return;
@@ -108,9 +158,9 @@ namespace Utilities.Inputs
 			if (!EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of reseting the Inputs Manager to it's original state?", "Yes I'm sure", "No"))
 				return;
 
-			if (!AssetDatabase.DeleteAsset($"Assets/{InputsManager.DataAssetPath}"))
+			if (!AssetDatabase.DeleteAsset($"Assets/Resources/{InputsManager.DataAssetPath}"))
 			{
-				if (EditorUtility.DisplayDialog("Inputs Manager: Internal Error", "Unable to delete the current `InputsManager` asset in order to create a new one!", "Report error...", "Cancel"))
+				if (EditorUtility.DisplayDialog("Inputs Manager: Internal Error", "Unable to delete the current `InputsManager` asset in order to create a new one!", "Report Error...", "Cancel"))
 					ReportError();
 
 				return;
@@ -258,30 +308,112 @@ namespace Utilities.Inputs
 			EditInput(new InputsManager.Input(input));
 			addingInput = true;
 		}
-		private static void BindAxis(InputsManager.InputAxis axis, BindTarget target)
+		private static void BindAxis(InputsManager.Input.Axis axis, BindTarget target)
 		{
 			bindingAxis = axis;
 			bindingTarget = target;
 		}
 		private static void EndBindAxis(bool saveChanges)
 		{
-			if (bindingKey != (int)Key.None && saveChanges)
-				switch (bindingTarget)
-				{
-					case BindTarget.Positive:
-						bindingAxis.Positive = (Key)bindingKey;
-						break;
+			bool bindingForGamepad = bindingTarget == BindTarget.GamepadPositive || bindingTarget == BindTarget.GamepadNegative;
 
-					case BindTarget.Negative:
-						bindingAxis.Negative = (Key)bindingKey;
-						break;
-				}
+#if ENABLE_INPUT_SYSTEM
+			switch (bindingTarget)
+			{
+				case BindTarget.Positive:
+					bindingAxis.Positive = (Key)bindingKey;
+					break;
+
+				case BindTarget.Negative:
+					bindingAxis.Negative = (Key)bindingKey;
+					break;
+
+				case BindTarget.GamepadPositive:
+					bindingAxis.GamepadPositive = (GamepadBinding)bindingKey;
+					break;
+
+				case BindTarget.GamepadNegative:
+					bindingAxis.GamepadNegative = (GamepadBinding)bindingKey;
+					break;
+			}
 
 			bindingAxis = null;
-			bindingKey = (int)Key.None;
+			bindingKey = bindingForGamepad ? (int)GamepadBinding.None : (int)Key.None;
 			bindingTarget = BindTarget.None;
+
+			if (bindingForGamepad)
+				InputSystem.onEvent -= GamepadBindEvent;
+#endif
 		}
-		private static void InputAxisEditor(InputsManager.InputAxis axis, InputsManager.InputType type, InputsManager.InputAxis mainAxis = null)
+		private static void GamepadBindEvent(InputEventPtr eventPtr, InputDevice device)
+		{
+			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+				return;
+
+			Gamepad gamepad = device as Gamepad;
+
+			if (gamepad == null)
+				return;
+
+			if (gamepad.dpad.ReadValueFromEvent(eventPtr, out Vector2 dpad) && dpad != Vector2.zero)
+			{
+				if (dpad.y > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.DpadUp;
+				else if (dpad.x > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.DpadRight;
+				else if (dpad.y < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.DpadDown;
+				else if (dpad.x < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.DpadLeft;
+			}
+			else if (gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out float buttonNorth) && buttonNorth > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.ButtonNorth;
+			else if (gamepad.buttonEast.ReadValueFromEvent(eventPtr, out float buttonEast) && buttonEast > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.ButtonEast;
+			else if (gamepad.buttonSouth.ReadValueFromEvent(eventPtr, out float buttonSouth) && buttonSouth > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.ButtonSouth;
+			else if (gamepad.buttonWest.ReadValueFromEvent(eventPtr, out float buttonWest) && buttonWest > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.ButtonWest;
+			else if (gamepad.leftStickButton.ReadValueFromEvent(eventPtr, out float leftStickButton) && leftStickButton > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.LeftStickButton;
+			else if (gamepad.leftStick.ReadValueFromEvent(eventPtr, out Vector2 leftStick) && leftStick != Vector2.zero)
+			{
+				if (leftStick.y > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.LeftStickUp;
+				else if (leftStick.x > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.LeftStickRight;
+				else if (leftStick.y < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.LeftStickDown;
+				else if (leftStick.x < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.LeftStickLeft;
+			}
+			else if (gamepad.rightStickButton.ReadValueFromEvent(eventPtr, out float rightStickButton) && rightStickButton > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.RightStickButton;
+			else if (gamepad.rightStick.ReadValueFromEvent(eventPtr, out Vector2 rightStick) && rightStick != Vector2.zero)
+			{
+				if (rightStick.y > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.RightStickUp;
+				else if (rightStick.x > InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.RightStickRight;
+				else if (rightStick.y < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.RightStickDown;
+				else if (rightStick.x < -InputsManager.GamepadThreshold)
+					bindedGamepadBind = GamepadBinding.RightStickLeft;
+			}
+			else if (gamepad.leftShoulder.ReadValueFromEvent(eventPtr, out float leftShoulder) && leftShoulder > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.LeftShoulder;
+			else if (gamepad.rightShoulder.ReadValueFromEvent(eventPtr, out float rightShoulder) && rightShoulder > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.RightShoulder;
+			else if (gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out float leftTrigger) && leftTrigger > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.LeftTrigger;
+			else if (gamepad.rightTrigger.ReadValueFromEvent(eventPtr, out float rightTrigger) && rightTrigger > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.RightTrigger;
+			else if (gamepad.startButton.ReadValueFromEvent(eventPtr, out float startButton) && startButton > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.StartButton;
+			else if (gamepad.selectButton.ReadValueFromEvent(eventPtr, out float selectButton) && selectButton > InputsManager.GamepadThreshold)
+				bindedGamepadBind = GamepadBinding.SelectButton;
+		}
+		private static void InputAxisEditor(InputsManager.Input.Axis axis, InputsManager.Input.InputType type, InputsManager.Input.Axis mainAxis = null, bool isGamepadEditor = false)
 		{
 			#region Editor Styles
 
@@ -298,72 +430,139 @@ namespace Utilities.Inputs
 
 			#endregion
 
-			if (type == InputsManager.InputType.Axis)
+#if ENABLE_INPUT_SYSTEM
+			if (type == InputsManager.Input.InputType.Axis)
 			{
-				bool enumDisabled = axis.Positive == Key.None || axis.Negative == Key.None;
+				bool enumDisabled;
+
+				if (isGamepadEditor)
+					enumDisabled = axis.GamepadPositive == GamepadBinding.None || axis.GamepadNegative == GamepadBinding.None;
+				else
+					enumDisabled = axis.Positive == Key.None || axis.Negative == Key.None;
+
+				InputsManager.Input.Axis.Side newStrongSide = isGamepadEditor ? axis.GamepadStrongSide : axis.StrongSide;
 
 				if (enumDisabled)
-					axis.StrongSide = InputsManager.InputAxisStrongSide.None;
+					newStrongSide = InputsManager.Input.Axis.Side.None;
 
 				EditorGUI.BeginDisabledGroup(enumDisabled);
 
-				axis.StrongSide = (InputsManager.InputAxisStrongSide)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), axis.StrongSide);
+				newStrongSide = (InputsManager.Input.Axis.Side)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), newStrongSide);
 			
+				if (!isGamepadEditor && axis.StrongSide != newStrongSide)
+					axis.StrongSide = newStrongSide;
+
+				if (isGamepadEditor && axis.GamepadStrongSide != newStrongSide)
+					axis.GamepadStrongSide = newStrongSide;
+
 				EditorGUI.EndDisabledGroup();
 			}
 
-			bool positiveDisabled = mainAxis && mainAxis.Positive == Key.None;
+			bool positiveDisabled;
+
+			if (isGamepadEditor)
+				positiveDisabled = mainAxis && mainAxis.GamepadPositive == GamepadBinding.None;
+			else
+				positiveDisabled = mainAxis && mainAxis.Positive == Key.None;
+
+			int newPositive = isGamepadEditor ? (int)axis.GamepadPositive : (int)axis.Positive;
 
 			if (positiveDisabled)
-				axis.Positive = Key.None;
+				newPositive = isGamepadEditor ? (int)GamepadBinding.None : (int)Key.None;
 
 			EditorGUI.BeginDisabledGroup(positiveDisabled);
 			EditorGUILayout.BeginHorizontal();
 
-			axis.Positive = (Key)EditorGUILayout.EnumPopup(type == InputsManager.InputType.Button ? "Button" : "Positive", axis.Positive);
+			newPositive = EditorGUILayout.Popup(type == InputsManager.Input.InputType.Button ? "Button" : "Positive", newPositive, isGamepadEditor ? GamepadBindings : Keys);
+
+			if (isGamepadEditor)
+			{
+				GamepadBinding newGamepadPositive = (GamepadBinding)newPositive;
+
+				if (axis.GamepadPositive != newGamepadPositive)
+					axis.GamepadPositive = newGamepadPositive;
+			}
+			else
+			{
+				Key newKeyboardPositive = (Key)newPositive;
+
+				if (axis.Positive != newKeyboardPositive)
+					axis.Positive = newKeyboardPositive;
+			}
 
 			if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Eye, "Bind"), unstretchableMiniButtonWide))
-				BindAxis(axis, BindTarget.Positive);
+			{
+				if (isGamepadEditor)
+					InputSystem.onEvent += GamepadBindEvent;
+
+				BindAxis(axis, isGamepadEditor ? BindTarget.GamepadPositive : BindTarget.Positive);
+			}
 
 			EditorGUILayout.EndHorizontal();
-				EditorGUI.EndDisabledGroup();
+			EditorGUI.EndDisabledGroup();
 			
-			if (type == InputsManager.InputType.Axis)
+			if (type == InputsManager.Input.InputType.Axis)
 			{
-				bool negativeDisabled = mainAxis && mainAxis.Negative == Key.None;
+				bool negativeDisabled;
 
-				if (negativeDisabled)
-					axis.Negative = Key.None;
+				if (isGamepadEditor)
+					negativeDisabled = mainAxis && mainAxis.GamepadNegative == GamepadBinding.None;
+				else
+					negativeDisabled = mainAxis && mainAxis.Negative == Key.None;
 
 				EditorGUI.BeginDisabledGroup(negativeDisabled);
 				EditorGUILayout.BeginHorizontal();
 
-				axis.Negative = (Key)EditorGUILayout.EnumPopup("Negative", axis.Negative);
+				int newNegative = EditorGUILayout.Popup("Negative", isGamepadEditor ? (int)axis.GamepadNegative : (int)axis.Negative, isGamepadEditor ? GamepadBindings : Keys);
+
+				if (isGamepadEditor)
+				{
+					GamepadBinding newGamepadNegative = (GamepadBinding)newNegative;
+
+					if (axis.GamepadNegative != newGamepadNegative)
+						axis.GamepadNegative = newGamepadNegative;
+				}
+				else
+				{
+					Key newKeyboardNegative = (Key)newNegative;
+
+					if (axis.Negative != newKeyboardNegative)
+						axis.Negative = newKeyboardNegative;
+				}
 
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Eye, "Bind"), unstretchableMiniButtonWide))
-					BindAxis(axis, BindTarget.Negative);
+				{
+					if (isGamepadEditor)
+						InputSystem.onEvent += GamepadBindEvent;
+
+					BindAxis(axis, isGamepadEditor ? BindTarget.GamepadNegative : BindTarget.Negative);
+				}
 
 				EditorGUILayout.EndHorizontal();
 				EditorGUI.EndDisabledGroup();
 			}
 
-			InputsManager.Input keyUsedPositive = Array.Find(InputsManager.KeyUsed(axis.Positive), query => query != input);
+			InputsManager.Input positiveBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadPositive) : InputsManager.KeyUsed(axis.Positive), @in => @in != input);
 
-			if (keyUsedPositive)
-				EditorGUILayout.HelpBox($"The `{axis.Positive}` key seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.None);
+			if (positiveBindingUsed)
+				EditorGUILayout.HelpBox($"The `{(isGamepadEditor ? axis.GamepadPositive.ToString() : axis.Positive.ToString())}` binding seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.None);
 
-			InputsManager.Input keyUsedNegative = Array.Find(InputsManager.KeyUsed(axis.Negative), query => query != input);
+			InputsManager.Input negativeBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadNegative) : InputsManager.KeyUsed(axis.Negative), @in => @in != input);
 
-			if (keyUsedNegative)
-				EditorGUILayout.HelpBox($"The `{axis.Negative}` key seems to be selected by another input{(keyUsedPositive ? " as well" : ". It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame")}.", MessageType.None);
+			if (negativeBindingUsed)
+				EditorGUILayout.HelpBox($"The `{(isGamepadEditor ? axis.GamepadNegative.ToString() : axis.Negative.ToString())}` binding seems to be selected by another input{(positiveBindingUsed ? " as well" : ". It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame")}.", MessageType.None);
+#endif
 		}
 		private static void InputEditor(InputsManager.Input input)
 		{
+#if ENABLE_INPUT_SYSTEM
 			if (bindingAxis && bindingTarget != BindTarget.None)
 			{
+				bool bindingForGamepad = bindingTarget == BindTarget.GamepadPositive || bindingTarget == BindTarget.GamepadNegative;
+				
 				EditorGUILayout.LabelField($"Binding key for the `{inputName}` input", EditorStyles.boldLabel);
-				EditorGUILayout.HelpBox(bindingKey == (int)Key.None ? "Waiting for key press..." : $"Current Key: {(bindingKey != 999 ? ((Key)bindingKey).ToString() : "Other")}", MessageType.None);
-					
+				EditorGUILayout.HelpBox(bindingKey == (bindingForGamepad ? (int)GamepadBinding.None : (int)Key.None) ? "Waiting for key press..." : $"Current Key: {(bindingKey != 999 ? (bindingForGamepad ? ((GamepadBinding)bindingKey).ToString() : ((Key)bindingKey).ToString()) : "Unknown")}", MessageType.None);
+
 				if (hasShiftBind)
 				{
 					if (EditorUtility.DisplayDialog("Inputs Manager: Info", "Shift key detected! Which one would you choose?", "Left Shift", "Right Shift"))
@@ -374,13 +573,22 @@ namespace Utilities.Inputs
 					hasShiftBind = false;
 					hasBind = true;
 
-					EditorGUILayout.EndScrollView();
 					editorInstance.Repaint();
-
-					return;
 				}
 
-				if (bindingEvent.type == EventType.KeyUp || bindingEvent.shift)
+				if (bindingForGamepad)
+				{
+					InputSystem.Update();
+					editorInstance.Repaint();
+
+					if (bindedGamepadBind != GamepadBinding.None)
+					{
+						bindingKey = (int)bindedGamepadBind;
+						bindedGamepadBind = (int)GamepadBinding.None;
+						hasBind = true;
+					}
+				}
+				else if (bindingEvent.type == EventType.KeyUp || bindingEvent.shift)
 				{
 					if (bindingEvent.shift)
 						hasShiftBind = true;
@@ -393,18 +601,15 @@ namespace Utilities.Inputs
 					
 					hasBind = true;
 
-					EditorGUILayout.EndScrollView();
 					editorInstance.Repaint();
-
-					return;
 				}
 
-				if (bindingKey != (int)Key.None && bindingKey != 999)
+				if ((!bindingForGamepad && bindingKey != (int)Key.None || bindingForGamepad && bindingKey != (int)GamepadBinding.None) && bindingKey != 999)
 				{
-					InputsManager.Input keyUsed = Array.Find(InputsManager.KeyUsed((Key)bindingKey), query => query != input);
+					InputsManager.Input keyUsed = Array.Find(bindingForGamepad ? InputsManager.GamepadBindingUsed((GamepadBinding)bindingKey) : InputsManager.KeyUsed((Key)bindingKey), query => query != input);
 
 					if (keyUsed)
-						EditorGUILayout.HelpBox("The current key seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.Info);
+						EditorGUILayout.HelpBox("The current binding seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.Info);
 
 					if (GUILayout.Button("Save"))
 						EndBindAxis(true);
@@ -422,8 +627,8 @@ namespace Utilities.Inputs
 			EditorGUI.indentLevel++;
 
 			inputName = EditorGUILayout.TextField("Name", inputName);
-			input.Type = (InputsManager.InputType)EditorGUILayout.EnumPopup("Type", input.Type);
-			input.Interpolation = (InputsManager.InputAxisInterpolation)EditorGUILayout.EnumPopup(new GUIContent("Interpolation", "The interpolation method specifies how the current value of the axis moves towards the target within the interval.\r\n\r\nSmooth: Linear interpolation over time\r\nJump: Same as Smooth with the exception that if an opposite direction is triggered, the value goes instantly to neutral and continue from there. This method won't work if the input type is set to button\r\nInstant: No interpolation"), input.Interpolation);
+			input.Type = (InputsManager.Input.InputType)EditorGUILayout.EnumPopup("Type", input.Type);
+			input.Interpolation = (InputsManager.Input.InputInterpolation)EditorGUILayout.EnumPopup(new GUIContent("Interpolation", "The interpolation method specifies how the current value of the axis moves towards the target within the interval.\r\n\r\nSmooth: Linear interpolation over time\r\nJump: Same as Smooth with the exception that if an opposite direction is triggered, the value goes instantly to neutral and continue from there. This method won't work if the input type is set to button\r\nInstant: No interpolation"), input.Interpolation);
 				
 			EditorGUILayout.LabelField("Value Interval");
 
@@ -433,7 +638,7 @@ namespace Utilities.Inputs
 
 			switch (input.Type)
 			{
-				case InputsManager.InputType.Axis:
+				case InputsManager.Input.InputType.Axis:
 					EditorGUI.BeginDisabledGroup(!input.Invert && input.Main.Negative == Key.None || input.Invert && input.Main.Positive == Key.None);
 
 					valueInterval.x = Mathf.Clamp(EditorGUILayout.FloatField("Minimum", valueInterval.x), Mathf.NegativeInfinity, valueInterval.y);
@@ -449,7 +654,7 @@ namespace Utilities.Inputs
 
 					break;
 
-				case InputsManager.InputType.Button:
+				case InputsManager.Input.InputType.Button:
 
 					if (input.Invert)
 					{
@@ -515,9 +720,34 @@ namespace Utilities.Inputs
 			EditorGUILayout.Space();
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.BeginVertical(GUI.skin.box);
-			EditorGUILayout.LabelField("Joystick", EditorStyles.miniBoldLabel);
-			EditorGUILayout.HelpBox("Not available at the moment. Stay tuned for new updates!", MessageType.None);
+			EditorGUILayout.LabelField("Gamepad", EditorStyles.miniBoldLabel);
+
+			EditorGUI.indentLevel++;
+
+			EditorGUILayout.LabelField("Main Bindings", EditorStyles.miniBoldLabel);
+
+			EditorGUI.indentLevel++;
+
+			InputAxisEditor(input.Main, input.Type, null, true);
+
+			EditorGUI.indentLevel--;
+
+			EditorGUI.BeginDisabledGroup(input.Main.GamepadPositive == GamepadBinding.None && input.Main.GamepadNegative == GamepadBinding.None);
+			EditorGUILayout.LabelField("Alternative Bindings", EditorStyles.miniBoldLabel);
+
+			EditorGUI.indentLevel++;
+
+			InputAxisEditor(input.Alt, input.Type, input.Main, true);
+
+			EditorGUI.indentLevel--;
+
+			EditorGUI.EndDisabledGroup();
+
+			EditorGUI.indentLevel--;
+
+			EditorGUILayout.Space();
 			EditorGUILayout.EndVertical();
+#endif
 		}
 		private void OnGUI()
 		{
@@ -531,9 +761,21 @@ namespace Utilities.Inputs
 				importJson = string.Empty;
 			}
 
-			if (!InputsManager.DataAssetExists)
+			bool newInputSystemInstalled = true;
+
+#if !ENABLE_INPUT_SYSTEM
+			newInputSystemInstalled = false;
+#endif
+
+			if (!newInputSystemInstalled)
 			{
-				EditorGUILayout.HelpBox($"We couldn't find the data asset file at the following path \"{InputsManager.DataAssetPath}\". You can create a new one from `Tools > Utilities > Inputs Manager > Create data asset`", MessageType.Error);
+				EditorGUILayout.HelpBox("It seems like the the Unity New Input System is either not installed or disabled on this project. Please check the Package Manager and install the requested package! Otherwise you need to enable it from the Player Settings window. For more information check the Unity help forums on how to install packages from the Package Manager.", MessageType.Error);
+
+				return;
+			}
+			else if (!InputsManager.DataAssetExists)
+			{
+				EditorGUILayout.HelpBox($"We couldn't find the data asset file at the following path \"Resources/{InputsManager.DataAssetPath}\". You can create a new one from `Tools > Utilities > Inputs Manager > Create data asset`", MessageType.Error);
 
 				return;
 			}
@@ -707,7 +949,7 @@ namespace Utilities.Inputs
 				}
 
 				GUILayout.Space(5f);
-				EditorGUILayout.LabelField(export ? "Save Preset" : (Import ? "Load Preset" : "Settings"), EditorStyles.boldLabel);
+				EditorGUILayout.LabelField(export ? "Save Preset" : Import ? "Load Preset" : "Settings", EditorStyles.boldLabel);
 				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.Space();
 
@@ -826,7 +1068,7 @@ namespace Utilities.Inputs
 						
 						if (Application.platform == RuntimePlatform.LinuxEditor || Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.WindowsEditor)
 						{
-							if (EditorUtility.DisplayDialog("Inputs Manager: Info", $"Json preset file saved successfully on the following path:\r\n\"{exportPath}\"", "Open folder", "Proceed"))
+							if (EditorUtility.DisplayDialog("Inputs Manager: Info", $"Json preset file saved successfully on the following path:\r\n\"{exportPath}\"", "Open folder", "Continue"))
 							{
 								string processName = "";
 
@@ -889,7 +1131,7 @@ namespace Utilities.Inputs
 						"Keep Existing",
 						"Ignore Existing"
 					};
-					bool forceAdditive = InputsManager.Count == 0;
+					bool forceAdditive = InputsManager.Count < 1;
 
 					EditorGUI.BeginDisabledGroup(forceAdditive);
 
@@ -921,7 +1163,7 @@ namespace Utilities.Inputs
 
 					for (int i = 0; i < importInputsSelection.Length; i++)
 					{
-						bool inputExists = importAdditive && InputsManager.IndexOf(importInputs[i].Name) != -1;
+						bool inputExists = importAdditive && InputsManager.IndexOf(importInputs[i].Name) > -1;
 						bool inputDisabled = inputExists && !importOverride;
 
 						EditorGUI.BeginDisabledGroup(inputDisabled);
@@ -973,7 +1215,7 @@ namespace Utilities.Inputs
 							{
 								int existingInputIndex = InputsManager.IndexOf(importInputs[i].Name);
 
-								if (existingInputIndex != -1)
+								if (existingInputIndex > -1)
 								{
 									InputsManager.RemoveInput(importInputs[i].Name);
 									InputsManager.InsertInput(existingInputIndex, importInputs[i]);
@@ -1012,7 +1254,7 @@ namespace Utilities.Inputs
 					return;
 				}
 
-				EditorGUI.BeginDisabledGroup(InputsManager.Count == 0);
+				EditorGUI.BeginDisabledGroup(InputsManager.Count < 1);
 
 				if (GUILayout.Button("Save Preset", EditorStyles.miniButtonRight))
 				{
@@ -1029,14 +1271,57 @@ namespace Utilities.Inputs
 				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.EndVertical();
 				EditorGUILayout.BeginVertical(GUI.skin.box);
+				EditorGUILayout.LabelField("Behaviour", EditorStyles.miniBoldLabel);
+
+				EditorGUI.indentLevel++;
+
+				InputsManager.InputSource newInputSourcePriority = (InputsManager.InputSource)EditorGUILayout.EnumPopup(new GUIContent("Source Priority", "This indicates which input source has priority over the others."), InputsManager.InputSourcePriority);
+
+				if (InputsManager.InputSourcePriority != newInputSourcePriority)
+					InputsManager.InputSourcePriority = newInputSourcePriority;
+
+				EditorGUI.indentLevel--;
+
+				EditorGUILayout.Space();
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.BeginVertical(GUI.skin.box);
 				EditorGUILayout.LabelField("Timing", EditorStyles.miniBoldLabel);
 
 				EditorGUI.indentLevel++;
 
-				InputsManager.InterpolationTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Interpolation Time", $"How much time does it take an input to reach it's target. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.InterpolationTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) / 1000f);
-				InputsManager.HoldTriggerTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Trigger", $"How much time does it take an input to be triggered as held. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldTriggerTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) / 1000f);
-				InputsManager.HoldWaitTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Wait", $"How much time does it take an input to be triggered as held once more. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldWaitTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) / 1000f);
-				InputsManager.DoublePressTimeout = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Double Press Timeout", $"Double press check time range. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.DoublePressTimeout * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) / 1000f);
+				float newInterpolationTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Interpolation Time", $"How much time does it take an input to reach it's target. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.InterpolationTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+
+				if (InputsManager.InterpolationTime != newInterpolationTime)
+					InputsManager.InterpolationTime = newInterpolationTime;
+
+				float newHoldTriggerTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Trigger", $"How much time does it take an input to be triggered as held. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldTriggerTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+
+				if (InputsManager.HoldTriggerTime != newHoldTriggerTime)
+					InputsManager.HoldTriggerTime = newHoldTriggerTime;
+				
+				float newHoldWaitTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Wait", $"How much time does it take an input to be triggered as held once more. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldWaitTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+
+				if (InputsManager.HoldWaitTime != newHoldWaitTime)
+					InputsManager.HoldWaitTime = newHoldWaitTime;
+
+				float newDoublePressTimeout = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Double Press Timeout", $"Double press check time range. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.DoublePressTimeout * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+
+				if (InputsManager.DoublePressTimeout != newDoublePressTimeout)
+					InputsManager.DoublePressTimeout = newDoublePressTimeout;
+
+				EditorGUI.indentLevel--;
+
+				EditorGUILayout.Space();
+				EditorGUILayout.EndVertical();
+				EditorGUILayout.BeginVertical(GUI.skin.box);
+				EditorGUILayout.LabelField("Thresholds", EditorStyles.miniBoldLabel);
+
+				EditorGUI.indentLevel++;
+
+				float newGamepadThreshold = Mathf.Clamp01(EditorGUILayout.Slider(new GUIContent("Gamepad Threshold", "The gamepad threshold is the minimum value used to detect gamepad actions. This value doesn't apply to sticks or triggers in Play mode."), InputsManager.GamepadThreshold, 0f, 1f));
+
+				if (InputsManager.GamepadThreshold != newGamepadThreshold)
+					InputsManager.GamepadThreshold = newGamepadThreshold;
 
 				EditorGUI.indentLevel--;
 
@@ -1074,9 +1359,9 @@ namespace Utilities.Inputs
 						EndBindAxis(false);
 					else if (addingInput)
 						SwitchNewInput(false);
-					else if (string.IsNullOrEmpty(inputName))
+					else if (string.IsNullOrEmpty(inputName) || string.IsNullOrWhiteSpace(inputName))
 						EditorUtility.DisplayDialog("Inputs Manager: Error", "The input name cannot be empty.", "Okay");
-					else if (InputsManager.IndexOf(inputName) != -1)
+					else if (InputsManager.IndexOf(inputName) > -1)
 						EditorUtility.DisplayDialog("Inputs Manager: Info", "We didn't save the input name because it matches another one.", "Okay");
 					else 
 						SaveInput();
@@ -1105,11 +1390,11 @@ namespace Utilities.Inputs
 				EditorGUILayout.Space();
 
 				if (addingInput)
-					if (GUILayout.Button($"Add {(string.IsNullOrEmpty(input.Name) ? "New Input" : inputName)}"))
+					if (GUILayout.Button($"Add {(string.IsNullOrEmpty(input.Name) || string.IsNullOrWhiteSpace(input.Name) ? "New Input" : inputName)}"))
 					{
-						if (string.IsNullOrEmpty(inputName))
+						if (string.IsNullOrEmpty(inputName) || string.IsNullOrWhiteSpace(inputName))
 							EditorUtility.DisplayDialog("Inputs Manager: Error", "The new input name cannot be empty.", "Okay");
-						else if (InputsManager.IndexOf(inputName) != -1)
+						else if (InputsManager.IndexOf(inputName) > -1)
 							EditorUtility.DisplayDialog("Inputs Manager: Error", "The new input name matches an older input. Please use a different name or modify the existing input.", "Okay");
 						else
 						{
@@ -1251,7 +1536,7 @@ namespace Utilities.Inputs
 				}
 
 				if (EditorApplication.isPlaying)
-					EditorGUILayout.HelpBox("Hey! Unfortunately, you can't change or modify anything because you're on play mode.", MessageType.Info);
+					EditorGUILayout.HelpBox("Hey! Unfortunately, you can't change or modify anything because you are on play mode.", MessageType.Info);
 			}
 			else if (!EditorApplication.isPlaying)
 				EditorGUILayout.HelpBox("The inputs list is empty for the moment, press the \"+\" button to create a new one. You can also import some presets from the \"Settings\" menu.", MessageType.Info);
@@ -1281,7 +1566,7 @@ namespace Utilities.Inputs
 		{
 			editorInstance = null;
 
-			if (input && !string.IsNullOrEmpty(inputName))
+			if (input && !string.IsNullOrEmpty(inputName) && !string.IsNullOrWhiteSpace(inputName))
 				SaveInput();
 			else if (input)
 				input = null;
@@ -1293,11 +1578,11 @@ namespace Utilities.Inputs
 
 			if (InputsManager.DataChanged)
 			{
-				if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "You've some unsaved data that you might lose! Do you want to save it?", "Save", "Discard"))
+				if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "You have some unsaved data that you might lose! Do you want to save it?", "Save", "Discard"))
 					InputsManager.SaveData();
 			}
 
-			InputsManager.UnloadData();
+			InputsManager.ForceLoadData();
 		}
 
 		#endregion

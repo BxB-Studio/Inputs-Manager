@@ -3,7 +3,7 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
-**Version:** 0.4-beta
+**Version:** 1.0.0
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
@@ -25,21 +25,25 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Runtime double press and hold binding
 - Wide range of settings
 - Secured data saving
-- Joysticks compatibility (Will be added soon...)
+- Joysticks/Gamepad compatibility
 
 ## Compatibility
 - Unity 2018.4 or later<br/>
-<b>Note</b>: Not tested for Unity 2020.1 yet
 
 ## Dependencies
 - Unity 2019.1 or later
 	- Input System: 1.0.0-preview or later
-	- Vector Graphics: Any version
 - Unity 2018.4
 	- Input System: 0.2.1-preview or older
-	- Vector Graphics: Any version
 
 ## Release Notes
+- 1.0.0
+	- First production release
+	- Added joystick/gamepad support
+	- Optimized code
+	- Optimized performance
+	- Fixed bunch of bugs
+	- Ability to bind joystick/gamepad inputs
 - 0.4-beta
 	- Fixed some performance issues
 	- Fixed some bugs

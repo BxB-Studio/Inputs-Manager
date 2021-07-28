@@ -25,7 +25,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Runtime double press and hold binding
 - Wide range of settings
 - Secured data saving
-- Joysticks compatibility (Will be added soon...)
+- Joysticks/Gamepad compatibility
 
 ## Compatibility
 - Unity 2018.4 or later<br/>
@@ -43,6 +43,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Optimized code
 	- Optimized performance
 	- Fixed bunch of bugs
+	- Ability to bind joystick/gamepad inputs
 - 0.4-beta
 	- Fixed some performance issues
 	- Fixed some bugs

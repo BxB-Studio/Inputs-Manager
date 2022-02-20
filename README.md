@@ -17,6 +17,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Joysticks/Gamepad compatibility
 - Runtime double press and hold binding
 - Bind keys within the Unity Editor
+- Single/Multiple Touch binding
 - Edit inputs at runtime
 - High performant code
 - Easy inputs setup
@@ -42,7 +43,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Fixed Gamepad/Joystick detection at runtime
 	- Added new icons
 	- Deleted unnecessary files
-	- Single/Multiple Touch Binding support for Unity 2018.4
+	- Touch Binding support for Unity 2018.4
 - 1.0.0
 	- First production release
 	- Added joystick/gamepad support

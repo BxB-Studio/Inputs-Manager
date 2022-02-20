@@ -1,0 +1,498 @@
+{
+    "items": [
+        {
+            "name": "Steering Wheel",
+            "type": 0,
+            "main": {
+                "strongSide": 3,
+                "positive": 62,
+                "negative": 61,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 11,
+                "gamepadNegative": 13
+            },
+            "alt": {
+                "strongSide": 3,
+                "positive": 18,
+                "negative": 15,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": -1.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Fuel Pedal",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 63,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 22,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 37,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Brake Pedal",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 64,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 21,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 33,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Clutch Pedal",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 38,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Handbrake",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 1,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 6,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 0,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Start Engine",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 19,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 5,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Gear Shift Up",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 51,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 20,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 52,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Gear Shift Down",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 55,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 19,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 56,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "NOS Boost",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 53,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 7,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 54,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Launch Control",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 39,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 9,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Light",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 26,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 2,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch High Beam Light",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 25,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 1,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Interior Light",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 24,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Left Side Signal Light",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 23,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 3,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Right Side Signal Light",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 29,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 4,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Hazard Lights",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 30,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Horn",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 22,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Reset Vehicle",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 32,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 8,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        },
+        {
+            "name": "Switch Trailer Link",
+            "type": 1,
+            "main": {
+                "strongSide": 0,
+                "positive": 34,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "alt": {
+                "strongSide": 0,
+                "positive": 0,
+                "negative": 0,
+                "gamepadStrongSide": 0,
+                "gamepadPositive": 0,
+                "gamepadNegative": 0
+            },
+            "interpolation": 2,
+            "valueInterval": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "invert": false
+        }
+    ]
+}

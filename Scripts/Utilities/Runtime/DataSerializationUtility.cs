@@ -31,6 +31,9 @@ namespace Utilities
 
 			try
 			{
+				if (!Directory.Exists(Path.GetDirectoryName(path)))
+					Directory.CreateDirectory(Path.GetDirectoryName(path));
+
 				stream = File.Open($"{path}{(useResources ? ".bytes" : "")}", FileMode.OpenOrCreate);
 
 				BinaryFormatter formatter = new BinaryFormatter();

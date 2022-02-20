@@ -66,7 +66,7 @@ namespace Utilities
 
 		public enum Precision { Simple, Advanced }
 		public enum UnitType { Metric, Imperial }
-		public enum Units { Area, AreaAccurate, AreaLarge, Density, Distance, DistanceAccurate, DistanceLong, Force, Frequency, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
+		public enum Units { Area, AreaAccurate, AreaLarge, ElectricConsumption, Density, Distance, DistanceAccurate, DistanceLong, ElectricCapacity, Force, Frequency, FuelConsumption, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
 		public enum RenderPipeline { Standard, UniversalRenderPipeline, HighDefinitionRenderPipeline, CustomRenderPipeline }
 		public enum TextureEncodingType { EXR, JPG, PNG, TGA }
 		public enum WorldSurface { XY, XZ, YZ }
@@ -1172,6 +1172,9 @@ namespace Utilities
 				case Units.AreaLarge:
 					return unitType == UnitType.Metric ? 1f : 1f / 2.59f;
 
+				case Units.ElectricConsumption:
+					return unitType == UnitType.Metric ? 1f : 1f / 1.609f;
+
 				case Units.Density:
 					return unitType == UnitType.Metric ? 1f : 0.06242796f;
 
@@ -1183,6 +1186,9 @@ namespace Utilities
 
 				case Units.DistanceLong:
 					return unitType == UnitType.Metric ? 1f : 0.621371f;
+
+				case Units.FuelConsumption:
+					return unitType == UnitType.Metric ? 1f : 235.215f;
 
 				case Units.Liquid:
 					return unitType == UnitType.Metric ? 1f : 1f / 4.546f;
@@ -1232,7 +1238,10 @@ namespace Utilities
 					return unitType == UnitType.Metric ? "cm²" : "in²";
 
 				case Units.AreaLarge:
-					return unitType == UnitType.Metric ? "km²" : "m²";
+					return unitType == UnitType.Metric ? "km²" : "mi²";
+
+				case Units.ElectricConsumption:
+					return unitType == UnitType.Metric ? "kW⋅h/100km" : "kW⋅h/100m";
 
 				case Units.Density:
 					return unitType == UnitType.Metric ? "kg/m³" : "lbᵐ/ft³";
@@ -1244,13 +1253,19 @@ namespace Utilities
 					return unitType == UnitType.Metric ? "m" : "yd";
 
 				case Units.DistanceLong:
-					return unitType == UnitType.Metric ? "km" : "m";
+					return unitType == UnitType.Metric ? "km" : "mi";
+
+				case Units.ElectricCapacity:
+					return unitType == UnitType.Metric ? "kW⋅h" : "kW⋅h";
 
 				case Units.Force:
 					return unitType == UnitType.Metric ? "N" : "N";
 
 				case Units.Frequency:
 					return unitType == UnitType.Metric ? "Hz" : "Hz";
+
+				case Units.FuelConsumption:
+					return unitType == UnitType.Metric ? "L/100km" : "mpg";
 
 				case Units.Liquid:
 					return unitType == UnitType.Metric ? "L" : "gal";
@@ -1289,7 +1304,7 @@ namespace Utilities
 					return unitType == UnitType.Metric ? "cm³" : "in³";
 
 				case Units.VolumeLarge:
-					return unitType == UnitType.Metric ? "km³" : "m³";
+					return unitType == UnitType.Metric ? "km³" : "mi³";
 
 				case Units.Weight:
 					return unitType == UnitType.Metric ? "kg" : "lbs";
@@ -1311,6 +1326,9 @@ namespace Utilities
 				case Units.AreaLarge:
 					return unitType == UnitType.Metric ? "Square Kilometre" : "Square Mile";
 
+				case Units.ElectricConsumption:
+					return unitType == UnitType.Metric ? "KiloWatt Hour per 100 Kilometres" : "KiloWatt Hour per 100 Miles";
+
 				case Units.Density:
 					return unitType == UnitType.Metric ? "Kilogram per Cubic Metre" : "Pound-mass per Cubic Foot";
 
@@ -1323,17 +1341,23 @@ namespace Utilities
 				case Units.DistanceLong:
 					return unitType == UnitType.Metric ? "Kilometre" : "Mile";
 
+				case Units.ElectricCapacity:
+					return unitType == UnitType.Metric ? "KiloWatt Hour" : "KiloWatt Hour";
+
 				case Units.Force:
 					return unitType == UnitType.Metric ? "Newton" : "Newton";
 
 				case Units.Frequency:
 					return unitType == UnitType.Metric ? "Hertz" : "Hertz";
 
+				case Units.FuelConsumption:
+					return unitType == UnitType.Metric ? "Liters per 100 Kilometre" : "Miles per Galon";
+
 				case Units.Liquid:
 					return unitType == UnitType.Metric ? "Litre" : "Gallon";
 
 				case Units.Power:
-					return unitType == UnitType.Metric ? "Horsepower" : "Kilowatt";
+					return unitType == UnitType.Metric ? "Horsepower" : "KiloWatt";
 
 				case Units.Pressure:
 					return unitType == UnitType.Metric ? "Bar" : "Pounds per Square Inch";
@@ -1397,7 +1421,7 @@ namespace Utilities
 				if (float.TryParse(valueArray[i], out float number))
 					value += number + (i < valueArray.Length - 1 ? " " : "");
 
-			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? result / UnitMultiplier(unit, unitType) : 0f;
+			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? (IsDeviderUnit(unit) && unitType != UnitType.Metric ? UnitMultiplier(unit, unitType) / result : result / UnitMultiplier(unit, unitType)) : 0f;
 		}
 		public static string NumberToValueWithUnit(float number, string unit, bool rounded)
 		{
@@ -1424,7 +1448,10 @@ namespace Utilities
 			else if (number == Mathf.NegativeInfinity)
 				return "-Infinity";
 
-			number *= UnitMultiplier(unit, unitType);
+			if (IsDeviderUnit(unit) && unitType != UnitType.Metric)
+				number = UnitMultiplier(unit, unitType) / number;
+			else
+				number *= UnitMultiplier(unit, unitType);
 
 			return $"{(rounded ? Mathf.Round(number) : number)} {Unit(unit, unitType)}";
 		}
@@ -1435,7 +1462,10 @@ namespace Utilities
 			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
 				return "-Infinity";
 
-			number *= UnitMultiplier(unit, unitType);
+			if (IsDeviderUnit(unit) && unitType != UnitType.Metric)
+				number = UnitMultiplier(unit, unitType) / number;
+			else
+				number *= UnitMultiplier(unit, unitType);
 
 			return $"{Round(number, decimals)} {Unit(unit, unitType)}";
 		}
@@ -1500,6 +1530,12 @@ namespace Utilities
 					return 0f;
 			}
 		}
+		public static float BrakingDistance(float speed, float friction)
+		{
+			friction = InverseLerpUnclamped(1f, 1.5f, friction);
+
+			return ClampInfinity(Mathf.LerpUnclamped(Mathf.LerpUnclamped(30f, 26f, friction), Mathf.LerpUnclamped(143f, 113f, friction), InverseLerpUnclamped(40f, 110f, speed)));
+		}
 		public static float RPMToSpeed(float rpm, float radius)
 		{
 			return radius * .377f * rpm;
@@ -1513,17 +1549,17 @@ namespace Utilities
 		}
 		public static bool MaskHasLayer(LayerMask mask, int layer)
 		{
-			return (mask.value & 1 << layer) != 0;
+			return MaskHasLayer(mask.value, layer);
 		}
 		public static bool MaskHasLayer(int mask, int layer)
 		{
 			return (mask & 1 << layer) != 0;
 		}
-		public static int LayerMask(string name)
+		public static int ExclusiveLayerMask(string name)
 		{
-			return ~(1 << UnityEngine.LayerMask.NameToLayer(name));
+			return ExclusiveLayerMask(UnityEngine.LayerMask.NameToLayer(name));
 		}
-		public static int LayerMask(int layer)
+		public static int ExclusiveLayerMask(int layer)
 		{
 			return ~(1 << layer);
 		}
@@ -1534,6 +1570,10 @@ namespace Utilities
 		public static float BoolToNumber(float source, bool condition, float damping = 2.5f)
 		{
 			return Mathf.MoveTowards(source, BoolToNumber(condition), Time.deltaTime * damping);
+		}
+		public static int InvertSign(bool invert)
+		{
+			return invert ? -1 : 1;
 		}
 		public static bool NumberToBool(float number)
 		{
@@ -1604,43 +1644,33 @@ namespace Utilities
 
 			return $"{Round(size, 2):0.00} {sizes[index]}";
 		}
-		public static void DrawArrowForGizmos(Vector3 pos, Vector3 direction, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
+		public static void DrawArrowForGizmos(Vector3 pos, Vector3 direction, float arrowHeadLength = .25f, float arrowHeadAngle = 20f)
 		{
-			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 180f + arrowHeadAngle, 0f) * Vector3.forward;
+			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 180f - arrowHeadAngle, 0f) * Vector3.forward;
 
 			Gizmos.DrawRay(pos, direction);
 			Gizmos.DrawRay(pos + direction, right * arrowHeadLength);
 			Gizmos.DrawRay(pos + direction, left * arrowHeadLength);
 		}
-		public static void DrawArrowForGizmos(Vector3 pos, Vector3 direction, UnityEngine.Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
+		public static void DrawArrowForGizmos(Vector3 pos, Vector3 direction, UnityEngine.Color color, float arrowHeadLength = .25f, float arrowHeadAngle = 20f)
 		{
 			UnityEngine.Color orgColor = Gizmos.color;
 
 			Gizmos.color = color;
 
-			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-
-			Gizmos.DrawRay(pos, direction);
-			Gizmos.DrawRay(pos + direction, right * arrowHeadLength);
-			Gizmos.DrawRay(pos + direction, left * arrowHeadLength);
+			DrawArrowForGizmos(pos, direction, arrowHeadLength, arrowHeadAngle);
 
 			Gizmos.color = orgColor;
 		}
-		public static void DrawArrowForDebug(Vector3 pos, Vector3 direction, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
+		public static void DrawArrowForDebug(Vector3 pos, Vector3 direction, float arrowHeadLength = .25f, float arrowHeadAngle = 20f)
 		{
-			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-
-			Debug.DrawRay(pos, direction);
-			Debug.DrawRay(pos + direction, right * arrowHeadLength);
-			Debug.DrawRay(pos + direction, left * arrowHeadLength);
+			DrawArrowForDebug(pos, direction, UnityEngine.Color.white, arrowHeadLength, arrowHeadAngle);
 		}
-		public static void DrawArrowForDebug(Vector3 pos, Vector3 direction, UnityEngine.Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f)
+		public static void DrawArrowForDebug(Vector3 pos, Vector3 direction, UnityEngine.Color color, float arrowHeadLength = .25f, float arrowHeadAngle = 20f)
 		{
-			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
-			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+			Vector3 right = Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 180f + arrowHeadAngle, 0f) * Vector3.forward;
+			Vector3 left = Quaternion.LookRotation(direction) * Quaternion.Euler(0f, 180f - arrowHeadAngle, 0f) * Vector3.forward;
 
 			Debug.DrawRay(pos, direction, color);
 			Debug.DrawRay(pos + direction, right * arrowHeadLength, color);
@@ -1686,9 +1716,9 @@ namespace Utilities
 		}
 		public static Vector3 PointFromLine(Vector3 start, Vector3 direction, float length, float position)
 		{
-			return start + direction * position * length;
+			return start + length * position * direction;
 		}
-		public static Vector3 VectorAbs(Vector3 vector)
+		public static Vector3 Abs(Vector3 vector)
 		{
 			return new Vector3(vector.x, vector.y, vector.z);
 		}
@@ -1696,15 +1726,23 @@ namespace Utilities
 		{
 			Vector3 vector = new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
 
-			return abs ? VectorAbs(vector) : vector;
+			return abs ? Abs(vector) : vector;
 		}
 		public static Vector3 Round(Vector3 vector)
 		{
 			return new Vector3(Mathf.Round(vector.x), Mathf.Round(vector.y), Mathf.Round(vector.z));
 		}
+		public static Vector3 Round(Vector3 vector, uint decimals)
+		{
+			return new Vector3(Round(vector.x, decimals), Round(vector.y, decimals), Round(vector.z, decimals));
+		}
 		public static Vector2 Round(Vector2 vector)
 		{
 			return new Vector2(Mathf.Round(vector.x), Mathf.Round(vector.y));
+		}
+		public static Vector2 Round(Vector2 vector, uint decimals)
+		{
+			return new Vector2(Round(vector.x, decimals), Round(vector.y, decimals));
 		}
 		public static Vector3Int RoundToInt(Vector3 vector)
 		{
@@ -1804,9 +1842,35 @@ namespace Utilities
 		{
 			return Devide(last - current, deltaTime);
 		}
+		public static float LoopNumber(float number, float after)
+		{
+			while (number >= after)
+				number -= after;
+
+			while (number < 0)
+				number += after;
+
+			return number;
+		}
+		public static bool IsDownFromLastState(float current, float last)
+		{
+			return IsDownFromLastState(NumberToBool(current), NumberToBool(last));
+		}
+		public static bool IsDownFromLastState(int current, int last)
+		{
+			return IsDownFromLastState(NumberToBool(current), NumberToBool(last));
+		}
 		public static bool IsDownFromLastState(bool current, bool last)
 		{
 			return !last && current;
+		}
+		public static bool IsUpFromLastState(float current, float last)
+		{
+			return IsUpFromLastState(NumberToBool(current), NumberToBool(last));
+		}
+		public static bool IsUpFromLastState(int current, int last)
+		{
+			return IsUpFromLastState(NumberToBool(current), NumberToBool(last));
 		}
 		public static bool IsUpFromLastState(bool current, bool last)
 		{
@@ -1912,6 +1976,14 @@ namespace Utilities
 
 			return Mathf.RoundToInt((float)ints.Average());
 		}
+		public static int Square(int number)
+		{
+			return number * number;
+		}
+		public static float Square(float number)
+		{
+			return number * number;
+		}
 		public static float ClampInfinity(float number, float min = 0f)
 		{
 			return min >= 0f ? Mathf.Max(number, min) : Mathf.Min(number, min);
@@ -1962,12 +2034,12 @@ namespace Utilities
 		}
 		public static void AddTorqueAtPosition(Rigidbody rigid, Vector3 torque, Vector3 point, ForceMode mode)
 		{
-			rigid.AddForceAtPosition(Vector3.forward * torque.y * .5f, point + Vector3.left, mode);
-			rigid.AddForceAtPosition(Vector3.back * torque.y * .5f, point + Vector3.right, mode);
-			rigid.AddForceAtPosition(Vector3.forward * torque.x * .5f, point + Vector3.up, mode);
-			rigid.AddForceAtPosition(Vector3.back * torque.x * .5f, point + Vector3.down, mode);
-			rigid.AddForceAtPosition(Vector3.right * torque.z * .5f, point + Vector3.up, mode);
-			rigid.AddForceAtPosition(Vector3.left * torque.z * .5f, point + Vector3.down, mode);
+			rigid.AddForceAtPosition(.5f * torque.y * Vector3.forward, point + Vector3.left, mode);
+			rigid.AddForceAtPosition(.5f * torque.y * Vector3.back, point + Vector3.right, mode);
+			rigid.AddForceAtPosition(.5f * torque.x * Vector3.forward, point + Vector3.up, mode);
+			rigid.AddForceAtPosition(.5f * torque.x * Vector3.back, point + Vector3.down, mode);
+			rigid.AddForceAtPosition(.5f * torque.z * Vector3.right, point + Vector3.up, mode);
+			rigid.AddForceAtPosition(.5f * torque.z * Vector3.left, point + Vector3.down, mode);
 		}
 		public static string ParsePath(params string[] path)
 		{
@@ -2195,7 +2267,11 @@ namespace Utilities
 		public static Bounds GetObjectBounds(GameObject gameObject, bool keepRotation = false, bool keepScale = true)
 		{
 			Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
-			Bounds bounds = new Bounds();
+
+			if (renderers.Length > 0)
+				renderers = renderers.Where(renderer => !(renderer is TrailRenderer || renderer is ParticleSystemRenderer)).ToArray();
+
+			Bounds bounds = default;
 			Quaternion orgRotation = gameObject.transform.rotation;
 			Vector3 orgScale = gameObject.transform.localScale;
 
@@ -2206,13 +2282,10 @@ namespace Utilities
 				gameObject.transform.rotation = Quaternion.identity;
 
 			for (int i = 0; i < renderers.Length; i++)
-				if (!(renderers[i] is TrailRenderer || renderers[i] is ParticleSystemRenderer))
-				{
-					if (bounds.size == Vector3.zero)
-						bounds = renderers[i].bounds;
-					else
-						bounds.Encapsulate(renderers[i].bounds);
-				}
+				if (bounds.size == Vector3.zero)
+					bounds = renderers[i].bounds;
+				else
+					bounds.Encapsulate(renderers[i].bounds);
 
 			if (!keepScale)
 				gameObject.transform.localScale = orgScale;
@@ -2238,6 +2311,10 @@ namespace Utilities
 			UnityEngine.Object.DestroyImmediate(obj, allowDestroyingAssets);
 		}
 
+		private static bool IsDeviderUnit(Units unit)
+		{
+			return unit == Units.FuelConsumption;
+		}
 		private static float PointSign(Vector2 point1, Vector2 point2, Vector2 point3)
 		{
 			return (point1.x - point3.x) * (point2.y - point3.y) - (point2.x - point3.x) * (point1.y - point3.y);

@@ -124,7 +124,7 @@ namespace Utilities.Inputs
 
 		#region Methods
 
-		#region Utilities
+		#region Menu Items
 
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
 		public static void OpenInputsManager()
@@ -149,6 +149,11 @@ namespace Utilities.Inputs
 
 			editorInstance.Show();
 		}
+		public static void OpenInputsManager(InputsManager.Input input)
+		{
+			OpenInputsManager();
+			EditInput(input);
+		}
 		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", true)]
 		protected static bool CheckResetInputsManager()
 		{
@@ -160,7 +165,10 @@ namespace Utilities.Inputs
 			if (!EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of reseting the Inputs Manager to it's original state?", "Yes I'm sure", "No"))
 				return;
 
-			if (!AssetDatabase.DeleteAsset($"Assets/Resources/{InputsManager.DataAssetPath}"))
+			string dataPath = Path.Combine(Application.dataPath, "Resources", $"{InputsManager.DataAssetPath}.bytes");
+			DataSerializationUtility<InputsManager.DataSheet> data = new DataSerializationUtility<InputsManager.DataSheet>(dataPath, false);
+
+			if (!data.Delete())
 			{
 				if (EditorUtility.DisplayDialog("Inputs Manager: Internal Error", "Unable to delete the current `InputsManager` asset in order to create a new one!", "Report Error...", "Cancel"))
 					ReportError();
@@ -200,17 +208,23 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Report Error...", false, 4)]
 		public static void ReportError()
 		{
-			Application.OpenURL("https://github.com/mediamax07/Inputs-Manager/issues/new");
+			OpenExternalURL("https://github.com/mediamax07/Inputs-Manager/issues/new");
 		}
-		[MenuItem("Tools/Utilities/Inputs Manager/About...", false, 4)]
+		[MenuItem("Tools/Utilities/Inputs Manager/About...", false, 5)]
 		public static void About()
 		{
-			Application.OpenURL("https://github.com/mediamax07/Inputs-Manager");
+			OpenExternalURL("https://github.com/mediamax07/Inputs-Manager");
+		}
+
+		private static void OpenExternalURL(string url)
+		{
+			if (EditorUtility.DisplayDialog("Inputs Manager: Info", "You're about to visit an external link. Do you want to proceed?", "Yes", "No"))
+				Application.OpenURL(url);
 		}
 
 		#endregion
 
-		#region Editor
+		#region Utilities
 
 		private static bool RecreateDataFile()
 		{
@@ -324,18 +338,22 @@ namespace Utilities.Inputs
 			{
 				case BindTarget.Positive:
 					bindingAxis.Positive = (Key)bindingKey;
+
 					break;
 
 				case BindTarget.Negative:
 					bindingAxis.Negative = (Key)bindingKey;
+
 					break;
 
 				case BindTarget.GamepadPositive:
 					bindingAxis.GamepadPositive = (GamepadBinding)bindingKey;
+
 					break;
 
 				case BindTarget.GamepadNegative:
 					bindingAxis.GamepadNegative = (GamepadBinding)bindingKey;
+
 					break;
 			}
 
@@ -358,7 +376,8 @@ namespace Utilities.Inputs
 				return;
 
 #if UNITY_2019_1_OR_NEWER
-			Gamepad gamepad = device as Gamepad;
+			if (!(device is Gamepad gamepad))
+				return;
 #else
 			Gamepad gamepad = InputSystem.GetDeviceById(eventPtr.deviceId) as Gamepad;
 #endif
@@ -425,6 +444,10 @@ namespace Utilities.Inputs
 				bindedGamepadBind = GamepadBinding.SelectButton;
 		}
 #endif
+		#endregion
+
+		#region Editor
+
 		private static void InputAxisEditor(InputsManager.Input.Axis axis, InputsManager.Input.InputType type, InputsManager.Input.Axis mainAxis = null, bool isGamepadEditor = false)
 		{
 			#region Editor Styles
@@ -638,8 +661,13 @@ namespace Utilities.Inputs
 
 			EditorGUI.indentLevel++;
 
+			EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+
 			inputName = EditorGUILayout.TextField("Name", inputName);
 			input.Type = (InputsManager.Input.InputType)EditorGUILayout.EnumPopup("Type", input.Type);
+
+			EditorGUI.EndDisabledGroup();
+
 			input.Interpolation = (InputsManager.Input.InputInterpolation)EditorGUILayout.EnumPopup(new GUIContent("Interpolation", "The interpolation method specifies how the current value of the axis moves towards the target within the interval.\r\n\r\nSmooth: Linear interpolation over time\r\nJump: Same as Smooth with the exception that if an opposite direction is triggered, the value goes instantly to neutral and continue from there. This method won't work if the input type is set to button\r\nInstant: No interpolation"), input.Interpolation);
 
 			EditorGUILayout.LabelField("Value Interval");
@@ -765,10 +793,10 @@ namespace Utilities.Inputs
 		{
 			if (EditorApplication.isPlaying)
 			{
-				input = null;
+				//input = null;
 				addingInput = false;
 				sortingInputs = false;
-				settings = false;
+				//settings = false;
 				export = false;
 				importJson = string.Empty;
 			}
@@ -1089,15 +1117,18 @@ namespace Utilities.Inputs
 									case RuntimePlatform.LinuxEditor:
 										processName = "xdg-open";
 										exportPath = $"{Path.GetDirectoryName(exportPath)}";
+
 										break;
 
 									case RuntimePlatform.OSXEditor:
 										processName = "open";
+
 										break;
 
 									case RuntimePlatform.WindowsEditor:
 										processName = "explorer.exe";
 										exportPath = $"{Path.GetDirectoryName(exportPath)}";
+
 										break;
 								}
 
@@ -1248,6 +1279,7 @@ namespace Utilities.Inputs
 					return;
 				}
 
+				EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
 				EditorGUILayout.BeginVertical(GUI.skin.box);
 				EditorGUILayout.LabelField("Data Management", EditorStyles.miniBoldLabel);
 				EditorGUILayout.BeginHorizontal();
@@ -1282,6 +1314,7 @@ namespace Utilities.Inputs
 				EditorGUI.EndDisabledGroup();
 				EditorGUILayout.EndHorizontal();
 				EditorGUILayout.EndVertical();
+				EditorGUI.EndDisabledGroup();
 				EditorGUILayout.BeginVertical(GUI.skin.box);
 				EditorGUILayout.LabelField("Behaviour", EditorStyles.miniBoldLabel);
 
@@ -1330,10 +1363,14 @@ namespace Utilities.Inputs
 
 				EditorGUI.indentLevel++;
 
+				EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+
 				float newGamepadThreshold = Mathf.Clamp01(EditorGUILayout.Slider(new GUIContent("Gamepad Threshold", "The gamepad threshold is the minimum value used to detect gamepad actions. This value doesn't apply to sticks or triggers in Play mode."), InputsManager.GamepadThreshold, 0f, 1f));
 
 				if (InputsManager.GamepadThreshold != newGamepadThreshold)
 					InputsManager.GamepadThreshold = newGamepadThreshold;
+
+				EditorGUI.EndDisabledGroup();
 
 				EditorGUI.indentLevel--;
 
@@ -1343,12 +1380,12 @@ namespace Utilities.Inputs
 				EditorGUILayout.LabelField("Help", EditorStyles.miniBoldLabel);
 				EditorGUILayout.Space();
 
-				EditorGUILayout.HelpBox("The open-source Inputs Manager has been created by MediaMax.", MessageType.None);
+				EditorGUILayout.HelpBox("The Inputs Manager is an open-source asset available on GitHub and is created by MediaMax.", MessageType.None);
 
 				if (GUILayout.Button("Report Error/Issue"))
 					ReportError();
 
-				if (GUILayout.Button("More about Inputs Manager"))
+				if (GUILayout.Button("Visit the Github Repository"))
 					About();
 
 				EditorGUILayout.EndVertical();
@@ -1373,7 +1410,7 @@ namespace Utilities.Inputs
 						SwitchNewInput(false);
 					else if (string.IsNullOrEmpty(inputName) || string.IsNullOrWhiteSpace(inputName))
 						EditorUtility.DisplayDialog("Inputs Manager: Error", "The input name cannot be empty.", "Okay");
-					else if (InputsManager.IndexOf(inputName) > -1)
+					else if (!EditorApplication.isPlaying && InputsManager.IndexOf(inputName) > -1)
 						EditorUtility.DisplayDialog("Inputs Manager: Info", "We didn't save the input name because it matches another one.", "Okay");
 					else
 						SaveInput();
@@ -1411,6 +1448,7 @@ namespace Utilities.Inputs
 						else
 						{
 							input.Name = inputName;
+
 							InputsManager.AddInput(input);
 							SwitchNewInput(false);
 						}
@@ -1446,50 +1484,49 @@ namespace Utilities.Inputs
 			{
 				EditorGUILayout.BeginHorizontal();
 				EditorGUILayout.LabelField("Inputs Manager", EditorStyles.boldLabel);
+				EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
+				EditorGUI.BeginDisabledGroup(!InputsManager.DataChanged);
 
-				if (!EditorApplication.isPlaying)
+				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Save), unstretchableMiniButtonWide))
+					InputsManager.SaveData();
+
+				EditorGUI.EndDisabledGroup();
+
+				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Add), unstretchableMiniButtonWide))
 				{
-					EditorGUI.BeginDisabledGroup(!InputsManager.DataChanged);
+					SwitchNewInput(true);
 
-					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Save), unstretchableMiniButtonWide))
-						InputsManager.SaveData();
+					sortingInputs = false;
+					settings = false;
 
-					EditorGUI.EndDisabledGroup();
+					return;
+				}
 
-					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Add), unstretchableMiniButtonWide))
-					{
-						SwitchNewInput(true);
-						sortingInputs = false;
-						settings = false;
+				EditorGUI.BeginDisabledGroup(InputsManager.Count < 2);
 
-						return;
-					}
+				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Sort), unstretchableMiniButtonWide))
+				{
+					sortingInputs = true;
+					settings = false;
+				}
 
-					EditorGUI.BeginDisabledGroup(InputsManager.Count < 2);
-
-					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Sort), unstretchableMiniButtonWide))
-					{
-						sortingInputs = true;
-						settings = false;
-					}
-
-					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Trash), unstretchableMiniButtonWide))
-						if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of removing all of the existing inputs?", "Yes", "No"))
+				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Trash), unstretchableMiniButtonWide))
+					if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of removing all of the existing inputs?", "Yes", "No"))
 						{
 							InputsManager.RemoveAll();
 
 							return;
 						}
 
-					EditorGUI.EndDisabledGroup();
+				EditorGUI.EndDisabledGroup();
+				EditorGUI.EndDisabledGroup();
 
-					if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Settings), unstretchableMiniButtonWide))
-					{
-						settings = true;
-						sortingInputs = false;
+				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Settings), unstretchableMiniButtonWide))
+				{
+					settings = true;
+					sortingInputs = false;
 
-						return;
-					}
+					return;
 				}
 
 				EditorGUILayout.EndHorizontal();
@@ -1497,8 +1534,10 @@ namespace Utilities.Inputs
 
 			EditorGUILayout.Space();
 
+			if (EditorApplication.isPlaying)
+				EditorGUILayout.HelpBox("You can't change or modify some settings in play mode. Keep in mind thay any changes on the Inputs Manager editor won't be saved unless using a custom script to override this behaviour!", MessageType.Info);
+
 			if (InputsManager.Count > 0)
-			{
 				for (int i = 0; i < InputsManager.Count; i++)
 				{
 					EditorGUILayout.BeginVertical(GUI.skin.box);
@@ -1530,10 +1569,12 @@ namespace Utilities.Inputs
 
 					EditorGUILayout.LabelField(InputsManager.GetInput(i).Name, EditorStyles.miniBoldLabel);
 
-					if (!EditorApplication.isPlaying && !sortingInputs)
+					if (!sortingInputs)
 					{
 						if (GUILayout.Button(EditorUtilities.Icons.Pencil, unstretchableMiniButtonWide))
 							EditInput(InputsManager.GetInput(i));
+
+						EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
 
 						if (GUILayout.Button(EditorUtilities.Icons.Clone, unstretchableMiniButtonWide))
 							DuplicateInput(InputsManager.GetInput(i));
@@ -1541,15 +1582,13 @@ namespace Utilities.Inputs
 						if (GUILayout.Button(EditorUtilities.Icons.Trash, unstretchableMiniButtonWide))
 							if (EditorUtility.DisplayDialog("Inputs Manager: Warning", $"Are you sure of removing the '{InputsManager.GetInput(i).Name}' input?", "Yes", "Not really"))
 								InputsManager.RemoveInput(i);
+
+						EditorGUI.EndDisabledGroup();
 					}
 
 					EditorGUILayout.EndHorizontal();
 					EditorGUILayout.EndVertical();
 				}
-
-				if (EditorApplication.isPlaying)
-					EditorGUILayout.HelpBox("Hey! Unfortunately, you can't change or modify anything because you are on play mode.", MessageType.Info);
-			}
 			else if (!EditorApplication.isPlaying)
 				EditorGUILayout.HelpBox("The inputs list is empty for the moment, press the \"+\" button to create a new one. You can also import some presets from the \"Settings\" menu.", MessageType.Info);
 			else
@@ -1594,7 +1633,7 @@ namespace Utilities.Inputs
 					InputsManager.SaveData();
 			}
 
-			InputsManager.ForceLoadData();
+			InputsManager.ForceDataChange();
 		}
 
 		#endregion

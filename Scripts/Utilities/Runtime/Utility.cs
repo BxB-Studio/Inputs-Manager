@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using System.IO;
 
 #endregion
@@ -57,8 +58,16 @@ namespace Utilities
 
 			return newArray;
 		}
+		public static bool IsNullOrEmpty(this string str)
+		{
+			return string.IsNullOrEmpty(str);
+		}
+		public static bool IsNullOrWhiteSpace(this string str)
+		{
+			return string.IsNullOrWhiteSpace(str);
+		}
 	}
-	public struct Utility
+	public static class Utility
 	{
 		#region Modules & Enumerators
 
@@ -67,7 +76,7 @@ namespace Utilities
 		public enum Precision { Simple, Advanced }
 		public enum UnitType { Metric, Imperial }
 		public enum Units { Area, AreaAccurate, AreaLarge, ElectricConsumption, Density, Distance, DistanceAccurate, DistanceLong, ElectricCapacity, Force, Frequency, FuelConsumption, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
-		public enum RenderPipeline { Standard, UniversalRenderPipeline, HighDefinitionRenderPipeline, CustomRenderPipeline }
+		public enum RenderPipeline { Standard, URP, HDRP, Custom }
 		public enum TextureEncodingType { EXR, JPG, PNG, TGA }
 		public enum WorldSurface { XY, XZ, YZ }
 		public enum Axis2 { X, Y }
@@ -1150,6 +1159,7 @@ namespace Utilities
 		#region Constants
 
 		public const float airDensity = 1.29f;
+		public const string emptyString = "";
 
 		#endregion
 
@@ -1292,7 +1302,7 @@ namespace Utilities
 					return unitType == UnitType.Metric ? "ms" : "ms";
 
 				case Units.Torque:
-					return unitType == UnitType.Metric ? "N⋅m" : "ft/lb";
+					return unitType == UnitType.Metric ? "N⋅m" : "ft-lb";
 
 				case Units.Velocity:
 					return unitType == UnitType.Metric ? "m/s" : "ft/s";
@@ -1557,11 +1567,19 @@ namespace Utilities
 		}
 		public static int ExclusiveLayerMask(string name)
 		{
-			return ExclusiveLayerMask(UnityEngine.LayerMask.NameToLayer(name));
+			return ExclusiveLayerMask(new string[] { name });
 		}
 		public static int ExclusiveLayerMask(int layer)
 		{
-			return ~(1 << layer);
+			return ExclusiveLayerMask(new int[] { layer });
+		}
+		public static int ExclusiveLayerMask(params string[] layers)
+		{
+			return ~LayerMask.GetMask(layers);
+		}
+		public static int ExclusiveLayerMask(params int[] layers)
+		{
+			return ExclusiveLayerMask(layers.Select(layer => LayerMask.LayerToName(layer)).ToArray());
 		}
 		public static int BoolToNumber(bool condition)
 		{
@@ -2043,12 +2061,12 @@ namespace Utilities
 		}
 		public static string ParsePath(params string[] path)
 		{
-			string newPath = string.Join("/", path);
+			string newPath = string.Join(Path.AltDirectorySeparatorChar.ToString(), path);
 
-			while (newPath.IndexOf('\\') > -1)
-				newPath = newPath.Replace('\\', '/');
+			while (newPath.IndexOf(Path.AltDirectorySeparatorChar) > -1)
+				newPath = newPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
-			string[] pathArray = newPath.Split('/').Where(s => !string.IsNullOrEmpty(s) && !string.IsNullOrWhiteSpace(s)).ToArray();
+			string[] pathArray = newPath.Split(Path.DirectorySeparatorChar).Where(s => !string.IsNullOrEmpty(s) && !string.IsNullOrWhiteSpace(s)).ToArray();
 
 			var index = Array.IndexOf(pathArray, '.');
 
@@ -2068,14 +2086,16 @@ namespace Utilities
 				index = Array.IndexOf(pathArray, "..");
 			}
 
-			return string.Join("/", pathArray);
+			return string.Join(Path.DirectorySeparatorChar.ToString(), pathArray);
 		}
 		public static bool IsDriectoryEmpty(string path)
 		{
 			IEnumerable<string> items = Directory.EnumerateFileSystemEntries(path);
 
+#pragma warning disable IDE0063 // Use simple 'using' statement
 			using (IEnumerator<string> entry = items.GetEnumerator())
 				return !entry.MoveNext();
+#pragma warning restore IDE0063 // Use simple 'using' statement
 		}
 		public static AudioSource NewAudioSource(string sourceName, float minDistance, float maxDistance, float volume, AudioClip clip, bool loop, bool playNow, bool destroyAfterFinished, bool mute = false, Transform parent = null, AudioMixerGroup mixer = null, bool spatialize = false)
 		{
@@ -2117,7 +2137,7 @@ namespace Utilities
 
 			return result.ToArray();
 		}
-		public static T CopyComponent<T>(T original, GameObject destination) where T : Component
+		public static T Clone<T>(T original, GameObject destination) where T : Component
 		{
 			Type type = typeof(T);
 			T target = destination.AddComponent<T>();
@@ -2254,22 +2274,45 @@ namespace Utilities
 #else
 			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("HDRenderPipelineAsset"))
 #endif
-				return RenderPipeline.HighDefinitionRenderPipeline;
+				return RenderPipeline.HDRP;
 #if UNITY_2019_3_OR_NEWER
 			else if (GraphicsSettings.currentRenderPipeline.GetType().Name.Contains("LightweightRenderPipelineAsset") || GraphicsSettings.currentRenderPipeline.GetType().Name.Contains("UniversalRenderPipelineAsset"))
 #else
 			else if (GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("LightweightRenderPipelineAsset") || GraphicsSettings.renderPipelineAsset.GetType().Name.Contains("UniversalRenderPipelineAsset"))
 #endif
-				return RenderPipeline.UniversalRenderPipeline;
+				return RenderPipeline.URP;
 			else
-				return RenderPipeline.CustomRenderPipeline;
+				return RenderPipeline.Custom;
 		}
-		public static Bounds GetObjectBounds(GameObject gameObject, bool keepRotation = false, bool keepScale = true)
+		public static GameObject[] FindGameObjectsWithLayerMask(string[] layers, bool includeInactive = true)
 		{
-			Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
+			return FindGameObjectsWithLayerMask(LayerMask.GetMask(layers), includeInactive);
+		}
+		public static GameObject[] FindGameObjectsWithLayerMask(LayerMask layerMask, bool includeInactive = true)
+		{
+			return FindGameObjectsWithLayerMask(layerMask.value, includeInactive);
+		}
+		public static GameObject[] FindGameObjectsWithLayerMask(int layerMask, bool includeInactive = true)
+		{
+			List<GameObject> gameObjects = new List<GameObject>();
+			IEnumerable<GameObject> rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
 
-			if (renderers.Length > 0)
-				renderers = renderers.Where(renderer => !(renderer is TrailRenderer || renderer is ParticleSystemRenderer)).ToArray();
+			foreach (GameObject rootGameObject in rootGameObjects)
+			{
+				IEnumerable<GameObject> children = rootGameObject.GetComponentsInChildren<Transform>().Select(transform => transform.gameObject);
+
+				if (children.Count() > 0)
+					gameObjects.AddRange(children.Where(gameObject => (includeInactive || gameObject.activeInHierarchy) && MaskHasLayer(layerMask, gameObject.layer)));
+			}
+
+			return gameObjects.ToArray();
+		}
+		public static Bounds GetObjectPhysicsBounds(GameObject gameObject, bool includeTriggers, bool keepRotation = false, bool keepScale = true)
+		{
+			IEnumerable<Collider> colliders = gameObject.GetComponentsInChildren<Collider>();
+
+			if (colliders.Count() > 0)
+				colliders = colliders.Where(collider => includeTriggers || !collider.isTrigger);
 
 			Bounds bounds = default;
 			Quaternion orgRotation = gameObject.transform.rotation;
@@ -2281,11 +2324,42 @@ namespace Utilities
 			if (!keepRotation)
 				gameObject.transform.rotation = Quaternion.identity;
 
-			for (int i = 0; i < renderers.Length; i++)
+			for (int i = 0; i < colliders.Count(); i++)
 				if (bounds.size == Vector3.zero)
-					bounds = renderers[i].bounds;
+					bounds = colliders.ElementAt(i).bounds;
 				else
-					bounds.Encapsulate(renderers[i].bounds);
+					bounds.Encapsulate(colliders.ElementAt(i).bounds);
+
+			if (!keepScale)
+				gameObject.transform.localScale = orgScale;
+
+			if (!keepRotation)
+				gameObject.transform.rotation = orgRotation;
+
+			return bounds;
+		}
+		public static Bounds GetObjectBounds(GameObject gameObject, bool keepRotation = false, bool keepScale = true)
+		{
+			IEnumerable<Renderer> renderers = gameObject.GetComponentsInChildren<Renderer>();
+
+			if (renderers.Count() > 0)
+				renderers = renderers.Where(renderer => !(renderer is TrailRenderer || renderer is ParticleSystemRenderer));
+
+			Bounds bounds = default;
+			Quaternion orgRotation = gameObject.transform.rotation;
+			Vector3 orgScale = gameObject.transform.localScale;
+
+			if (!keepScale)
+				gameObject.transform.localScale = Vector3.one;
+
+			if (!keepRotation)
+				gameObject.transform.rotation = Quaternion.identity;
+
+			for (int i = 0; i < renderers.Count(); i++)
+				if (bounds.size == Vector3.zero)
+					bounds = renderers.ElementAt(i).bounds;
+				else
+					bounds.Encapsulate(renderers.ElementAt(i).bounds);
 
 			if (!keepScale)
 				gameObject.transform.localScale = orgScale;

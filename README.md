@@ -3,7 +3,7 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
@@ -17,7 +17,6 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Joysticks/Gamepad compatibility
 - Runtime double press and hold binding
 - Bind keys within the Unity Editor
-- Single/Multiple Touch binding
 - Edit inputs at runtime
 - High performant code
 - Easy inputs setup
@@ -32,18 +31,19 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Unity 2018.4 or newer<br/>
 
 ## Dependencies
-- Unity 2018.4
-	- Input System: 0.2.1-preview only
 - Unity 2019.1 or newer
 	- Input System: 1.0.0-preview or newer
+- Unity 2018.4
+	- Input System: 0.2.1-preview or older
 
 ## Release Notes
+- 1.0.2
+	- Easier input edit through scripting
+	- Added scripting custom data loading
+	- Edit settings in Play Mode in Editor & through scripting
 - 1.0.1
 	- New updated Utilities library
 	- Fixed Gamepad/Joystick detection at runtime
-	- Added new icons
-	- Deleted unnecessary files
-	- Touch Binding support for Unity 2018.4
 - 1.0.0
 	- First production release
 	- Added joystick/gamepad support
@@ -51,8 +51,6 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Optimized performance
 	- Fixed bunch of bugs
 	- Ability to bind joystick/gamepad inputs
-	- Single/Multiple Touch Binding *(Unity 2019.1 or newer; Input System 0.9-preview or newer)*
-	- Replaced SVG icons with PNG ones *(Vector Graphics package is no longer required!)*
 - 0.4-beta
 	- Fixed some performance issues
 	- Fixed some bugs
@@ -84,10 +82,9 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Json preset importer
 
 ## Important Notes!
-**The Inputs Manager requires a Scripting Runtime Version of .NET 4.x Equivalent or newer *(If available; This is only for older Unity versions)*.<br/>
+**The Inputs Manager requires an API Compatibility Level of .NET 4.x or newer (If available).<br/>
 This package requires the New Input System package to be installed from the Package Manager.<br/>
-Once the Input System has been installed, a Scripting Define Symbol `ENABLE_INPUT_SYSTEM` would be added; If not, please go to `Edit > Project Settings > Player > Scripting Define Symbols` and add `ENABLE_INPUT_SYSTEM` there. *On Unity 2019.4 or older; If `Scripting Define Symbols` is not empty, you can separate symbols with a `;`.*<br />
-Please do not changes the destination of the existing files under the `Resources` directory. Doing so may cause some internal errors!**
+Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## Contributing
 Please read the [contributing guidlines](https://github.com/mediamax07/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.

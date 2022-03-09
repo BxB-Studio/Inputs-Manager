@@ -31,7 +31,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("Button");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -55,7 +55,13 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButton");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
+					style.normal = new GUIStyleState()
+					{
+						background = style.active.background,
+						scaledBackgrounds = style.active.scaledBackgrounds
+					};
+					style.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
+
 #else
 					style.normal = style.active;
 #endif
@@ -79,7 +85,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonMid");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -103,7 +109,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonLeft");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 #else
 					style.normal = style.active;
 #endif
@@ -127,7 +133,7 @@ namespace Utilities
 					GUIStyle style = new GUIStyle("MiniButtonRight");
 
 #if UNITY_2019_3_OR_NEWER
-					style.normal.textColor = EditorGUIUtility.isProSkin ? UnityEngine.Color.white : UnityEngine.Color.black;
+					style.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 #else
 					style.normal = style.active;
 #endif

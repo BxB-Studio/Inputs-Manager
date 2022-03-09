@@ -89,7 +89,7 @@ namespace Utilities
 					stream.Close();
 			}
 		}
-		public void Delete()
+		public bool Delete()
 		{
 			CheckValidity();
 
@@ -97,21 +97,35 @@ namespace Utilities
 			{
 				Debug.LogError("You can't delete a resource file, use normal path finding instead!");
 
-				return;
+				return false;
 			}
 
-			if (!bypassExceptions && !File.Exists(path))
-				throw new FileNotFoundException($"We couldn't delete ({path}), as it doesn't exist!");
+			if (!File.Exists(path))
+			{
+				if (!bypassExceptions)
+					throw new FileNotFoundException($"We couldn't delete ({path}), as it doesn't exist!");
+
+				return false;
+			}
 
 			try
 			{
 				File.Delete(path);
+
+				string metaFilePath = $"{path}.meta";
+
+				if (File.Exists(metaFilePath))
+					File.Delete(metaFilePath);
 			}
 			catch (Exception e)
 			{
 				if (!bypassExceptions)
 					throw e;
+
+				return false;
 			}
+
+			return true;
 		}
 
 		private void CheckValidity()

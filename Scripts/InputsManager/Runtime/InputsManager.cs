@@ -176,6 +176,8 @@ namespace Utilities.Inputs
 			#region Enumerators
 
 			public enum InputType { Axis, Button }
+			public enum InputAxisType { Main, Alt }
+			public enum InputAxisSide { Positive, Negative }
 			public enum InputInterpolation { Instant = 2, Jump = 1, Smooth = 0 }
 
 			#endregion
@@ -201,11 +203,8 @@ namespace Utilities.Inputs
 					}
 					set
 					{
-						if (Application.isPlaying)
-							return;
-
 						strongSide = value;
-						dataChanged = true;
+						dataChanged = !Application.isPlaying;
 					}
 				}
 #if ENABLE_INPUT_SYSTEM
@@ -242,11 +241,8 @@ namespace Utilities.Inputs
 					}
 					set
 					{
-						if (Application.isPlaying)
-							return;
-
 						gamepadStrongSide = value;
-						dataChanged = true;
+						dataChanged = !Application.isPlaying;
 					}
 				}
 #if ENABLE_INPUT_SYSTEM
@@ -259,7 +255,7 @@ namespace Utilities.Inputs
 					set
 					{
 						gamepadPositive = value;
-						dataChanged = true;
+						dataChanged = !Application.isPlaying;
 					}
 				}
 				public GamepadBinding GamepadNegative
@@ -271,7 +267,7 @@ namespace Utilities.Inputs
 					set
 					{
 						gamepadNegative = value;
-						dataChanged = true;
+						dataChanged = !Application.isPlaying;
 					}
 				}
 #endif
@@ -354,8 +350,8 @@ namespace Utilities.Inputs
 					if (Application.isPlaying)
 						return;
 
+					dataChanged = dataChanged || !value.IsNullOrEmpty() && name != value;
 					name = value;
-					dataChanged = true;
 				}
 			}
 			public InputType Type
@@ -382,7 +378,7 @@ namespace Utilities.Inputs
 					dataChanged = true;
 				}
 			}
-			public Input.InputInterpolation Interpolation
+			public InputInterpolation Interpolation
 			{
 				get
 				{
@@ -390,11 +386,8 @@ namespace Utilities.Inputs
 				}
 				set
 				{
-					if (Application.isPlaying)
-						return;
-
 					interpolation = value;
-					dataChanged = true;
+					dataChanged = !Application.isPlaying;
 				}
 			}
 			public Vector2 ValueInterval
@@ -405,11 +398,8 @@ namespace Utilities.Inputs
 				}
 				set
 				{
-					if (Application.isPlaying)
-						return;
-
 					valueInterval = value;
-					dataChanged = true;
+					dataChanged = !Application.isPlaying;
 				}
 			}
 			public bool Invert
@@ -421,7 +411,7 @@ namespace Utilities.Inputs
 				set
 				{
 					invert = value;
-					dataChanged = true;
+					dataChanged = !Application.isPlaying;
 				}
 			}
 			public Axis Main
@@ -432,10 +422,7 @@ namespace Utilities.Inputs
 				}
 				set
 				{
-					if (Application.isPlaying)
-						return;
-
-					if (!value)
+					if (Application.isPlaying || !value)
 						return;
 
 					main = value;
@@ -450,10 +437,7 @@ namespace Utilities.Inputs
 				}
 				set
 				{
-					if (Application.isPlaying)
-						return;
-
-					if (!value)
+					if (Application.isPlaying || !value)
 						return;
 
 					main = value;
@@ -617,11 +601,11 @@ namespace Utilities.Inputs
 			[SerializeField]
 			private InputType type;
 			[SerializeField]
-			private Axis main = new Axis();
+			private Axis main;
 			[SerializeField]
-			private Axis alt = new Axis();
+			private Axis alt;
 			[SerializeField]
-			private Input.InputInterpolation interpolation;
+			private InputInterpolation interpolation;
 			[SerializeField]
 			private Utility.SerializableVector2 valueInterval;
 			[SerializeField]
@@ -727,6 +711,45 @@ namespace Utilities.Inputs
 
 			#region Methods
 
+#if ENABLE_INPUT_SYSTEM
+			public void SetKeyboardKey(InputAxisType axis, InputAxisSide binding, Key key)
+			{
+				switch (axis)
+				{
+					case InputAxisType.Alt:
+						SetAxisKeyOrButton(Alt, binding, (int)key, false);
+
+						break;
+
+					default:
+						SetAxisKeyOrButton(Main, binding, (int)key, false);
+
+						break;
+				}
+
+				if (Application.isPlaying)
+					Start();
+			}
+			public void SetGamepadBinding(InputAxisType axis, InputAxisSide side, GamepadBinding key)
+			{
+				switch (axis)
+				{
+					case InputAxisType.Alt:
+						SetAxisKeyOrButton(Alt, side, (int)key, true);
+
+						break;
+
+					default:
+						SetAxisKeyOrButton(Main, side, (int)key, true);
+
+						break;
+				}
+
+				if (Application.isPlaying)
+					Start();
+			}
+#endif
+
 			internal void Start()
 			{
 				if (!trimmed)
@@ -780,7 +803,7 @@ namespace Utilities.Inputs
 
 				switch (Main.StrongSide)
 				{
-					case Input.Axis.Side.FirstPressing:
+					case Axis.Side.FirstPressing:
 						if (KeyboardMainValue > 0f)
 							positiveCoeficient = 2f;
 						else if (KeyboardMainValue < 0f)
@@ -788,12 +811,14 @@ namespace Utilities.Inputs
 
 						break;
 
-					case Input.Axis.Side.Positive:
+					case Axis.Side.Positive:
 						positiveCoeficient = 2f;
+
 						break;
 
-					case Input.Axis.Side.Negative:
+					case Axis.Side.Negative:
 						negativeCoeficient = 2f;
+
 						break;
 				}
 
@@ -825,7 +850,7 @@ namespace Utilities.Inputs
 
 				switch (Alt.StrongSide)
 				{
-					case Input.Axis.Side.FirstPressing:
+					case Axis.Side.FirstPressing:
 						if (KeyboardAltValue > 0f)
 							positiveCoeficient = 2f;
 						else if (KeyboardAltValue < 0f)
@@ -833,12 +858,14 @@ namespace Utilities.Inputs
 
 						break;
 
-					case Input.Axis.Side.Positive:
+					case Axis.Side.Positive:
 						positiveCoeficient = 2f;
+
 						break;
 
-					case Input.Axis.Side.Negative:
+					case Axis.Side.Negative:
 						negativeCoeficient = 2f;
+
 						break;
 				}
 
@@ -1036,7 +1063,7 @@ namespace Utilities.Inputs
 
 					switch (Main.GamepadStrongSide)
 					{
-						case Input.Axis.Side.FirstPressing:
+						case Axis.Side.FirstPressing:
 							if (GamepadMainValues[i] > 0f)
 								positiveCoeficient = 2f;
 							else if (GamepadMainValues[i] < 0f)
@@ -1044,12 +1071,14 @@ namespace Utilities.Inputs
 
 							break;
 
-						case Input.Axis.Side.Positive:
+						case Axis.Side.Positive:
 							positiveCoeficient = 2f;
+
 							break;
 
-						case Input.Axis.Side.Negative:
+						case Axis.Side.Negative:
 							negativeCoeficient = 2f;
+
 							break;
 					}
 
@@ -1081,7 +1110,7 @@ namespace Utilities.Inputs
 
 					switch (Alt.GamepadStrongSide)
 					{
-						case Input.Axis.Side.FirstPressing:
+						case Axis.Side.FirstPressing:
 							if (GamepadAltValues[i] > 0f)
 								positiveCoeficient = 2f;
 							else if (GamepadAltValues[i] < 0f)
@@ -1089,12 +1118,14 @@ namespace Utilities.Inputs
 
 							break;
 
-						case Input.Axis.Side.Positive:
+						case Axis.Side.Positive:
 							positiveCoeficient = 2f;
+
 							break;
 
-						case Input.Axis.Side.Negative:
+						case Axis.Side.Negative:
 							negativeCoeficient = 2f;
+
 							break;
 					}
 
@@ -1287,7 +1318,6 @@ namespace Utilities.Inputs
 				}
 #endif
 			}
-
 #if ENABLE_INPUT_SYSTEM
 			internal void InitializeGamepads()
 			{
@@ -1577,7 +1607,29 @@ namespace Utilities.Inputs
 				if (Application.isPlaying)
 					trimmed = true;
 			}
+#if ENABLE_INPUT_SYSTEM
+			private void SetAxisKeyOrButton(Axis axis, InputAxisSide binding, int keyOrButton, bool gamepad)
+			{
+				switch (binding)
+				{
+					case InputAxisSide.Negative:
+						if (gamepad)
+							axis.GamepadNegative = (GamepadBinding)keyOrButton;
+						else
+							axis.Negative = (Key)keyOrButton;
 
+						break;
+
+					default:
+						if (gamepad)
+							axis.GamepadPositive = (GamepadBinding)keyOrButton;
+						else
+							axis.Positive = (Key)keyOrButton;
+
+						break;
+				}
+			}
+#endif
 			#endregion
 
 			#region Constructors & Operators
@@ -1631,7 +1683,7 @@ namespace Utilities.Inputs
 			}
 			set
 			{
-				if (Application.isPlaying || inputSourcePriority == value)
+				if (inputSourcePriority == value)
 					return;
 
 				inputSourcePriority = value;
@@ -1639,7 +1691,7 @@ namespace Utilities.Inputs
 				SaveData();
 			}
 		}
-		public static readonly string DataAssetPath = "Assets/InputsManager_Data";
+		public static readonly string DataAssetPath = $"Assets{Path.DirectorySeparatorChar}InputsManager_Data";
 		public static float InterpolationTime
 		{
 			get
@@ -1651,10 +1703,10 @@ namespace Utilities.Inputs
 			}
 			set
 			{
-				if (Application.isPlaying || interpolationTime == value)
+				if (interpolationTime == value)
 					return;
 
-				interpolationTime = value;
+				interpolationTime = Utility.ClampInfinity(value, 0f);
 
 				SaveData();
 			}
@@ -1670,10 +1722,10 @@ namespace Utilities.Inputs
 			}
 			set
 			{
-				if (Application.isPlaying || holdTriggerTime == value)
+				if (holdTriggerTime == value)
 					return;
 
-				holdTriggerTime = value;
+				holdTriggerTime = Utility.ClampInfinity(value, 0f);
 
 				SaveData();
 			}
@@ -1689,10 +1741,10 @@ namespace Utilities.Inputs
 			}
 			set
 			{
-				if (Application.isPlaying || holdWaitTime == value)
+				if (holdWaitTime == value)
 					return;
 
-				holdWaitTime = value;
+				holdWaitTime = Utility.ClampInfinity(value, 0f);
 
 				SaveData();
 			}
@@ -1708,10 +1760,10 @@ namespace Utilities.Inputs
 			}
 			set
 			{
-				if (Application.isPlaying || doublePressTimeout == value)
+				if (doublePressTimeout == value)
 					return;
 
-				doublePressTimeout = value;
+				doublePressTimeout = Utility.ClampInfinity(value, 0f);
 
 				SaveData();
 			}
@@ -1742,7 +1794,7 @@ namespace Utilities.Inputs
 				if (!Application.isEditor)
 					return dataLoadedOnBuild;
 
-				return DataAssetExists && File.GetLastWriteTime($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") == dataLastWriteTime;
+				return DataAssetExists && File.GetLastWriteTime(Path.Combine(Application.dataPath, "Resources", $"{DataAssetPath}.bytes")) == dataLastWriteTime;
 			}
 		}
 		public static bool DataChanged
@@ -1759,7 +1811,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return Application.isEditor ? File.Exists($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") : Resources.Load<TextAsset>(DataAssetPath);
+				return Application.isEditor ? File.Exists(Path.Combine(Application.dataPath, "Resources", $"{DataAssetPath}.bytes")) : Resources.Load<TextAsset>(DataAssetPath);
 			}
 		}
 		public static int Count
@@ -1869,7 +1921,7 @@ namespace Utilities.Inputs
 		private static float holdTriggerTime = .3f;
 		private static float holdWaitTime = .1f;
 		private static float doublePressTimeout = .2f;
-		private static float gamepadThreshold = .1f;
+		private static float gamepadThreshold = .5f;
 		private static float mouseLeftHoldTimer;
 		private static float mouseMiddleHoldTimer;
 		private static float mouseRightHoldTimer;
@@ -3347,7 +3399,18 @@ namespace Utilities.Inputs
 		public static string[] GetInputsNames()
 		{
 			if (dataChanged || inputNames == null || inputNames.Length != Inputs.Length)
-				inputNames = Inputs.Select(input => input.Name).ToArray();
+			{
+				if (inputNames != null && inputNames.Length == Inputs.Length)
+					for (int i = 0; i < Inputs.Length; i++)
+					{
+						if (Inputs[i].Name.IsNullOrEmpty())
+							continue;
+						
+						inputNames[i] = Inputs[i].Name;
+					}
+				else
+					inputNames = Inputs.Select(input => input.Name).ToArray();
+			}
 
 			return inputNames;
 		}
@@ -3363,12 +3426,12 @@ namespace Utilities.Inputs
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentException("The input name cannot be empty or `null`", "name");
 
-			Input input = Array.Find(Inputs, query => query.Name == name);
+			int index = Array.IndexOf(GetInputsNames(), name);
 
-			if (!input)
+			if (index < 0)
 				throw new ArgumentException($"We couldn't find an input with the name of `{name}` in the inputs list!");
 
-			return input;
+			return GetInput(index);
 		}
 		public static void SetInput(int index, Input input)
 		{
@@ -3421,6 +3484,9 @@ namespace Utilities.Inputs
 				return null;
 			}
 
+			if (!input)
+				throw new ArgumentNullException("input");
+
 			if (string.IsNullOrEmpty(input.Name) || string.IsNullOrWhiteSpace(input.Name))
 				throw new ArgumentException("The input name cannot be empty or `null`", "input.name");
 
@@ -3435,9 +3501,15 @@ namespace Utilities.Inputs
 
 			return input;
 		}
-		public static Input AddInput(string name) => AddInput(new Input(name));
-		public static Input DuplicateInput(string name)
+		public static Input AddInput(string name)
 		{
+			return AddInput(new Input(name));
+		}
+		public static Input DuplicateInput(Input input)
+		{
+			if (!input)
+				throw new ArgumentNullException("input");
+
 			if (Application.isPlaying)
 			{
 				Debug.LogError("<b>Inputs Manager:</b> Cannot duplicate input in Play Mode");
@@ -3445,18 +3517,26 @@ namespace Utilities.Inputs
 				return null;
 			}
 
-			Input oldInput = GetInput(name);
-			Input input = new Input(oldInput);
+			Input newInput = new Input(input);
+			int index = Inputs.Length;
+			int newLength = index + 1;
 
-			Array.Resize(ref inputs, Inputs.Length + 1);
-			Array.Resize(ref inputNames, inputNames.Length + 1);
+			Array.Resize(ref inputs, newLength);
+			Array.Resize(ref inputNames, newLength);
 
-			Inputs[Inputs.Length - 1] = input;
+			Inputs[index] = newInput;
 			dataChanged = true;
 
-			return input;
+			return newInput;
 		}
-		public static Input DuplicateInput(int index) => DuplicateInput(GetInput(index).Name);
+		public static Input DuplicateInput(string name)
+		{
+			return DuplicateInput(GetInput(name));
+		}
+		public static Input DuplicateInput(int index)
+		{
+			return DuplicateInput(GetInput(index));
+		}
 		public static void InsertInput(int index, Input input)
 		{
 			if (Application.isPlaying)
@@ -3525,17 +3605,8 @@ namespace Utilities.Inputs
 			inputs = new Input[] { };
 			dataChanged = true;
 		}
-		public static bool LoadData()
+		public static bool LoadDataFromSheet(DataSheet data)
 		{
-			if (!DataAssetExists)
-				return false;
-
-			if (DataLoaded)
-				return true;
-
-			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>($"{(Application.isEditor ? $"{Application.dataPath}/Resources/" : "")}{DataAssetPath}{(Application.isEditor ? ".bytes" : "")}", !Application.isEditor);
-			DataSheet data = serializer.Load();
-
 			if (!data)
 			{
 				Debug.LogError("<b>Inputs Manager:</b> We've had some issues while loading data!");
@@ -3551,29 +3622,47 @@ namespace Utilities.Inputs
 			holdWaitTime = data.HoldWaitTime;
 			doublePressTimeout = data.DoublePressTimeout;
 			gamepadThreshold = data.GamepadThreshold;
-			dataLastWriteTime = Application.isEditor ? File.GetLastWriteTime($"{Application.dataPath}/Resources/{DataAssetPath}.bytes") : DateTime.Now;
-			dataChanged = false;
+			dataLastWriteTime = Application.isEditor ? File.GetLastWriteTime(Path.Combine(Application.dataPath, "Resources", $"{DataAssetPath}.bytes")) : DateTime.Now;
+			dataChanged = !Application.isPlaying;
 			dataLoadedOnBuild = !Application.isEditor;
 
 			return data;
 		}
-		public static void ForceLoadData()
+		public static bool LoadData()
+		{
+			if (!DataAssetExists)
+				return false;
+
+			if (DataLoaded)
+				return true;
+
+			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>($"{(Application.isEditor ? Path.Combine(Application.dataPath, $"Resources{Path.DirectorySeparatorChar}") : "")}{DataAssetPath}{(Application.isEditor ? ".bytes" : "")}", !Application.isEditor);
+			bool dataLoaded = LoadDataFromSheet(serializer.Load());
+
+			dataChanged = false;
+
+			return dataLoaded;
+		}
+		[Obsolete("Use InputsManager.ForceDataChange() instead.", true)]
+		public static void ForceLoadData() { }
+		public static void ForceDataChange()
 		{
 			dataLastWriteTime = DateTime.MinValue;
-			dataChanged = false;
+			dataChanged = true;
 		}
 		public static bool SaveData()
 		{
 			if (Application.isPlaying || !Application.isEditor)
 				return false;
 
-			string fullPath = $"{Application.dataPath}/Resources/{DataAssetPath}";
+			string fullPath = Path.Combine(Application.dataPath, "Resources", DataAssetPath);
 
 			if (File.Exists(fullPath))
 				File.Delete(fullPath);
 
 			DataSerializationUtility<DataSheet> serializer = new DataSerializationUtility<DataSheet>(fullPath, true);
 
+			inputNames = null;
 			dataChanged = false;
 
 			return serializer.SaveOrCreate(new DataSheet());

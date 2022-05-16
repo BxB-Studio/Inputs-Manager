@@ -1159,14 +1159,14 @@ namespace Utilities.Inputs
 					{
 						if (GamepadMainBindable)
 						{
-							GamepadsPositiveMainPress[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].isPressed : false;
-							GamepadsNegativeMainPress[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].isPressed : false;
+							GamepadsPositiveMainPress[i] = GamepadPositiveMainBindable && gamepadPositiveMainControls[i].isPressed;
+							GamepadsNegativeMainPress[i] = GamepadNegativeMainBindable && gamepadNegativeMainControls[i].isPressed;
 							GamepadsMainPress[i] = GamepadsPositiveMainPress[i] || GamepadsNegativeMainPress[i];
-							GamepadsPositiveMainDown[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].wasPressedThisFrame : false;
-							GamepadsNegativeMainDown[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].wasPressedThisFrame : false;
+							GamepadsPositiveMainDown[i] = GamepadPositiveMainBindable && gamepadPositiveMainControls[i].wasPressedThisFrame;
+							GamepadsNegativeMainDown[i] = GamepadNegativeMainBindable && gamepadNegativeMainControls[i].wasPressedThisFrame;
 							GamepadsMainDown[i] = GamepadsPositiveMainDown[i] || GamepadsNegativeMainDown[i];
-							GamepadsPositiveMainUp[i] = GamepadPositiveMainBindable ? gamepadPositiveMainControls[i].wasReleasedThisFrame : false;
-							GamepadsNegativeMainUp[i] = GamepadNegativeMainBindable ? gamepadNegativeMainControls[i].wasReleasedThisFrame : false;
+							GamepadsPositiveMainUp[i] = GamepadPositiveMainBindable && gamepadPositiveMainControls[i].wasReleasedThisFrame;
+							GamepadsNegativeMainUp[i] = GamepadNegativeMainBindable && gamepadNegativeMainControls[i].wasReleasedThisFrame;
 							GamepadsMainUp[i] = GamepadsPositiveMainUp[i] || GamepadsNegativeMainUp[i];
 							GamepadsPositiveMainHeld[i] = false;
 
@@ -3400,16 +3400,16 @@ namespace Utilities.Inputs
 		{
 			if (dataChanged || inputNames == null || inputNames.Length != Inputs.Length)
 			{
-				if (inputNames != null && inputNames.Length == Inputs.Length)
-					for (int i = 0; i < Inputs.Length; i++)
-					{
-						if (Inputs[i].Name.IsNullOrEmpty())
-							continue;
+				if (inputNames == null || inputNames.Length != Inputs.Length)
+					inputNames = new string[Inputs.Length];
+
+				for (int i = 0; i < Inputs.Length; i++)
+				{
+					if (Inputs[i].Name.IsNullOrEmpty())
+						continue;
 						
-						inputNames[i] = Inputs[i].Name;
-					}
-				else
-					inputNames = Inputs.Select(input => input.Name).ToArray();
+					inputNames[i] = Inputs[i].Name;
+				}
 			}
 
 			return inputNames;

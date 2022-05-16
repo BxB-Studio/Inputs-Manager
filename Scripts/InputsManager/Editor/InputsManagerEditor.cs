@@ -14,6 +14,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 #endif
 #endif
+using Utilities.Editor;
 
 #endregion
 
@@ -208,12 +209,12 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Report Error...", false, 4)]
 		public static void ReportError()
 		{
-			OpenExternalURL("https://github.com/mediamax07/Inputs-Manager/issues/new");
+			OpenExternalURL("https://github.com/yboumaiza7/Inputs-Manager/issues/new");
 		}
 		[MenuItem("Tools/Utilities/Inputs Manager/About...", false, 5)]
 		public static void About()
 		{
-			OpenExternalURL("https://github.com/mediamax07/Inputs-Manager");
+			OpenExternalURL("https://github.com/yboumaiza7/Inputs-Manager");
 		}
 
 		private static void OpenExternalURL(string url)

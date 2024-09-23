@@ -11,7 +11,7 @@ using Utilities.Editor;
 
 #endregion
 
-namespace Utilities.Inputs
+namespace Utilities.Inputs.Editor
 {
 	public class InputsManagerEditor : EditorWindow
 	{

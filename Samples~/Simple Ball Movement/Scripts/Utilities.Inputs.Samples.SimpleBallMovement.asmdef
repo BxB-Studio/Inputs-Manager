@@ -1,0 +1,16 @@
+{
+    "name": "Utilities.Inputs.Samples.SimpleBallMovement",
+    "rootNamespace": "Utilities.Inputs.Samples.SimpleBallMovement",
+    "references": [
+        "GUID:181c560409109a54da23fb20b47985c1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,16 @@
+{
+    "name": "Utilities.Test",
+    "rootNamespace": "Utilities.Test",
+    "references": [
+        "GUID:c5ad65fbcffd5674eacfda0d379fd1f2"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,11 @@
+# Folders
+/.vs/
+/Samples/
+/Scenes/
+
+# Files
+/Scripts/Utilities/LookFollow.cs*
+
+# File types
+/*.meta
+

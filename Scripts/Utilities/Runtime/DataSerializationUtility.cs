@@ -51,16 +51,20 @@ namespace Utilities
 			}
 			finally
 			{
-				if (stream != null)
-					stream.Close();
+				stream?.Close();
 			}
 		}
 		public T Load()
 		{
 			CheckValidity();
 
-			if (!bypassExceptions && (useResources && !Resources.Load<TextAsset>(path) || !useResources && !File.Exists(path)))
-				throw new ArgumentException($"The file ({path}) doesn't exist");
+			if (useResources && !Resources.Load<TextAsset>(path) || !useResources && !File.Exists(path))
+			{
+				if (bypassExceptions)
+					return null;
+				else
+					throw new ArgumentException($"The file ({path}) doesn't exist");
+			}
 
 			Stream stream = null;
 
@@ -85,8 +89,7 @@ namespace Utilities
 			}
 			finally
 			{
-				if (stream != null)
-					stream.Close();
+				stream?.Close();
 			}
 		}
 		public bool Delete()

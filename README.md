@@ -1,19 +1,20 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-This packages includes some additional [Unity CSharp Utilities](https://www.github.com/mediamax07/Unity-CSharp-Utilities).
+This packages includes some additional [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities).
 
-**Version:** 1.0.3
+**Version:** 1.1.0
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
-You can access the Inputs Manager from the `Utilities.Inputs` namespace.
+You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 
 ## Documentation
 Will be available soon...<br/>
 You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
 
 ## Features
+- High performant code (Using C# Jobs System)
 - Joysticks/Gamepad compatibility
 - Runtime double press and hold binding
 - Bind keys within the Unity Editor
@@ -21,22 +22,23 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - High performant code
 - Easy inputs setup
 - Save and import presets
-- Editor ready Json presets
+- Editor ready JSON presets
 - Fully customizable API
 - Dynamic editor window
 - Secured data saving
 - Wide range of settings
 
 ## Compatibility
-- Unity 2018.4 or newer<br/>
+- Unity 2021.3 or newer<br/>
 
 ## Dependencies
-- Unity 2019.1 or newer
-	- Input System: 1.0.0-preview or newer
-- Unity 2018.4
-	- Input System: 0.2.1-preview or older
+- Input System: 1.7.0 or newer
+- Collections: 1.2.4 or newer
 
 ## Release Notes
+- 1.1.0
+	- Added C# Jobs System integration
+	- Updated Utilities library
 - 1.0.3
 	- Added a default Inputs Manager data asset file
 	- Some minor API syntax improvements
@@ -83,7 +85,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - 0.1-preview (First Commit)
 	- Add, remove, duplicate inputs
 	- Bind keys in editor
-	- Json preset importer
+	- JSON preset importer
 
 ## Important Notes!
 **The Inputs Manager requires an API Compatibility Level of .NET 4.x or newer (If available).<br/>
@@ -91,7 +93,7 @@ This package requires the New Input System package to be installed from the Pack
 Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## Contributing
-Please read the [contributing guidlines](https://github.com/mediamax07/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.
+Please read the [contributing guidelines](https://github.com/BxB-Studio/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.
 
 ## License
-This project is under the MIT license. [Read more about it](https://github.com/mediamax07/Inputs-Manager/blob/master/LICENSE.md).
+This project is under the MIT license. [Read more about it](https://github.com/BxB-Studio/Inputs-Manager/blob/master/LICENSE.md).

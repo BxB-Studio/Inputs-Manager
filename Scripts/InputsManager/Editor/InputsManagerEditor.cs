@@ -5,15 +5,8 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
-#if ENABLE_INPUT_SYSTEM
-#if UNITY_2019_1_OR_NEWER
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
-#else
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
-#endif
-#endif
 using Utilities.Editor;
 
 #endregion
@@ -29,7 +22,6 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-#if ENABLE_INPUT_SYSTEM
 				if (keys == null || keys.Length < 1)
 				{
 					keys = new string[Enum.GetValues(typeof(Key)).Length];
@@ -49,7 +41,6 @@ namespace Utilities.Inputs
 					if (firstIntValue != keys.Length)
 						Array.Resize(ref keys, firstIntValue);
 				}
-#endif
 
 				return keys;
 			}
@@ -88,13 +79,15 @@ namespace Utilities.Inputs
 
 		#region Variables
 
+		public static bool EditingInput { get; private set; }
+
 		private static InputsManagerEditor editorInstance;
-		private static InputsManager.Input.Axis bindingAxis;
-		private static InputsManager.Input input;
+		private static InputAxis bindingAxis;
+		private static Input input;
 		private static BindTarget bindingTarget;
 		private static Event bindingEvent;
-		private static GamepadBinding bindedGamepadBind;
-		private readonly static string inittializerKey = "InputsManager_Init";
+		private static GamepadBinding boundGamepadBind;
+		private readonly static string initializerKey = "InputsManager_Init";
 		private static string inputName;
 		private static bool addingInput;
 		private static bool sortingInputs;
@@ -109,13 +102,13 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return !string.IsNullOrEmpty(importJson) && !string.IsNullOrWhiteSpace(importJson) && importInputs != null;
+				return !importJson.IsNullOrEmpty() && !importJson.IsNullOrWhiteSpace() && importInputs != null;
 			}
 		}
 		private static bool importAll = true;
 		private static bool[] importInputsSelection;
 		private static string importJson;
-		private static InputsManager.Input[] importInputs;
+		private static Input[] importInputs;
 		private static bool importAdditive;
 		private static bool importOverride;
 
@@ -130,27 +123,20 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
 		public static void OpenInputsManager()
 		{
-			if (!EditorPrefs.HasKey(inittializerKey))
+			if (!EditorPrefs.HasKey(initializerKey))
 			{
-				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honorable reviews and reports in case of any problems!", "Okay!");
+				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay!");
 				CreateInputsManager();
 
 				return;
 			}
 
-#if UNITY_2019_3_OR_NEWER
 			float minWindowWidth = 360f;
-#else
-			float minWindowWidth = 370f;
-#endif
 
-			editorInstance = GetWindow<InputsManagerEditor>();
-			editorInstance.titleContent = new GUIContent("InputsManager");
-			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
-
-			editorInstance.Show();
+			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
+			editorInstance.minSize = new(minWindowWidth, 512f);
 		}
-		public static void OpenInputsManager(InputsManager.Input input)
+		public static void OpenInputsManager(Input input)
 		{
 			OpenInputsManager();
 			EditInput(input);
@@ -163,11 +149,11 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", false, 2)]
 		public static void ResetInputsManager()
 		{
-			if (!EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of reseting the Inputs Manager to it's original state?", "Yes I'm sure", "No"))
+			if (!EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of resetting the Inputs Manager to it's original state?", "Yes I'm sure", "No"))
 				return;
 
 			string dataPath = Path.Combine(Application.dataPath, "Resources", $"{InputsManager.DataAssetPath}.bytes");
-			DataSerializationUtility<InputsManager.DataSheet> data = new DataSerializationUtility<InputsManager.DataSheet>(dataPath, false);
+			DataSerializationUtility<InputsManagerData> data = new(dataPath, false);
 
 			if (!data.Delete())
 			{
@@ -188,7 +174,7 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Create Data Asset", false, 3)]
 		public static void CreateInputsManager()
 		{
-			EditorPrefs.SetInt(inittializerKey, 0);
+			EditorPrefs.SetInt(initializerKey, 0);
 
 			if (!RecreateDataFile())
 			{
@@ -209,12 +195,12 @@ namespace Utilities.Inputs
 		[MenuItem("Tools/Utilities/Inputs Manager/Report Error...", false, 4)]
 		public static void ReportError()
 		{
-			OpenExternalURL("https://github.com/yboumaiza7/Inputs-Manager/issues/new");
+			OpenExternalURL(@"https://github.com/BxB-Studio/Inputs-Manager/issues/new");
 		}
 		[MenuItem("Tools/Utilities/Inputs Manager/About...", false, 5)]
 		public static void About()
 		{
-			OpenExternalURL("https://github.com/yboumaiza7/Inputs-Manager");
+			OpenExternalURL(@"https://github.com/BxB-Studio/Inputs-Manager");
 		}
 
 		private static void OpenExternalURL(string url)
@@ -251,11 +237,11 @@ namespace Utilities.Inputs
 		}
 		private static bool ImportJsonFromPath()
 		{
-			string path = EditorUtility.OpenFilePanel("Choose a preset file", "", "json");
+			string path = EditorUtility.OpenFilePanel("Choose a preset file", string.Empty, "json");
 
 			importJson = "";
 
-			if (string.IsNullOrEmpty(path) || !File.Exists(path))
+			if (path.IsNullOrEmpty() || !File.Exists(path))
 				return false;
 
 			StreamReader stream = File.OpenText(path);
@@ -279,7 +265,7 @@ namespace Utilities.Inputs
 		}
 		private static bool InputsFromJson()
 		{
-			importInputs = JsonUtility.FromJson<Utility.JsonArray<InputsManager.Input>>(importJson).ToArray();
+			importInputs = JsonUtility.FromJson<Utility.JsonArray<Input>>(importJson).ToArray();
 
 			if (importInputs == null)
 				return false;
@@ -293,20 +279,22 @@ namespace Utilities.Inputs
 		}
 		private static void MoveInput(int oldIndex, int newIndex)
 		{
-			InputsManager.Input input = InputsManager.GetInput(oldIndex);
+			Input input = InputsManager.GetInput(oldIndex);
 
 			InputsManager.RemoveInput(oldIndex);
 			InputsManager.InsertInput(newIndex, input);
 		}
-		private static void EditInput(InputsManager.Input input)
+		private static void EditInput(Input input)
 		{
 			InputsManagerEditor.input = input;
 			inputName = input.Name;
+			EditingInput = true;
 			input.Name = "";
 		}
 		private static void SaveInput()
 		{
 			input.Name = inputName;
+			EditingInput = false;
 			input = null;
 		}
 		private static void SwitchNewInput(bool state)
@@ -314,27 +302,26 @@ namespace Utilities.Inputs
 			addingInput = state;
 
 			if (state)
-				EditInput(new InputsManager.Input("New input"));
+				EditInput(new("New input"));
 			else
 				SaveInput();
 
 			editorInstance.Repaint();
 		}
-		private static void DuplicateInput(InputsManager.Input input)
+		private static void DuplicateInput(Input input)
 		{
-			EditInput(new InputsManager.Input(input));
+			EditInput(new(input));
 			addingInput = true;
 		}
-		private static void BindAxis(InputsManager.Input.Axis axis, BindTarget target)
+		private static void BindAxis(InputAxis axis, BindTarget target)
 		{
 			bindingAxis = axis;
 			bindingTarget = target;
 		}
-		private static void EndBindAxis(bool saveChanges)
+		private static void EndBindAxis()
 		{
 			bool bindingForGamepad = bindingTarget == BindTarget.GamepadPositive || bindingTarget == BindTarget.GamepadNegative;
 
-#if ENABLE_INPUT_SYSTEM
 			switch (bindingTarget)
 			{
 				case BindTarget.Positive:
@@ -364,110 +351,88 @@ namespace Utilities.Inputs
 
 			if (bindingForGamepad)
 				InputSystem.onEvent -= GamepadBindEvent;
-#endif
 		}
-#if ENABLE_INPUT_SYSTEM
-#if UNITY_2019_1_OR_NEWER
 		private static void GamepadBindEvent(InputEventPtr eventPtr, InputDevice device)
-#else
-		private static void GamepadBindEvent(InputEventPtr eventPtr)
-#endif
 		{
-			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-				return;
-
-#if UNITY_2019_1_OR_NEWER
-			if (!(device is Gamepad gamepad))
-				return;
-#else
-			Gamepad gamepad = InputSystem.GetDeviceById(eventPtr.deviceId) as Gamepad;
-#endif
-
-			if (gamepad == null)
+			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>() || device is not Gamepad gamepad)
 				return;
 
 			if (gamepad.dpad.ReadValueFromEvent(eventPtr, out Vector2 dpad) && dpad != Vector2.zero)
 			{
 				if (dpad.y > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.DpadUp;
+					boundGamepadBind = GamepadBinding.DpadUp;
 				else if (dpad.x > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.DpadRight;
+					boundGamepadBind = GamepadBinding.DpadRight;
 				else if (dpad.y < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.DpadDown;
+					boundGamepadBind = GamepadBinding.DpadDown;
 				else if (dpad.x < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.DpadLeft;
+					boundGamepadBind = GamepadBinding.DpadLeft;
 			}
 			else if (gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out float buttonNorth) && buttonNorth > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.ButtonNorth;
+				boundGamepadBind = GamepadBinding.ButtonNorth;
 			else if (gamepad.buttonEast.ReadValueFromEvent(eventPtr, out float buttonEast) && buttonEast > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.ButtonEast;
+				boundGamepadBind = GamepadBinding.ButtonEast;
 			else if (gamepad.buttonSouth.ReadValueFromEvent(eventPtr, out float buttonSouth) && buttonSouth > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.ButtonSouth;
+				boundGamepadBind = GamepadBinding.ButtonSouth;
 			else if (gamepad.buttonWest.ReadValueFromEvent(eventPtr, out float buttonWest) && buttonWest > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.ButtonWest;
+				boundGamepadBind = GamepadBinding.ButtonWest;
 			else if (gamepad.leftStickButton.ReadValueFromEvent(eventPtr, out float leftStickButton) && leftStickButton > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.LeftStickButton;
+				boundGamepadBind = GamepadBinding.LeftStickButton;
 			else if (gamepad.leftStick.ReadValueFromEvent(eventPtr, out Vector2 leftStick) && leftStick != Vector2.zero)
 			{
 				if (leftStick.y > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.LeftStickUp;
+					boundGamepadBind = GamepadBinding.LeftStickUp;
 				else if (leftStick.x > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.LeftStickRight;
+					boundGamepadBind = GamepadBinding.LeftStickRight;
 				else if (leftStick.y < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.LeftStickDown;
+					boundGamepadBind = GamepadBinding.LeftStickDown;
 				else if (leftStick.x < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.LeftStickLeft;
+					boundGamepadBind = GamepadBinding.LeftStickLeft;
 			}
 			else if (gamepad.rightStickButton.ReadValueFromEvent(eventPtr, out float rightStickButton) && rightStickButton > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.RightStickButton;
+				boundGamepadBind = GamepadBinding.RightStickButton;
 			else if (gamepad.rightStick.ReadValueFromEvent(eventPtr, out Vector2 rightStick) && rightStick != Vector2.zero)
 			{
 				if (rightStick.y > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.RightStickUp;
+					boundGamepadBind = GamepadBinding.RightStickUp;
 				else if (rightStick.x > InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.RightStickRight;
+					boundGamepadBind = GamepadBinding.RightStickRight;
 				else if (rightStick.y < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.RightStickDown;
+					boundGamepadBind = GamepadBinding.RightStickDown;
 				else if (rightStick.x < -InputsManager.GamepadThreshold)
-					bindedGamepadBind = GamepadBinding.RightStickLeft;
+					boundGamepadBind = GamepadBinding.RightStickLeft;
 			}
 			else if (gamepad.leftShoulder.ReadValueFromEvent(eventPtr, out float leftShoulder) && leftShoulder > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.LeftShoulder;
+				boundGamepadBind = GamepadBinding.LeftShoulder;
 			else if (gamepad.rightShoulder.ReadValueFromEvent(eventPtr, out float rightShoulder) && rightShoulder > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.RightShoulder;
+				boundGamepadBind = GamepadBinding.RightShoulder;
 			else if (gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out float leftTrigger) && leftTrigger > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.LeftTrigger;
+				boundGamepadBind = GamepadBinding.LeftTrigger;
 			else if (gamepad.rightTrigger.ReadValueFromEvent(eventPtr, out float rightTrigger) && rightTrigger > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.RightTrigger;
+				boundGamepadBind = GamepadBinding.RightTrigger;
 			else if (gamepad.startButton.ReadValueFromEvent(eventPtr, out float startButton) && startButton > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.StartButton;
+				boundGamepadBind = GamepadBinding.StartButton;
 			else if (gamepad.selectButton.ReadValueFromEvent(eventPtr, out float selectButton) && selectButton > InputsManager.GamepadThreshold)
-				bindedGamepadBind = GamepadBinding.SelectButton;
+				boundGamepadBind = GamepadBinding.SelectButton;
 		}
-#endif
+
 		#endregion
 
 		#region Editor
 
-		private static void InputAxisEditor(InputsManager.Input.Axis axis, InputsManager.Input.InputType type, InputsManager.Input.Axis mainAxis = null, bool isGamepadEditor = false)
+		private static void InputAxisEditor(InputAxis axis, InputType type, InputAxis mainAxis = null, bool isGamepadEditor = false)
 		{
 			#region Editor Styles
 
-			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonWide = new(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = 28f
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = 15f
-#endif
 			};
 
 			#endregion
 
-#if ENABLE_INPUT_SYSTEM
-			if (type == InputsManager.Input.InputType.Axis)
+			if (type == InputType.Axis)
 			{
 				bool enumDisabled;
 
@@ -476,14 +441,14 @@ namespace Utilities.Inputs
 				else
 					enumDisabled = axis.Positive == Key.None || axis.Negative == Key.None;
 
-				InputsManager.Input.Axis.Side newStrongSide = isGamepadEditor ? axis.GamepadStrongSide : axis.StrongSide;
+				InputAxis.Side newStrongSide = isGamepadEditor ? axis.GamepadStrongSide : axis.StrongSide;
 
 				if (enumDisabled)
-					newStrongSide = InputsManager.Input.Axis.Side.None;
+					newStrongSide = InputAxis.Side.None;
 
 				EditorGUI.BeginDisabledGroup(enumDisabled);
 
-				newStrongSide = (InputsManager.Input.Axis.Side)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), newStrongSide);
+				newStrongSide = (InputAxis.Side)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), newStrongSide);
 
 				if (!isGamepadEditor && axis.StrongSide != newStrongSide)
 					axis.StrongSide = newStrongSide;
@@ -509,7 +474,7 @@ namespace Utilities.Inputs
 			EditorGUI.BeginDisabledGroup(positiveDisabled);
 			EditorGUILayout.BeginHorizontal();
 
-			newPositive = EditorGUILayout.Popup(type == InputsManager.Input.InputType.Button ? "Button" : "Positive", newPositive, isGamepadEditor ? GamepadBindings : Keys);
+			newPositive = EditorGUILayout.Popup(type == InputType.Button ? "Button" : "Positive", newPositive, isGamepadEditor ? GamepadBindings : Keys);
 
 			if (isGamepadEditor)
 			{
@@ -537,7 +502,7 @@ namespace Utilities.Inputs
 			EditorGUILayout.EndHorizontal();
 			EditorGUI.EndDisabledGroup();
 
-			if (type == InputsManager.Input.InputType.Axis)
+			if (type == InputType.Axis)
 			{
 				bool negativeDisabled;
 
@@ -578,20 +543,21 @@ namespace Utilities.Inputs
 				EditorGUI.EndDisabledGroup();
 			}
 
-			InputsManager.Input positiveBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadPositive) : InputsManager.KeyUsed(axis.Positive), @in => @in != input);
+			Input positiveBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadPositive) : InputsManager.KeyUsed(axis.Positive), @in => @in != input);
 
 			if (positiveBindingUsed)
 				EditorGUILayout.HelpBox($"The `{(isGamepadEditor ? axis.GamepadPositive.ToString() : axis.Positive.ToString())}` binding seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.None);
 
-			InputsManager.Input negativeBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadNegative) : InputsManager.KeyUsed(axis.Negative), @in => @in != input);
+			Input negativeBindingUsed = Array.Find(isGamepadEditor ? InputsManager.GamepadBindingUsed(axis.GamepadNegative) : InputsManager.KeyUsed(axis.Negative), @in => @in != input);
 
 			if (negativeBindingUsed)
 				EditorGUILayout.HelpBox($"The `{(isGamepadEditor ? axis.GamepadNegative.ToString() : axis.Negative.ToString())}` binding seems to be selected by another input{(positiveBindingUsed ? " as well" : ". It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame")}.", MessageType.None);
-#endif
 		}
-		private static void InputEditor(InputsManager.Input input)
+		private static void InputEditor(Input input)
 		{
-#if ENABLE_INPUT_SYSTEM
+			if (!input)
+				return;
+
 			if (bindingAxis && bindingTarget != BindTarget.None)
 			{
 				bool bindingForGamepad = bindingTarget == BindTarget.GamepadPositive || bindingTarget == BindTarget.GamepadNegative;
@@ -617,10 +583,10 @@ namespace Utilities.Inputs
 					InputSystem.Update();
 					editorInstance.Repaint();
 
-					if (bindedGamepadBind != GamepadBinding.None)
+					if (boundGamepadBind != GamepadBinding.None)
 					{
-						bindingKey = (int)bindedGamepadBind;
-						bindedGamepadBind = (int)GamepadBinding.None;
+						bindingKey = (int)boundGamepadBind;
+						boundGamepadBind = (int)GamepadBinding.None;
 						hasBind = true;
 					}
 				}
@@ -642,13 +608,13 @@ namespace Utilities.Inputs
 
 				if ((!bindingForGamepad && bindingKey != (int)Key.None || bindingForGamepad && bindingKey != (int)GamepadBinding.None) && bindingKey != 999)
 				{
-					InputsManager.Input keyUsed = Array.Find(bindingForGamepad ? InputsManager.GamepadBindingUsed((GamepadBinding)bindingKey) : InputsManager.KeyUsed((Key)bindingKey), query => query != input);
+					Input keyUsed = Array.Find(bindingForGamepad ? InputsManager.GamepadBindingUsed((GamepadBinding)bindingKey) : InputsManager.KeyUsed((Key)bindingKey), query => query != input);
 
 					if (keyUsed)
 						EditorGUILayout.HelpBox("The current binding seems to be selected by another input. It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame.", MessageType.Info);
 
 					if (GUILayout.Button("Save"))
-						EndBindAxis(true);
+						EndBindAxis();
 				}
 
 				EditorGUILayout.EndScrollView();
@@ -665,11 +631,11 @@ namespace Utilities.Inputs
 			EditorGUI.BeginDisabledGroup(EditorApplication.isPlaying);
 
 			inputName = EditorGUILayout.TextField("Name", inputName);
-			input.Type = (InputsManager.Input.InputType)EditorGUILayout.EnumPopup("Type", input.Type);
+			input.Type = (InputType)EditorGUILayout.EnumPopup("Type", input.Type);
 
 			EditorGUI.EndDisabledGroup();
 
-			input.Interpolation = (InputsManager.Input.InputInterpolation)EditorGUILayout.EnumPopup(new GUIContent("Interpolation", "The interpolation method specifies how the current value of the axis moves towards the target within the interval.\r\n\r\nSmooth: Linear interpolation over time\r\nJump: Same as Smooth with the exception that if an opposite direction is triggered, the value goes instantly to neutral and continue from there. This method won't work if the input type is set to button\r\nInstant: No interpolation"), input.Interpolation);
+			input.Interpolation = (InputInterpolation)EditorGUILayout.EnumPopup(new GUIContent("Interpolation", "The interpolation method specifies how the current value of the axis moves towards the target within the interval.\r\n\r\nSmooth: Linear interpolation over time\r\nJump: Same as Smooth with the exception that if an opposite direction is triggered, the value goes instantly to neutral and continue from there. This method won't work if the input type is set to button\r\nInstant: No interpolation"), input.Interpolation);
 
 			EditorGUILayout.LabelField("Value Interval");
 
@@ -679,7 +645,7 @@ namespace Utilities.Inputs
 
 			switch (input.Type)
 			{
-				case InputsManager.Input.InputType.Axis:
+				case InputType.Axis:
 					EditorGUI.BeginDisabledGroup(!input.Invert && input.Main.Negative == Key.None || input.Invert && input.Main.Positive == Key.None);
 
 					valueInterval.x = Mathf.Clamp(EditorGUILayout.FloatField("Minimum", valueInterval.x), Mathf.NegativeInfinity, valueInterval.y);
@@ -695,7 +661,7 @@ namespace Utilities.Inputs
 
 					break;
 
-				case InputsManager.Input.InputType.Button:
+				case InputType.Button:
 
 					if (input.Invert)
 					{
@@ -788,7 +754,6 @@ namespace Utilities.Inputs
 
 			EditorGUILayout.Space();
 			EditorGUILayout.EndVertical();
-#endif
 		}
 		private void OnGUI()
 		{
@@ -802,19 +767,7 @@ namespace Utilities.Inputs
 				importJson = string.Empty;
 			}
 
-			bool newInputSystemInstalled = true;
-
-#if !ENABLE_INPUT_SYSTEM
-			newInputSystemInstalled = false;
-#endif
-
-			if (!newInputSystemInstalled)
-			{
-				EditorGUILayout.HelpBox("It seems like the the Unity New Input System is either not installed or disabled on this project. Please check the Package Manager and install the requested package! Otherwise you need to enable it from the Player Settings window. For more information check the Unity help forums on how to install packages from the Package Manager.", MessageType.Error);
-
-				return;
-			}
-			else if (!InputsManager.DataAssetExists)
+			if (!InputsManager.DataAssetExists)
 			{
 				EditorGUILayout.HelpBox($"We couldn't find the data asset file at the following path \"Resources/{InputsManager.DataAssetPath}\". You can create a new one from `Tools > Utilities > Inputs Manager > Create data asset`", MessageType.Error);
 
@@ -822,7 +775,10 @@ namespace Utilities.Inputs
 			}
 
 			if (!InputsManager.DataLoaded)
+			{
+				AssetDatabase.Refresh();
 				InputsManager.LoadData();
+			}
 
 			scroll = EditorGUILayout.BeginScrollView(scroll);
 
@@ -833,138 +789,70 @@ namespace Utilities.Inputs
 			float miniButtonSmallWidth = 16f;
 			float miniButtonWidth = 20f;
 			float miniButtonWideWidth = 25f;
-#if !UNITY_2019_3_OR_NEWER
-			float miniButtonHeight = 15f;
-#endif
 
-			GUIStyle unstretchableMiniButtonSmall = new GUIStyle(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonSmall = new(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButton = new GUIStyle(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButton = new(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonNormal = new GUIStyle(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonNormal = new(EditorStyles.miniButton)
 			{
 				stretchWidth = false
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonWide = new(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonLeftSmall = new GUIStyle(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeftSmall = new(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonLeft = new GUIStyle(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeft = new(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonLeftWide = new GUIStyle(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeftWide = new(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonMiddleSmall = new GUIStyle(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddleSmall = new(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonMiddle = new GUIStyle(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddle = new(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonMiddleWide = new GUIStyle(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddleWide = new(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonRightSmall = new GUIStyle(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRightSmall = new(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonRight = new GUIStyle(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRight = new(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
-			GUIStyle unstretchableMiniButtonRightWide = new GUIStyle(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRightWide = new(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
-#if !UNITY_2019_3_OR_NEWER
-				,
-				stretchHeight = false,
-				fixedHeight = miniButtonHeight
-#endif
 			};
 
 			#endregion
@@ -985,8 +873,6 @@ namespace Utilities.Inputs
 					}
 					else
 						settings = false;
-
-					return;
 				}
 
 				GUILayout.Space(5f);
@@ -1023,9 +909,9 @@ namespace Utilities.Inputs
 
 					if (GUILayout.Button("...", unstretchableMiniButtonNormal))
 					{
-						string path = EditorUtility.SaveFilePanel("Save preset file", "", string.IsNullOrEmpty(exportPath) ? "" : Path.GetFileNameWithoutExtension(exportPath), "json");
+						string path = EditorUtility.SaveFilePanel("Save preset file", "", exportPath.IsNullOrEmpty() ? "" : Path.GetFileNameWithoutExtension(exportPath), "json");
 
-						if (!string.IsNullOrEmpty(path))
+						if (!path.IsNullOrEmpty())
 							exportPath = path;
 					}
 
@@ -1072,7 +958,7 @@ namespace Utilities.Inputs
 
 					if (GUILayout.Button("Export"))
 					{
-						InputsManager.Input[] inputs = new InputsManager.Input[exportInputs.Where(boolean => boolean == true).Count()];
+						Input[] inputs = new Input[exportInputs.Where(boolean => boolean == true).Count()];
 						int j = 0;
 
 						for (int i = 0; i < InputsManager.Count; i++)
@@ -1089,7 +975,7 @@ namespace Utilities.Inputs
 
 						EditorUtility.DisplayProgressBar("Inputs Manager", "Generating Json...", (InputsManager.Count - 1) / InputsManager.Count);
 
-						Utility.JsonArray<InputsManager.Input> jsonArray = new Utility.JsonArray<InputsManager.Input>(inputs);
+						Utility.JsonArray<Input> jsonArray = new(inputs);
 						string json = JsonUtility.ToJson(jsonArray, exportPretty);
 
 						if (File.Exists(exportPath))
@@ -1133,7 +1019,7 @@ namespace Utilities.Inputs
 										break;
 								}
 
-								if (!string.IsNullOrEmpty(processName))
+								if (!processName.IsNullOrEmpty())
 									System.Diagnostics.Process.Start(processName, exportPath);
 							}
 						}
@@ -1183,7 +1069,7 @@ namespace Utilities.Inputs
 
 					EditorGUI.BeginDisabledGroup(!importAdditive);
 
-					importOverride = Utility.NumberToBool(EditorGUILayout.Popup(new GUIContent("Override Mode", "Ignore Existing: The selected inputs will override the existing inputs if their names match\r\nKeep Existing: Some imported inputs are gonna be ignored if their names match the existing inputs"), Utility.BoolToNumber(importOverride || forceAdditive), importOverrideModes));
+					importOverride = Utility.NumberToBool(EditorGUILayout.Popup(new GUIContent("Override Mode", "Ignore Existing: The selected inputs will override the existing inputs if their names match\r\nKeep Existing: Some imported inputs are going to be ignored if their names match the existing inputs"), Utility.BoolToNumber(importOverride || forceAdditive), importOverrideModes));
 
 					EditorGUI.EndDisabledGroup();
 					EditorGUI.EndDisabledGroup();
@@ -1286,18 +1172,10 @@ namespace Utilities.Inputs
 				EditorGUILayout.BeginHorizontal();
 
 				if (GUILayout.Button("Reset", EditorStyles.miniButtonLeft))
-				{
 					ResetInputsManager();
 
-					return;
-				}
-
 				if (GUILayout.Button("Load Preset", EditorStyles.miniButtonMid))
-				{
 					LoadPreset();
-
-					return;
-				}
 
 				EditorGUI.BeginDisabledGroup(InputsManager.Count < 1);
 
@@ -1308,8 +1186,6 @@ namespace Utilities.Inputs
 
 					for (int i = 0; i < exportInputs.Length; i++)
 						exportInputs[i] = true;
-
-					return;
 				}
 
 				EditorGUI.EndDisabledGroup();
@@ -1321,7 +1197,7 @@ namespace Utilities.Inputs
 
 				EditorGUI.indentLevel++;
 
-				InputsManager.InputSource newInputSourcePriority = (InputsManager.InputSource)EditorGUILayout.EnumPopup(new GUIContent("Source Priority", "This indicates which input source has priority over the others."), InputsManager.InputSourcePriority);
+				InputSource newInputSourcePriority = (InputSource)EditorGUILayout.EnumPopup(new GUIContent("Source Priority", "This indicates which input source has priority over the others."), InputsManager.InputSourcePriority);
 
 				if (InputsManager.InputSourcePriority != newInputSourcePriority)
 					InputsManager.InputSourcePriority = newInputSourcePriority;
@@ -1381,12 +1257,12 @@ namespace Utilities.Inputs
 				EditorGUILayout.LabelField("Help", EditorStyles.miniBoldLabel);
 				EditorGUILayout.Space();
 
-				EditorGUILayout.HelpBox("The Inputs Manager is an open-source asset available on GitHub and is created by MediaMax.", MessageType.None);
+				EditorGUILayout.HelpBox("The Inputs Manager is an open-source asset available on GitHub and is created by BxB Studio.", MessageType.None);
 
-				if (GUILayout.Button("Report Error/Issue"))
+				if (GUILayout.Button("Report Error/Issue..."))
 					ReportError();
 
-				if (GUILayout.Button("Visit the Github Repository"))
+				if (GUILayout.Button("Visit the GitHub Repository..."))
 					About();
 
 				EditorGUILayout.EndVertical();
@@ -1406,17 +1282,15 @@ namespace Utilities.Inputs
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.ChevronLeft), unstretchableMiniButtonWide))
 				{
 					if (bindingAxis && bindingTarget != BindTarget.None)
-						EndBindAxis(false);
+						EndBindAxis();
 					else if (addingInput)
 						SwitchNewInput(false);
-					else if (string.IsNullOrEmpty(inputName) || string.IsNullOrWhiteSpace(inputName))
+					else if (inputName.IsNullOrEmpty() || inputName.IsNullOrWhiteSpace())
 						EditorUtility.DisplayDialog("Inputs Manager: Error", "The input name cannot be empty.", "Okay");
 					else if (!EditorApplication.isPlaying && InputsManager.IndexOf(inputName) > -1)
 						EditorUtility.DisplayDialog("Inputs Manager: Info", "We didn't save the input name because it matches another one.", "Okay");
 					else
 						SaveInput();
-
-					return;
 				}
 
 				bindingEvent = Event.current;
@@ -1440,9 +1314,9 @@ namespace Utilities.Inputs
 				EditorGUILayout.Space();
 
 				if (addingInput)
-					if (GUILayout.Button($"Add {(string.IsNullOrEmpty(input.Name) || string.IsNullOrWhiteSpace(input.Name) ? "New Input" : inputName)}"))
+					if (GUILayout.Button($"Add {(input.Name.IsNullOrEmpty() || input.Name.IsNullOrWhiteSpace() ? "New Input" : inputName)}"))
 					{
-						if (string.IsNullOrEmpty(inputName) || string.IsNullOrWhiteSpace(inputName))
+						if (inputName.IsNullOrEmpty() || inputName.IsNullOrWhiteSpace())
 							EditorUtility.DisplayDialog("Inputs Manager: Error", "The new input name cannot be empty.", "Okay");
 						else if (InputsManager.IndexOf(inputName) > -1)
 							EditorUtility.DisplayDialog("Inputs Manager: Error", "The new input name matches an older input. Please use a different name or modify the existing input.", "Okay");
@@ -1471,11 +1345,7 @@ namespace Utilities.Inputs
 				EditorGUILayout.BeginHorizontal();
 
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.ChevronLeft), unstretchableMiniButtonWide))
-				{
 					sortingInputs = false;
-
-					return;
-				}
 
 				GUILayout.Space(5f);
 				EditorGUILayout.LabelField("Sort", EditorStyles.boldLabel);
@@ -1489,7 +1359,10 @@ namespace Utilities.Inputs
 				EditorGUI.BeginDisabledGroup(!InputsManager.DataChanged);
 
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Save), unstretchableMiniButtonWide))
+				{
 					InputsManager.SaveData();
+					AssetDatabase.Refresh();
+				}
 
 				EditorGUI.EndDisabledGroup();
 
@@ -1499,8 +1372,6 @@ namespace Utilities.Inputs
 
 					sortingInputs = false;
 					settings = false;
-
-					return;
 				}
 
 				EditorGUI.BeginDisabledGroup(InputsManager.Count < 2);
@@ -1513,11 +1384,7 @@ namespace Utilities.Inputs
 
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Trash), unstretchableMiniButtonWide))
 					if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "Are you sure of removing all of the existing inputs?", "Yes", "No"))
-						{
-							InputsManager.RemoveAll();
-
-							return;
-						}
+						InputsManager.RemoveAll();
 
 				EditorGUI.EndDisabledGroup();
 				EditorGUI.EndDisabledGroup();
@@ -1526,8 +1393,6 @@ namespace Utilities.Inputs
 				{
 					settings = true;
 					sortingInputs = false;
-
-					return;
 				}
 
 				EditorGUILayout.EndHorizontal();
@@ -1536,7 +1401,7 @@ namespace Utilities.Inputs
 			EditorGUILayout.Space();
 
 			if (EditorApplication.isPlaying)
-				EditorGUILayout.HelpBox("You can't change or modify some settings in play mode. Keep in mind thay any changes on the Inputs Manager editor won't be saved unless using a custom script to override this behaviour!", MessageType.Info);
+				EditorGUILayout.HelpBox("You can't change or modify some settings in play mode. Keep in mind that any changes on the Inputs Manager editor won't be saved unless using a custom script to override this behaviour!", MessageType.Info);
 
 			if (InputsManager.Count > 0)
 				for (int i = 0; i < InputsManager.Count; i++)
@@ -1549,21 +1414,13 @@ namespace Utilities.Inputs
 						EditorGUI.BeginDisabledGroup(i == 0);
 
 						if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.CaretUp), unstretchableMiniButtonLeft))
-						{
 							MoveInput(i, i - 1);
-
-							return;
-						}
 
 						EditorGUI.EndDisabledGroup();
 						EditorGUI.BeginDisabledGroup(i == InputsManager.Count - 1);
 
 						if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.CaretDown), unstretchableMiniButtonRight))
-						{
 							MoveInput(i, i + 1);
-
-							return;
-						}
 
 						EditorGUI.EndDisabledGroup();
 					}
@@ -1618,20 +1475,20 @@ namespace Utilities.Inputs
 		{
 			editorInstance = null;
 
-			if (input && !string.IsNullOrEmpty(inputName) && !string.IsNullOrWhiteSpace(inputName))
+			if (input && !inputName.IsNullOrEmpty() && !inputName.IsNullOrWhiteSpace())
 				SaveInput();
 			else if (input)
 				input = null;
 
 			if (bindingAxis && bindingTarget != BindTarget.None)
-				EndBindAxis(false);
+				EndBindAxis();
 			else if (bindingAxis)
 				bindingAxis = null;
 
-			if (InputsManager.DataChanged)
+			if (InputsManager.DataChanged && EditorUtility.DisplayDialog("Inputs Manager: Warning", "You have some unsaved data that you might lose! Do you want to save it?", "Save", "Discard"))
 			{
-				if (EditorUtility.DisplayDialog("Inputs Manager: Warning", "You have some unsaved data that you might lose! Do you want to save it?", "Save", "Discard"))
-					InputsManager.SaveData();
+				InputsManager.SaveData();
+				AssetDatabase.Refresh();
 			}
 
 			InputsManager.ForceDataChange();

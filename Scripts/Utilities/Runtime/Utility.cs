@@ -1,15 +1,20 @@
 ﻿#region Namespaces
 
 using System;
+using System.IO;
+using System.Net;
+using System.Net.Mail;
 using System.Linq;
 using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
-using System.IO;
 
 #endregion
 
@@ -83,8 +88,8 @@ namespace Utilities
 
 			for (int i = 0; i < curve.length; i++)
 			{
-				float newKeyTime = Mathf.Lerp(timeMin, timeMax, Mathf.InverseLerp(curveTimeMin, curveTimeMax, curve[i].time));
-				float newKeyValue = Mathf.Lerp(valueMin, valueMax, Mathf.InverseLerp(curveValueMin, curveValueMax, curve[i].value));
+				float newKeyTime = Utility.Lerp(timeMin, timeMax, Utility.InverseLerp(curveTimeMin, curveTimeMax, curve[i].time));
+				float newKeyValue = Utility.Lerp(valueMin, valueMax, Utility.InverseLerp(curveValueMin, curveValueMax, curve[i].value));
 
 				newCurve.MoveKey(i, new Keyframe(newKeyTime, newKeyValue));
 			}
@@ -103,15 +108,6 @@ namespace Utilities
 				preWrapMode = curve.preWrapMode
 			};
 		}
-		public static T[] ToArray<T>(this Array array)
-		{
-			T[] newArray = new T[array.Length];
-
-			for (int i = 0; i < array.Length; i++)
-				newArray[i] = (T)array.GetValue(i);
-
-			return newArray;
-		}
 		public static bool IsNullOrEmpty(this string str)
 		{
 			return string.IsNullOrEmpty(str);
@@ -120,7 +116,7 @@ namespace Utilities
 		{
 			return string.IsNullOrWhiteSpace(str);
 		}
-		public static string Join(this string[] strings, string separator)
+		public static string Join(this IEnumerable<string> strings, string separator)
 		{
 			return string.Join(separator, strings);
 		}
@@ -133,8 +129,8 @@ namespace Utilities
 
 		public enum Precision { Simple, Advanced }
 		public enum UnitType { Metric, Imperial }
-		public enum Units { Area, AreaAccurate, AreaLarge, ElectricConsumption, Density, Distance, DistanceAccurate, DistanceLong, ElectricCapacity, Force, Frequency, FuelConsumption, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
-		public enum RenderPipeline { Standard, URP, HDRP, Custom }
+		public enum Units { AngularVelocity, Area, AreaAccurate, AreaLarge, ElectricConsumption, Density, Distance, DistanceAccurate, DistanceLong, ElectricCapacity, Force, Frequency, FuelConsumption, Liquid, Power, Pressure, Size, SizeAccurate, Speed, Time, TimeAccurate, Torque, Velocity, Volume, VolumeAccurate, VolumeLarge, Weight }
+		public enum RenderPipeline { Unknown = -1, Standard, URP, HDRP, Custom }
 		public enum TextureEncodingType { EXR, JPG, PNG, TGA }
 		public enum WorldSide { Left = -1, Center, Right }
 		public enum WorldSurface { XY, XZ, YZ }
@@ -146,12 +142,44 @@ namespace Utilities
 
 		#region Modules
 
+		#region Static Modules
+
+		public static class Color
+		{
+			public static UnityEngine.Color darkGray = new(.25f, .25f, .25f);
+			public static UnityEngine.Color lightGray = new(.67f, .67f, .67f);
+			public static UnityEngine.Color orange = new(1f, .5f, 0f);
+			public static UnityEngine.Color purple = new(.5f, 0f, 1f);
+			public static UnityEngine.Color transparent = new(0f, 0f, 0f, 0f);
+		}
+		public static class FormulaInterpolation
+		{
+			public static float Linear(float t)
+			{
+				return Clamp01(t);
+			}
+			public static float CircularLowToHigh(float t)
+			{
+				return Clamp01(1f - math.pow(math.cos(math.PI * Mathf.Rad2Deg * Clamp01(t) * .5f), .5f));
+			}
+			public static float CircularHighToLow(float t)
+			{
+				return Clamp01(math.pow(math.abs(math.sin(math.PI * Mathf.Rad2Deg * Clamp01(t) * .5f)), .5f));
+			}
+		}
+
+		#endregion
+
+		#region Global Modules
+
 		[Serializable]
 		public class JsonArray<T>
 		{
 			#region Variables
 
 			#region  Global Variables
+
+			public int Length => items != null ? items.Length : 0;
 
 			[SerializeField]
 			private T[] items;
@@ -174,6 +202,10 @@ namespace Utilities
 
 			#region Methods
 
+			public IEnumerator GetEnumerator()
+			{
+				return items.GetEnumerator();
+			}
 			public T[] ToArray()
 			{
 				return items;
@@ -197,29 +229,29 @@ namespace Utilities
 
 			public float Min
 			{
-				get
+				readonly get
 				{
 					return min;
 				}
 				set
 				{
-					min = Mathf.Clamp(value, Mathf.NegativeInfinity, OverrideBorders ? Mathf.Infinity : Max);
+					min = math.clamp(value, -math.INFINITY, OverrideBorders ? math.INFINITY : Max);
 				}
 			}
 			public float Max
 			{
-				get
+				readonly get
 				{
 					return max;
 				}
 				set
 				{
-					max = Mathf.Clamp(value, OverrideBorders ? Mathf.NegativeInfinity : Min, Mathf.Infinity);
+					max = math.clamp(value, OverrideBorders ? -math.INFINITY : Min, math.INFINITY);
 				}
 			}
 			public bool OverrideBorders
 			{
-				get
+				readonly get
 				{
 					return overrideBorders;
 				}
@@ -227,8 +259,8 @@ namespace Utilities
 				{
 					if (!value)
 					{
-						min = Mathf.Clamp(min, ClampToZero ? 0f : Mathf.NegativeInfinity, max);
-						max = Mathf.Clamp(max, min, Mathf.Infinity);
+						min = math.clamp(min, ClampToZero ? 0f : -math.INFINITY, max);
+						max = math.clamp(max, min, math.INFINITY);
 					}
 
 					overrideBorders = value;
@@ -236,7 +268,7 @@ namespace Utilities
 			}
 			public bool ClampToZero
 			{
-				get
+				readonly get
 				{
 					return OverrideBorders && clampToZero;
 				}
@@ -262,7 +294,7 @@ namespace Utilities
 
 			#region Virtual Methods
 
-			public override bool Equals(object obj)
+			public override readonly bool Equals(object obj)
 			{
 				return obj is Interval interval &&
 					   min == interval.min &&
@@ -270,31 +302,36 @@ namespace Utilities
 					   overrideBorders == interval.overrideBorders &&
 					   clampToZero == interval.clampToZero;
 			}
-			public override int GetHashCode()
+			public override readonly int GetHashCode()
 			{
-				int hashCode = -897720056;
-
-				hashCode = hashCode * -1521134295 + min.GetHashCode();
-				hashCode = hashCode * -1521134295 + max.GetHashCode();
-				hashCode = hashCode * -1521134295 + overrideBorders.GetHashCode();
-				hashCode = hashCode * -1521134295 + clampToZero.GetHashCode();
-
-				return hashCode;
+				return HashCode.Combine(min, max, overrideBorders, clampToZero);
 			}
 
 			#endregion
 
 			#region Global Methods
 
-			public bool InRange(float value)
+			public readonly bool InRange(int value)
 			{
 				return value >= min && value <= max;
 			}
-			public float Lerp(float time, bool clamped = true)
+			public readonly bool InRange(float value)
 			{
-				return clamped ? Mathf.Lerp(Min, Max, time) : Mathf.LerpUnclamped(Min, Max, time);
+				return value >= min && value <= max;
 			}
-			public float InverseLerp(float value, bool clamped = true)
+			public readonly float Lerp(int time, bool clamped = true)
+			{
+				return clamped ? Utility.Lerp(Min, Max, time) : LerpUnclamped(Min, Max, time);
+			}
+			public readonly float Lerp(float time, bool clamped = true)
+			{
+				return clamped ? Utility.Lerp(Min, Max, time) : LerpUnclamped(Min, Max, time);
+			}
+			public readonly float InverseLerp(int value, bool clamped = true)
+			{
+				return clamped ? Utility.InverseLerp(Min, Max, value) : InverseLerpUnclamped(Min, Max, value);
+			}
+			public readonly float InverseLerp(float value, bool clamped = true)
 			{
 				return clamped ? Utility.InverseLerp(Min, Max, value) : InverseLerpUnclamped(Min, Max, value);
 			}
@@ -309,8 +346,8 @@ namespace Utilities
 
 			public Interval(float min, float max, bool overrideBorders = false, bool clampToZero = false)
 			{
-				this.min = Mathf.Clamp(min, clampToZero ? 0f : Mathf.NegativeInfinity, overrideBorders ? Mathf.Infinity : max);
-				this.max = Mathf.Clamp(max, overrideBorders ? Mathf.NegativeInfinity : min, Mathf.Infinity);
+				this.min = math.clamp(min, clampToZero ? 0f : -math.INFINITY, overrideBorders ? math.INFINITY : max);
+				this.max = math.clamp(max, overrideBorders ? -math.INFINITY : min, math.INFINITY);
 				this.overrideBorders = overrideBorders;
 				this.clampToZero = clampToZero;
 			}
@@ -373,6 +410,193 @@ namespace Utilities
 
 		}
 		[Serializable]
+		public struct IntervalInt
+		{
+			#region Variables
+
+			public int Min
+			{
+				readonly get
+				{
+					return min;
+				}
+				set
+				{
+					min = (int)math.clamp(value, -math.INFINITY, OverrideBorders ? math.INFINITY : max);
+				}
+			}
+			public int Max
+			{
+				readonly get
+				{
+					return max;
+				}
+				set
+				{
+					max = (int)math.clamp(value, OverrideBorders ? -math.INFINITY : min, math.INFINITY);
+				}
+			}
+			public bool OverrideBorders
+			{
+				readonly get
+				{
+					return overrideBorders;
+				}
+				set
+				{
+					if (!value)
+					{
+						min = (int)math.clamp(min, ClampToZero ? 0f : -math.INFINITY, max);
+						max = (int)math.clamp(max, min, math.INFINITY);
+					}
+
+					overrideBorders = value;
+				}
+			}
+			public bool ClampToZero
+			{
+				readonly get
+				{
+					return OverrideBorders && clampToZero;
+				}
+				set
+				{
+					clampToZero = value;
+					OverrideBorders = overrideBorders;
+				}
+			}
+
+			[SerializeField]
+			private int min;
+			[SerializeField]
+			private int max;
+			[SerializeField]
+			private bool overrideBorders;
+			[SerializeField]
+			private bool clampToZero;
+
+			#endregion
+
+			#region Methods
+
+			#region Virtual Methods
+
+			public override readonly bool Equals(object obj)
+			{
+				return obj is IntervalInt interval &&
+					   min == interval.min &&
+					   max == interval.max &&
+					   overrideBorders == interval.overrideBorders &&
+					   clampToZero == interval.clampToZero;
+			}
+			public override readonly int GetHashCode()
+			{
+				return HashCode.Combine(min, max, overrideBorders, clampToZero);
+			}
+
+			#endregion
+
+			#region Global Methods
+
+			public readonly bool InRange(int value)
+			{
+				return value >= min && value <= max;
+			}
+			public readonly bool InRange(float value)
+			{
+				return value >= min && value <= max;
+			}
+			public readonly float Lerp(int time, bool clamped = true)
+			{
+				return clamped ? Utility.Lerp(Min, Max, time) : LerpUnclamped(Min, Max, time);
+			}
+			public readonly float Lerp(float time, bool clamped = true)
+			{
+				return clamped ? Utility.Lerp(Min, Max, time) : LerpUnclamped(Min, Max, time);
+			}
+			public readonly float InverseLerp(int value, bool clamped = true)
+			{
+				return clamped ? Utility.InverseLerp(Min, Max, value) : InverseLerpUnclamped(Min, Max, value);
+			}
+			public readonly float InverseLerp(float value, bool clamped = true)
+			{
+				return clamped ? Utility.InverseLerp(Min, Max, value) : InverseLerpUnclamped(Min, Max, value);
+			}
+
+			#endregion
+
+			#endregion
+
+			#region Constructors & Operators
+
+			#region Constructors
+
+			public IntervalInt(int min, int max, bool overrideBorders = false, bool clampToZero = false)
+			{
+				this.min = (int)math.clamp(min, clampToZero ? 0f : -math.INFINITY, overrideBorders ? math.INFINITY : max);
+				this.max = (int)math.clamp(max, overrideBorders ? -math.INFINITY : min, math.INFINITY);
+				this.overrideBorders = overrideBorders;
+				this.clampToZero = clampToZero;
+			}
+			public IntervalInt(IntervalInt interval)
+			{
+				min = interval.Min;
+				max = interval.Max;
+				overrideBorders = interval.OverrideBorders;
+				clampToZero = interval.clampToZero;
+			}
+
+			#endregion
+
+			#region Operators
+
+			public static IntervalInt operator +(IntervalInt a, int b)
+			{
+				return new IntervalInt(a.min + b, a.max + b);
+			}
+			public static IntervalInt operator +(IntervalInt a, IntervalInt b)
+			{
+				return new IntervalInt(a.min + b.min, a.max + b.max);
+			}
+			public static IntervalInt operator -(IntervalInt a, int b)
+			{
+				return new IntervalInt(a.min - b, a.max - b);
+			}
+			public static IntervalInt operator -(IntervalInt a, IntervalInt b)
+			{
+				return new IntervalInt(a.min - b.min, a.max - b.max);
+			}
+			public static IntervalInt operator *(IntervalInt a, int b)
+			{
+				return new IntervalInt(a.min * b, a.max * b);
+			}
+			public static IntervalInt operator *(IntervalInt a, IntervalInt b)
+			{
+				return new IntervalInt(a.min * b.min, a.max * b.max);
+			}
+			public static IntervalInt operator /(IntervalInt a, int b)
+			{
+				return new IntervalInt(a.min / b, a.max / b);
+			}
+			public static IntervalInt operator /(IntervalInt a, IntervalInt b)
+			{
+				return new IntervalInt(a.min / b.min, a.max / b.max);
+			}
+			public static bool operator ==(IntervalInt a, IntervalInt b)
+			{
+				return a.Equals(b);
+			}
+			public static bool operator !=(IntervalInt a, IntervalInt b)
+			{
+				return !(a == b);
+			}
+
+			#endregion
+
+			#endregion
+
+		}
+		[Serializable]
 		public struct Interval2
 		{
 			#region Variables
@@ -386,31 +610,26 @@ namespace Utilities
 
 			#region Virtual Methods
 
-			public override bool Equals(object obj)
+			public override readonly bool Equals(object obj)
 			{
 				return obj is Interval2 interval &&
 					   EqualityComparer<Interval>.Default.Equals(x, interval.x) &&
 					   EqualityComparer<Interval>.Default.Equals(y, interval.y);
 			}
-			public override int GetHashCode()
+			public override readonly int GetHashCode()
 			{
-				int hashCode = 1502939027;
-
-				hashCode = hashCode * -1521134295 + x.GetHashCode();
-				hashCode = hashCode * -1521134295 + y.GetHashCode();
-
-				return hashCode;
+				return HashCode.Combine(x, y);
 			}
 
 			#endregion
 
 			#region Global Methods
 
-			public bool InRange(float value)
+			public readonly bool InRange(float value)
 			{
 				return x.InRange(value) && y.InRange(value);
 			}
-			public bool InRange(Vector2 value)
+			public readonly bool InRange(Vector2 value)
 			{
 				return x.InRange(value.x) && y.InRange(value.y);
 			}
@@ -475,33 +694,27 @@ namespace Utilities
 
 			#region Virtual Methods
 
-			public override bool Equals(object obj)
+			public readonly override bool Equals(object obj)
 			{
 				return obj is Interval3 interval &&
 					   EqualityComparer<Interval>.Default.Equals(x, interval.x) &&
 					   EqualityComparer<Interval>.Default.Equals(y, interval.y) &&
 					   EqualityComparer<Interval>.Default.Equals(z, interval.z);
 			}
-			public override int GetHashCode()
+			public readonly override int GetHashCode()
 			{
-				int hashCode = 373119288;
-
-				hashCode = hashCode * -1521134295 + x.GetHashCode();
-				hashCode = hashCode * -1521134295 + y.GetHashCode();
-				hashCode = hashCode * -1521134295 + z.GetHashCode();
-
-				return hashCode;
+				return HashCode.Combine(x, y, z);
 			}
 
 			#endregion
 
 			#region Global Methods
 
-			public bool InRange(float value)
+			public readonly bool InRange(float value)
 			{
 				return x.InRange(value) && y.InRange(value) && z.InRange(value);
 			}
-			public bool InRange(Vector3 value)
+			public readonly bool InRange(Vector3 value)
 			{
 				return x.InRange(value.x) && y.InRange(value.y) && z.InRange(value.z);
 			}
@@ -582,6 +795,11 @@ namespace Utilities
 				x = vector.x;
 				y = vector.y;
 			}
+			public SerializableVector2(float2 vector)
+			{
+				x = vector.x;
+				y = vector.y;
+			}
 
 			#endregion
 
@@ -611,6 +829,14 @@ namespace Utilities
 			{
 				return new SerializableVector2(vector);
 			}
+			public static implicit operator float2(SerializableVector2 vector)
+			{
+				return new float2(vector.x, vector.y);
+			}
+			public static implicit operator SerializableVector2(float2 vector)
+			{
+				return new SerializableVector2(vector);
+			}
 
 			#endregion
 
@@ -632,15 +858,15 @@ namespace Utilities
 
 			#region Methods
 
-			public bool Contains(Vector2 point)
+			public readonly bool Contains(Vector2 point)
 			{
 				return new Rect(x, y, width, height).Contains(point);
 			}
-			public bool Contains(Vector3 point)
+			public readonly bool Contains(Vector3 point)
 			{
 				return new Rect(x, y, width, height).Contains(point);
 			}
-			public bool Contains(Vector3 point, bool allowInverse)
+			public readonly bool Contains(Vector3 point, bool allowInverse)
 			{
 				return new Rect(x, y, width, height).Contains(point, allowInverse);
 			}
@@ -692,15 +918,9 @@ namespace Utilities
 
 			#region Methods
 
-			public void SetMaterial(Material material)
-			{
-				material.SetColor("_BaseColor", color);
-				material.SetFloat("_Metallic", metallic);
-				material.SetFloat("_Smoothness", smoothness);
-				material.SetFloat("_SmoothnessRemapMin", smoothness);
-				material.SetFloat("_SmoothnessRemapMax", smoothness);
-			}
-			public override bool Equals(object obj)
+			#region Virtual Methods
+
+			public readonly override bool Equals(object obj)
 			{
 				return obj is ColorSheet sheet &&
 					name == sheet.name &&
@@ -708,17 +928,25 @@ namespace Utilities
 					metallic == sheet.metallic &&
 					smoothness == sheet.smoothness;
 			}
-			public override int GetHashCode()
+			public readonly override int GetHashCode()
 			{
-				int hashCode = -383408880;
-
-				hashCode = hashCode * -1521134295 + name.GetHashCode();
-				hashCode = hashCode * -1521134295 + EqualityComparer<SerializableColor>.Default.GetHashCode(color);
-				hashCode = hashCode * -1521134295 + metallic.GetHashCode();
-				hashCode = hashCode * -1521134295 + smoothness.GetHashCode();
-
-				return hashCode;
+				return HashCode.Combine(name, color, metallic, smoothness);
 			}
+
+			#endregion
+
+			#region Global Methods
+
+			public readonly void SetMaterial(Material material)
+			{
+				material.SetColor("_BaseColor", color);
+				material.SetFloat("_Metallic", metallic);
+				material.SetFloat("_Smoothness", smoothness);
+				material.SetFloat("_SmoothnessRemapMin", smoothness);
+				material.SetFloat("_SmoothnessRemapMax", smoothness);
+			}
+
+			#endregion
 
 			#endregion
 
@@ -791,23 +1019,16 @@ namespace Utilities
 
 			#region Methods
 
-			public override bool Equals(object obj)
+			public readonly override bool Equals(object obj)
 			{
 				bool equalsColor = obj is SerializableColor color && r == color.r && g == color.g && b == color.b && a == color.a;
 				bool equalsUColor = obj is UnityEngine.Color uColor && r == uColor.r && g == uColor.g && b == uColor.b && a == uColor.a;
 
 				return equalsColor || equalsUColor;
 			}
-			public override int GetHashCode()
+			public readonly override int GetHashCode()
 			{
-				var hashCode = -490236692;
-
-				hashCode = hashCode * -1521134295 + r.GetHashCode();
-				hashCode = hashCode * -1521134295 + g.GetHashCode();
-				hashCode = hashCode * -1521134295 + b.GetHashCode();
-				hashCode = hashCode * -1521134295 + a.GetHashCode();
-
-				return hashCode;
+				return HashCode.Combine(r, g, b, a);
 			}
 
 			#endregion
@@ -1217,29 +1438,100 @@ namespace Utilities
 
 			#endregion
 		}
-		public static class Color
+		public struct TransformAccess
 		{
-			public static UnityEngine.Color darkGray = new UnityEngine.Color(.25f, .25f, .25f);
-			public static UnityEngine.Color lightGray = new UnityEngine.Color(.67f, .67f, .67f);
-			public static UnityEngine.Color orange = new UnityEngine.Color(1f, .5f, 0f);
-			public static UnityEngine.Color purple = new UnityEngine.Color(.5f, 0f, 1f);
-			public static UnityEngine.Color transparent = new UnityEngine.Color(0f, 0f, 0f, 0f);
+			#region Variables
+
+			public readonly bool isCreated;
+			public int childCount;
+			public float3 eulerAngles;
+			public float3 forward;
+			public bool hasChanged;
+			public int hierarchyCapacity;
+			public int hierarchyCount;
+			public float3 localEulerAngles;
+			public float3 localPosition;
+			public quaternion localRotation;
+			public float3 localScale;
+			public float4x4 localToWorldMatrix;
+			public float3 lossyScale;
+			public float3 position;
+			public float3 right;
+			public quaternion rotation;
+			public float3 up;
+			public float4x4 worldToLocalMatrix;
+
+			#endregion
+
+			#region Constructors & Operators
+
+			#region Constructors
+
+			public TransformAccess(Transform transform) : this()
+			{
+				if (!transform)
+					return;
+
+				childCount = transform.childCount;
+				eulerAngles = transform.eulerAngles;
+				forward = transform.forward;
+				hasChanged = transform.hasChanged;
+				hierarchyCapacity = transform.hierarchyCapacity;
+				hierarchyCount = transform.hierarchyCount;
+				localEulerAngles = transform.localEulerAngles;
+				localPosition = transform.localPosition;
+				localRotation = transform.localRotation;
+				localScale = transform.localScale;
+				localToWorldMatrix = transform.localToWorldMatrix;
+				lossyScale = transform.lossyScale;
+				position = transform.position;
+				right = transform.right;
+				rotation = transform.rotation;
+				up = transform.up;
+				worldToLocalMatrix = transform.worldToLocalMatrix;
+				isCreated = true;
+			}
+
+			#endregion
+
+			#region Operators
+
+			public static implicit operator TransformAccess(Transform transform) => new(transform);
+
+			#endregion
+
+			#endregion
 		}
-		public static class FormulaInterpolation
+		[Serializable]
+#pragma warning disable IDE1006 // Naming Styles
+		public struct float1
+#pragma warning restore IDE1006 // Naming Styles
 		{
-			public static float Linear(float t)
+			#region Variables
+
+			[SerializeField]
+			private float value;
+
+			#endregion
+
+			#region Operators
+
+			public static implicit operator float1(float value) => new(value);
+			public static implicit operator float(float1 value) => value.value;
+
+			#endregion
+
+			#region Constructors
+
+			private float1(float value)
 			{
-				return Mathf.Clamp01(t);
+				this.value = value;
 			}
-			public static float CircularLowToHigh(float t)
-			{
-				return Mathf.Clamp01(1f - Mathf.Pow(Mathf.Cos(Mathf.PI * Mathf.Rad2Deg * Mathf.Clamp01(t) * .5f), .5f));
-			}
-			public static float CircularHighToLow(float t)
-			{
-				return Mathf.Clamp01(Mathf.Pow(Mathf.Abs(Mathf.Sin(Mathf.PI * Mathf.Rad2Deg * Mathf.Clamp01(t) * .5f)), .5f));
-			}
+
+			#endregion
 		}
+
+		#endregion
 
 		#endregion
 
@@ -1252,6 +1544,578 @@ namespace Utilities
 
 		#endregion
 
+		#region Variables
+
+		public static float DeltaTime => Time.inFixedTimeStep ? Time.fixedDeltaTime : Time.deltaTime;
+		public readonly static float2 Float2One = new(1f, 1f);
+		public readonly static float2 Float2Up = new(0f, 1f);
+		public readonly static float2 Float2Right = new(1f, 0f);
+		public readonly static float3 Float3One = new(1f, 1f, 1f);
+		public readonly static float3 Float3Up = new(0f, 1f, 0f);
+		public readonly static float3 Float3Right = new(1f, 0f, 0f);
+		public readonly static float3 Float3Forward = new(0f, 0f, 1f);
+
+		private static readonly string[] disposableEmailDomains = new string[]
+		{
+			"nvhrw",
+			"ampswipe",
+			"trash-mail",
+			"terasd",
+			"cyadp",
+			"zwoho",
+			"necra",
+			"0815.ru",
+			"0wnd.net",
+			"0wnd.org",
+			"10minutemail.co.za",
+			"10minutemail.com",
+			"123-m.com",
+			"1fsdfdsfsdf.tk",
+			"1pad.de",
+			"20minutemail.com",
+			"21cn.com",
+			"2fdgdfgdfgdf.tk",
+			"2prong.com",
+			"30minutemail.com",
+			"33mail.com",
+			"3trtretgfrfe.tk",
+			"4gfdsgfdgfd.tk",
+			"4warding.com",
+			"5ghgfhfghfgh.tk",
+			"6hjgjhgkilkj.tk",
+			"6paq.com",
+			"7tags.com",
+			"9ox.net",
+			"a-bc.net",
+			"agedmail.com",
+			"ama-trade.de",
+			"amilegit.com",
+			"amiri.net",
+			"amiriindustries.com",
+			"anonmails.de",
+			"anonymbox.com",
+			"antichef.com",
+			"antichef.net",
+			"antireg.ru",
+			"antispam.de",
+			"antispammail.de",
+			"armyspy.com",
+			"artman-conception.com",
+			"azmeil.tk",
+			"baxomale.ht.cx",
+			"beefmilk.com",
+			"bigstring.com",
+			"binkmail.com",
+			"bio-muesli.net",
+			"bobmail.info",
+			"bodhi.lawlita.com",
+			"bofthew.com",
+			"bootybay.de",
+			"boun.cr",
+			"bouncr.com",
+			"breakthru.com",
+			"brefmail.com",
+			"bsnow.net",
+			"bspamfree.org",
+			"bugmenot.com",
+			"bund.us",
+			"burstmail.info",
+			"buymoreplays.com",
+			"byom.de",
+			"c2.hu",
+			"card.zp.ua",
+			"casualdx.com",
+			"cek.pm",
+			"centermail.com",
+			"centermail.net",
+			"chammy.info",
+			"childsavetrust.org",
+			"chogmail.com",
+			"choicemail1.com",
+			"clixser.com",
+			"cmail.net",
+			"cmail.org",
+			"coldemail.info",
+			"cool.fr.nf",
+			"courriel.fr.nf",
+			"courrieltemporaire.com",
+			"crapmail.org",
+			"cust.in",
+			"cuvox.de",
+			"d3p.dk",
+			"dacoolest.com",
+			"dandikmail.com",
+			"dayrep.com",
+			"dcemail.com",
+			"deadaddress.com",
+			"deadspam.com",
+			"delikkt.de",
+			"despam.it",
+			"despammed.com",
+			"devnullmail.com",
+			"dfgh.net",
+			"digitalsanctuary.com",
+			"dingbone.com",
+			"disposableaddress.com",
+			"disposableemailaddresses.com",
+			"disposableinbox.com",
+			"dispose.it",
+			"dispostable.com",
+			"dodgeit.com",
+			"dodgit.com",
+			"donemail.ru",
+			"dontreg.com",
+			"dontsendmespam.de",
+			"drdrb.net",
+			"dump-email.info",
+			"dumpandjunk.com",
+			"dumpyemail.com",
+			"e-mail.com",
+			"e-mail.org",
+			"e4ward.com",
+			"easytrashmail.com",
+			"einmalmail.de",
+			"einrot.com",
+			"eintagsmail.de",
+			"emailgo.de",
+			"emailias.com",
+			"emaillime.com",
+			"emailsensei.com",
+			"emailtemporanea.com",
+			"emailtemporanea.net",
+			"emailtemporar.ro",
+			"emailtemporario.com.br",
+			"emailthe.net",
+			"emailtmp.com",
+			"emailwarden.com",
+			"emailx.at.hm",
+			"emailxfer.com",
+			"emeil.in",
+			"emeil.ir",
+			"emz.net",
+			"ero-tube.org",
+			"evopo.com",
+			"explodemail.com",
+			"express.net.ua",
+			"eyepaste.com",
+			"fakeinbox.com",
+			"fakeinformation.com",
+			"fansworldwide.de",
+			"fantasymail.de",
+			"fightallspam.com",
+			"filzmail.com",
+			"fivemail.de",
+			"fleckens.hu",
+			"frapmail.com",
+			"friendlymail.co.uk",
+			"fuckingduh.com",
+			"fudgerub.com",
+			"fyii.de",
+			"garliclife.com",
+			"gehensiemirnichtaufdensack.de",
+			"get2mail.fr",
+			"getairmail.com",
+			"getmails.eu",
+			"getonemail.com",
+			"giantmail.de",
+			"girlsundertheinfluence.com",
+			"gishpuppy.com",
+			"gmial.com",
+			"goemailgo.com",
+			"gotmail.net",
+			"gotmail.org",
+			"gotti.otherinbox.com",
+			"great-host.in",
+			"greensloth.com",
+			"grr.la",
+			"gsrv.co.uk",
+			"guerillamail.biz",
+			"guerillamail.com",
+			"guerrillamail.biz",
+			"guerrillamail.com",
+			"guerrillamail.de",
+			"guerrillamail.info",
+			"guerrillamail.net",
+			"guerrillamail.org",
+			"guerrillamailblock.com",
+			"gustr.com",
+			"harakirimail.com",
+			"hat-geld.de",
+			"hatespam.org",
+			"herp.in",
+			"hidemail.de",
+			"hidzz.com",
+			"hmamail.com",
+			"hopemail.biz",
+			"ieh-mail.de",
+			"ikbenspamvrij.nl",
+			"imails.info",
+			"inbax.tk",
+			"inbox.si",
+			"inboxalias.com",
+			"inboxclean.com",
+			"inboxclean.org",
+			"infocom.zp.ua",
+			"instant-mail.de",
+			"ip6.li",
+			"irish2me.com",
+			"iwi.net",
+			"jetable.com",
+			"jetable.fr.nf",
+			"jetable.net",
+			"jetable.org",
+			"jnxjn.com",
+			"jourrapide.com",
+			"jsrsolutions.com",
+			"kasmail.com",
+			"kaspop.com",
+			"killmail.com",
+			"killmail.net",
+			"klassmaster.com",
+			"klzlk.com",
+			"koszmail.pl",
+			"kurzepost.de",
+			"lawlita.com",
+			"letthemeatspam.com",
+			"lhsdv.com",
+			"lifebyfood.com",
+			"link2mail.net",
+			"litedrop.com",
+			"lol.ovpn.to",
+			"lolfreak.net",
+			"lookugly.com",
+			"lortemail.dk",
+			"lr78.com",
+			"lroid.com",
+			"lukop.dk",
+			"m21.cc",
+			"mail-filter.com",
+			"mail-temporaire.fr",
+			"mail.by",
+			"mail.mezimages.net",
+			"mail.zp.ua",
+			"mail1a.de",
+			"mail21.cc",
+			"mail2rss.org",
+			"mail333.com",
+			"mailbidon.com",
+			"mailbiz.biz",
+			"mailblocks.com",
+			"mailbucket.org",
+			"mailcat.biz",
+			"mailcatch.com",
+			"mailde.de",
+			"mailde.info",
+			"maildrop.cc",
+			"maileimer.de",
+			"mailexpire.com",
+			"mailfa.tk",
+			"mailforspam.com",
+			"mailfreeonline.com",
+			"mailguard.me",
+			"mailin8r.com",
+			"mailinater.com",
+			"mailinator.com",
+			"mailinator.net",
+			"mailinator.org",
+			"mailinator2.com",
+			"mailincubator.com",
+			"mailismagic.com",
+			"mailme.lv",
+			"mailme24.com",
+			"mailmetrash.com",
+			"mailmoat.com",
+			"mailms.com",
+			"mailnesia.com",
+			"mailnull.com",
+			"mailorg.org",
+			"mailpick.biz",
+			"mailrock.biz",
+			"mailscrap.com",
+			"mailshell.com",
+			"mailsiphon.com",
+			"mailtemp.info",
+			"mailtome.de",
+			"mailtothis.com",
+			"mailtrash.net",
+			"mailtv.net",
+			"mailtv.tv",
+			"mailzilla.com",
+			"makemetheking.com",
+			"manybrain.com",
+			"mbx.cc",
+			"mega.zik.dj",
+			"meinspamschutz.de",
+			"meltmail.com",
+			"messagebeamer.de",
+			"mezimages.net",
+			"ministry-of-silly-walks.de",
+			"mintemail.com",
+			"misterpinball.de",
+			"moncourrier.fr.nf",
+			"monemail.fr.nf",
+			"monmail.fr.nf",
+			"monumentmail.com",
+			"mt2009.com",
+			"mt2014.com",
+			"mycard.net.ua",
+			"mycleaninbox.net",
+			"mymail-in.net",
+			"mypacks.net",
+			"mypartyclip.de",
+			"myphantomemail.com",
+			"mysamp.de",
+			"mytempemail.com",
+			"mytempmail.com",
+			"mytrashmail.com",
+			"nabuma.com",
+			"neomailbox.com",
+			"nepwk.com",
+			"nervmich.net",
+			"nervtmich.net",
+			"netmails.com",
+			"netmails.net",
+			"neverbox.com",
+			"nice-4u.com",
+			"nincsmail.hu",
+			"nnh.com",
+			"no-spam.ws",
+			"noblepioneer.com",
+			"nomail.pw",
+			"nomail.xl.cx",
+			"nomail2me.com",
+			"nomorespamemails.com",
+			"nospam.ze.tc",
+			"nospam4.us",
+			"nospamfor.us",
+			"nospammail.net",
+			"notmailinator.com",
+			"nowhere.org",
+			"nowmymail.com",
+			"nurfuerspam.de",
+			"nus.edu.sg",
+			"objectmail.com",
+			"obobbo.com",
+			"odnorazovoe.ru",
+			"oneoffemail.com",
+			"onewaymail.com",
+			"onlatedotcom.info",
+			"online.ms",
+			"opayq.com",
+			"ordinaryamerican.net",
+			"otherinbox.com",
+			"ovpn.to",
+			"owlpic.com",
+			"pancakemail.com",
+			"pcusers.otherinbox.com",
+			"pjjkp.com",
+			"plexolan.de",
+			"poczta.onet.pl",
+			"politikerclub.de",
+			"poofy.org",
+			"pookmail.com",
+			"privacy.net",
+			"privatdemail.net",
+			"proxymail.eu",
+			"prtnx.com",
+			"putthisinyourspamdatabase.com",
+			"putthisinyourspamdatabase.com",
+			"qq.com",
+			"quickinbox.com",
+			"rcpt.at",
+			"reallymymail.com",
+			"realtyalerts.ca",
+			"recode.me",
+			"recursor.net",
+			"reliable-mail.com",
+			"rhyta.com",
+			"rmqkr.net",
+			"royal.net",
+			"rtrtr.com",
+			"s0ny.net",
+			"safe-mail.net",
+			"safersignup.de",
+			"safetymail.info",
+			"safetypost.de",
+			"saynotospams.com",
+			"sceath.com",
+			"schafmail.de",
+			"schrott-email.de",
+			"secretemail.de",
+			"secure-mail.biz",
+			"senseless-entertainment.com",
+			"services391.com",
+			"sharklasers.com",
+			"shieldemail.com",
+			"shiftmail.com",
+			"shitmail.me",
+			"shitware.nl",
+			"shmeriously.com",
+			"shortmail.net",
+			"sibmail.com",
+			"sinnlos-mail.de",
+			"slapsfromlastnight.com",
+			"slaskpost.se",
+			"smashmail.de",
+			"smellfear.com",
+			"snakemail.com",
+			"sneakemail.com",
+			"sneakmail.de",
+			"snkmail.com",
+			"sofimail.com",
+			"solvemail.info",
+			"sogetthis.com",
+			"soodonims.com",
+			"spam4.me",
+			"spamail.de",
+			"spamarrest.com",
+			"spambob.net",
+			"spambog.ru",
+			"spambox.us",
+			"spamcannon.com",
+			"spamcannon.net",
+			"spamcon.org",
+			"spamcorptastic.com",
+			"spamcowboy.com",
+			"spamcowboy.net",
+			"spamcowboy.org",
+			"spamday.com",
+			"spamex.com",
+			"spamfree.eu",
+			"spamfree24.com",
+			"spamfree24.de",
+			"spamfree24.org",
+			"spamgoes.in",
+			"spamgourmet.com",
+			"spamgourmet.net",
+			"spamgourmet.org",
+			"spamherelots.com",
+			"spamherelots.com",
+			"spamhereplease.com",
+			"spamhereplease.com",
+			"spamhole.com",
+			"spamify.com",
+			"spaml.de",
+			"spammotel.com",
+			"spamobox.com",
+			"spamslicer.com",
+			"spamspot.com",
+			"spamthis.co.uk",
+			"spamtroll.net",
+			"speed.1s.fr",
+			"spoofmail.de",
+			"stuffmail.de",
+			"super-auswahl.de",
+			"supergreatmail.com",
+			"supermailer.jp",
+			"superrito.com",
+			"superstachel.de",
+			"suremail.info",
+			"talkinator.com",
+			"teewars.org",
+			"teleworm.com",
+			"teleworm.us",
+			"temp-mail.org",
+			"temp-mail.ru",
+			"tempe-mail.com",
+			"tempemail.co.za",
+			"tempemail.com",
+			"tempemail.net",
+			"tempemail.net",
+			"tempinbox.co.uk",
+			"tempinbox.com",
+			"tempmail.eu",
+			"tempmaildemo.com",
+			"tempmailer.com",
+			"tempmailer.de",
+			"tempomail.fr",
+			"temporaryemail.net",
+			"temporaryforwarding.com",
+			"temporaryinbox.com",
+			"temporarymailaddress.com",
+			"tempthe.net",
+			"thankyou2010.com",
+			"thc.st",
+			"thelimestones.com",
+			"thisisnotmyrealemail.com",
+			"thismail.net",
+			"throwawayemailaddress.com",
+			"tilien.com",
+			"tittbit.in",
+			"tizi.com",
+			"tmailinator.com",
+			"toomail.biz",
+			"topranklist.de",
+			"tradermail.info",
+			"trash2009.com",
+			"trashdevil.com",
+			"trashemail.de",
+			"trashmail.at",
+			"trashmail.com",
+			"trashmail.de",
+			"trashmail.me",
+			"trashmail.net",
+			"trashmail.org",
+			"trashymail.com",
+			"trialmail.de",
+			"trillianpro.com",
+			"twinmail.de",
+			"tyldd.com",
+			"uggsrock.com",
+			"umail.net",
+			"uroid.com",
+			"us.af",
+			"venompen.com",
+			"veryrealemail.com",
+			"viditag.com",
+			"viralplays.com",
+			"vpn.st",
+			"vsimcard.com",
+			"vubby.com",
+			"wasteland.rfc822.org",
+			"webemail.me",
+			"weg-werf-email.de",
+			"wegwerf-emails.de",
+			"wegwerfadresse.de",
+			"wegwerfemail.com",
+			"wegwerfemail.de",
+			"wegwerfmail.de",
+			"wegwerfmail.info",
+			"wegwerfmail.net",
+			"wegwerfmail.org",
+			"wh4f.org",
+			"whyspam.me",
+			"willhackforfood.biz",
+			"willselfdestruct.com",
+			"winemaven.info",
+			"wronghead.com",
+			"www.e4ward.com",
+			"www.mailinator.com",
+			"wwwnew.eu",
+			"x.ip6.li",
+			"xagloo.com",
+			"xemaps.com",
+			"xents.com",
+			"xmaily.com",
+			"xoxy.net",
+			"yep.it",
+			"yogamaven.com",
+			"yopmail.com",
+			"yopmail.fr",
+			"yopmail.net",
+			"yourdomain.com",
+			"yuurok.com",
+			"z1p.biz",
+			"za.com",
+			"zehnminuten.de",
+			"zehnminutenmail.de",
+			"zippymail.info",
+			"zoemail.net",
+			"zomg.info"
+		};
+
+		#endregion
+
 		#region Methods
 
 		public static void Dummy()
@@ -1260,243 +2124,98 @@ namespace Utilities
 		}
 		public static float UnitMultiplier(Units unit, UnitType unitType)
 		{
-			switch (unit)
+			return unit switch
 			{
-				case Units.Area:
-					return unitType == UnitType.Metric ? 1f : 10.7639f;
-
-				case Units.AreaAccurate:
-					return unitType == UnitType.Metric ? 1f : 0.155f;
-
-				case Units.AreaLarge:
-					return unitType == UnitType.Metric ? 1f : 1f / 2.59f;
-
-				case Units.ElectricConsumption:
-					return unitType == UnitType.Metric ? 1f : 1f / 1.609f;
-
-				case Units.Density:
-					return unitType == UnitType.Metric ? 1f : 0.06242796f;
-
-				case Units.Distance:
-					return unitType == UnitType.Metric ? 1f : 3.28084f;
-
-				case Units.DistanceAccurate:
-					return unitType == UnitType.Metric ? 1f : 1.09361f;
-
-				case Units.DistanceLong:
-					return unitType == UnitType.Metric ? 1f : 0.621371f;
-
-				case Units.FuelConsumption:
-					return unitType == UnitType.Metric ? 1f : 235.215f;
-
-				case Units.Liquid:
-					return unitType == UnitType.Metric ? 1f : 1f / 4.546f;
-
-				case Units.Power:
-					return unitType == UnitType.Metric ? 1f : 0.7457f;
-
-				case Units.Pressure:
-					return unitType == UnitType.Metric ? 1f : 14.503773773f;
-
-				case Units.Size:
-					return unitType == UnitType.Metric ? 1f : 1f / 2.54f;
-
-				case Units.Speed:
-					return unitType == UnitType.Metric ? 1f : 0.621371f;
-
-				case Units.Torque:
-					return unitType == UnitType.Metric ? 1f : 0.73756f;
-
-				case Units.Velocity:
-					return unitType == UnitType.Metric ? 1f : 3.28084f;
-
-				case Units.Volume:
-					return unitType == UnitType.Metric ? 1f : 35.3147f;
-
-				case Units.VolumeAccurate:
-					return unitType == UnitType.Metric ? 1f : 1f / 16.3871f;
-
-				case Units.VolumeLarge:
-					return unitType == UnitType.Metric ? 1f : 1f / 4.16818f;
-
-				case Units.Weight:
-					return unitType == UnitType.Metric ? 1f : 2.20462262185f;
-
-				default:
-					return 1f;
-			}
+				Units.Area => unitType == UnitType.Metric ? 1f : 10.7639f,
+				Units.AreaAccurate => unitType == UnitType.Metric ? 1f : 0.155f,
+				Units.AreaLarge => unitType == UnitType.Metric ? 1f : 1f / 2.59f,
+				Units.ElectricConsumption => unitType == UnitType.Metric ? 1f : 1f / 1.609f,
+				Units.Density => unitType == UnitType.Metric ? 1f : 0.06242796f,
+				Units.Distance => unitType == UnitType.Metric ? 1f : 3.28084f,
+				Units.DistanceAccurate => unitType == UnitType.Metric ? 1f : 1.09361f,
+				Units.DistanceLong => unitType == UnitType.Metric ? 1f : 0.621371f,
+				Units.FuelConsumption => unitType == UnitType.Metric ? 1f : 235.215f,
+				Units.Liquid => unitType == UnitType.Metric ? 1f : 1f / 4.546f,
+				Units.Power => unitType == UnitType.Metric ? 1f : 0.7457f,
+				Units.Pressure => unitType == UnitType.Metric ? 1f : 14.503773773f,
+				Units.Size => unitType == UnitType.Metric ? 1f : 1f / 2.54f,
+				Units.Speed => unitType == UnitType.Metric ? 1f : 0.621371f,
+				Units.Torque => unitType == UnitType.Metric ? 1f : 0.73756f,
+				Units.Velocity => unitType == UnitType.Metric ? 1f : 3.28084f,
+				Units.Volume => unitType == UnitType.Metric ? 1f : 35.3147f,
+				Units.VolumeAccurate => unitType == UnitType.Metric ? 1f : 1f / 16.3871f,
+				Units.VolumeLarge => unitType == UnitType.Metric ? 1f : 1f / 4.16818f,
+				Units.Weight => unitType == UnitType.Metric ? 1f : 2.20462262185f,
+				_ => 1f,
+			};
 		}
 		public static string Unit(Units unit, UnitType unitType)
 		{
-			switch (unit)
+			return unit switch
 			{
-				case Units.Area:
-					return unitType == UnitType.Metric ? "m²" : "ft²";
-
-				case Units.AreaAccurate:
-					return unitType == UnitType.Metric ? "cm²" : "in²";
-
-				case Units.AreaLarge:
-					return unitType == UnitType.Metric ? "km²" : "mi²";
-
-				case Units.ElectricConsumption:
-					return unitType == UnitType.Metric ? "kW⋅h/100km" : "kW⋅h/100m";
-
-				case Units.Density:
-					return unitType == UnitType.Metric ? "kg/m³" : "lbᵐ/ft³";
-
-				case Units.Distance:
-					return unitType == UnitType.Metric ? "m" : "ft";
-
-				case Units.DistanceAccurate:
-					return unitType == UnitType.Metric ? "m" : "yd";
-
-				case Units.DistanceLong:
-					return unitType == UnitType.Metric ? "km" : "mi";
-
-				case Units.ElectricCapacity:
-					return unitType == UnitType.Metric ? "kW⋅h" : "kW⋅h";
-
-				case Units.Force:
-					return unitType == UnitType.Metric ? "N" : "N";
-
-				case Units.Frequency:
-					return unitType == UnitType.Metric ? "Hz" : "Hz";
-
-				case Units.FuelConsumption:
-					return unitType == UnitType.Metric ? "L/100km" : "mpg";
-
-				case Units.Liquid:
-					return unitType == UnitType.Metric ? "L" : "gal";
-
-				case Units.Power:
-					return unitType == UnitType.Metric ? "hp" : "kW";
-
-				case Units.Pressure:
-					return unitType == UnitType.Metric ? "bar" : "psi";
-
-				case Units.Size:
-					return unitType == UnitType.Metric ? "cm" : "in";
-
-				case Units.SizeAccurate:
-					return unitType == UnitType.Metric ? "mm" : "mm";
-
-				case Units.Speed:
-					return unitType == UnitType.Metric ? "km/h" : "mph";
-
-				case Units.Time:
-					return unitType == UnitType.Metric ? "s" : "s";
-
-				case Units.TimeAccurate:
-					return unitType == UnitType.Metric ? "ms" : "ms";
-
-				case Units.Torque:
-					return unitType == UnitType.Metric ? "N⋅m" : "ft-lb";
-
-				case Units.Velocity:
-					return unitType == UnitType.Metric ? "m/s" : "ft/s";
-
-				case Units.Volume:
-					return unitType == UnitType.Metric ? "m³" : "ft³";
-
-				case Units.VolumeAccurate:
-					return unitType == UnitType.Metric ? "cm³" : "in³";
-
-				case Units.VolumeLarge:
-					return unitType == UnitType.Metric ? "km³" : "mi³";
-
-				case Units.Weight:
-					return unitType == UnitType.Metric ? "kg" : "lbs";
-
-				default:
-					return default;
-			}
+				Units.AngularVelocity => unitType == UnitType.Metric ? "rad/s" : "rad/s",
+				Units.Area => unitType == UnitType.Metric ? "m²" : "ft²",
+				Units.AreaAccurate => unitType == UnitType.Metric ? "cm²" : "in²",
+				Units.AreaLarge => unitType == UnitType.Metric ? "km²" : "mi²",
+				Units.ElectricConsumption => unitType == UnitType.Metric ? "kW⋅h/100km" : "kW⋅h/100m",
+				Units.Density => unitType == UnitType.Metric ? "kg/m³" : "lbᵐ/ft³",
+				Units.Distance => unitType == UnitType.Metric ? "m" : "ft",
+				Units.DistanceAccurate => unitType == UnitType.Metric ? "m" : "yd",
+				Units.DistanceLong => unitType == UnitType.Metric ? "km" : "mi",
+				Units.ElectricCapacity => unitType == UnitType.Metric ? "kW⋅h" : "kW⋅h",
+				Units.Force => unitType == UnitType.Metric ? "N" : "N",
+				Units.Frequency => unitType == UnitType.Metric ? "Hz" : "Hz",
+				Units.FuelConsumption => unitType == UnitType.Metric ? "L/100km" : "mpg",
+				Units.Liquid => unitType == UnitType.Metric ? "L" : "gal",
+				Units.Power => unitType == UnitType.Metric ? "hp" : "kW",
+				Units.Pressure => unitType == UnitType.Metric ? "bar" : "psi",
+				Units.Size => unitType == UnitType.Metric ? "cm" : "in",
+				Units.SizeAccurate => unitType == UnitType.Metric ? "mm" : "mm",
+				Units.Speed => unitType == UnitType.Metric ? "km/h" : "mph",
+				Units.Time => unitType == UnitType.Metric ? "s" : "s",
+				Units.TimeAccurate => unitType == UnitType.Metric ? "ms" : "ms",
+				Units.Torque => unitType == UnitType.Metric ? "N⋅m" : "ft-lb",
+				Units.Velocity => unitType == UnitType.Metric ? "m/s" : "ft/s",
+				Units.Volume => unitType == UnitType.Metric ? "m³" : "ft³",
+				Units.VolumeAccurate => unitType == UnitType.Metric ? "cm³" : "in³",
+				Units.VolumeLarge => unitType == UnitType.Metric ? "km³" : "mi³",
+				Units.Weight => unitType == UnitType.Metric ? "kg" : "lbs",
+				_ => default,
+			};
 		}
 		public static string FullUnit(Units unit, UnitType unitType)
 		{
-			switch (unit)
+			return unit switch
 			{
-				case Units.Area:
-					return unitType == UnitType.Metric ? "Square Metre" : "Square Feet";
-
-				case Units.AreaAccurate:
-					return unitType == UnitType.Metric ? "Square Centimetre" : "Square Inch";
-
-				case Units.AreaLarge:
-					return unitType == UnitType.Metric ? "Square Kilometre" : "Square Mile";
-
-				case Units.ElectricConsumption:
-					return unitType == UnitType.Metric ? "KiloWatt Hour per 100 Kilometres" : "KiloWatt Hour per 100 Miles";
-
-				case Units.Density:
-					return unitType == UnitType.Metric ? "Kilogram per Cubic Metre" : "Pound-mass per Cubic Foot";
-
-				case Units.Distance:
-					return unitType == UnitType.Metric ? "Metre" : "Foot";
-
-				case Units.DistanceAccurate:
-					return unitType == UnitType.Metric ? "Metre" : "Yard";
-
-				case Units.DistanceLong:
-					return unitType == UnitType.Metric ? "Kilometre" : "Mile";
-
-				case Units.ElectricCapacity:
-					return unitType == UnitType.Metric ? "KiloWatt Hour" : "KiloWatt Hour";
-
-				case Units.Force:
-					return unitType == UnitType.Metric ? "Newton" : "Newton";
-
-				case Units.Frequency:
-					return unitType == UnitType.Metric ? "Hertz" : "Hertz";
-
-				case Units.FuelConsumption:
-					return unitType == UnitType.Metric ? "Liters per 100 Kilometre" : "Miles per Galon";
-
-				case Units.Liquid:
-					return unitType == UnitType.Metric ? "Litre" : "Gallon";
-
-				case Units.Power:
-					return unitType == UnitType.Metric ? "Horsepower" : "KiloWatt";
-
-				case Units.Pressure:
-					return unitType == UnitType.Metric ? "Bar" : "Pounds per Square Inch";
-
-				case Units.Size:
-					return unitType == UnitType.Metric ? "Centimetre" : "Inch";
-
-				case Units.SizeAccurate:
-					return unitType == UnitType.Metric ? "Millimetre" : "Millimetre";
-
-				case Units.Speed:
-					return unitType == UnitType.Metric ? "Kilometres per Hour" : "Miles per Hour";
-
-				case Units.Time:
-					return unitType == UnitType.Metric ? "Second" : "Second";
-
-				case Units.TimeAccurate:
-					return unitType == UnitType.Metric ? "Millisecond" : "Millisecond";
-
-				case Units.Torque:
-					return unitType == UnitType.Metric ? "Newton⋅Metre" : "Pound⋅Feet";
-
-				case Units.Velocity:
-					return unitType == UnitType.Metric ? "Metres per Second" : "Feet per Second";
-
-				case Units.Volume:
-					return unitType == UnitType.Metric ? "Cubic Metre" : "Cubic Foot";
-
-				case Units.VolumeAccurate:
-					return unitType == UnitType.Metric ? "Cubic Centimetre" : "Cubic Inch";
-
-				case Units.VolumeLarge:
-					return unitType == UnitType.Metric ? "Cubic Kilometre" : "Cubic Mile";
-
-				case Units.Weight:
-					return unitType == UnitType.Metric ? "Kilogram" : "Pound";
-
-				default:
-					return default;
-			}
+				Units.AngularVelocity => unitType == UnitType.Metric ? "Radians per Second" : "Radians per Second",
+				Units.Area => unitType == UnitType.Metric ? "Square Metre" : "Square Feet",
+				Units.AreaAccurate => unitType == UnitType.Metric ? "Square Centimetre" : "Square Inch",
+				Units.AreaLarge => unitType == UnitType.Metric ? "Square Kilometre" : "Square Mile",
+				Units.ElectricConsumption => unitType == UnitType.Metric ? "KiloWatt Hour per 100 Kilometres" : "KiloWatt Hour per 100 Miles",
+				Units.Density => unitType == UnitType.Metric ? "Kilogram per Cubic Metre" : "Pound-mass per Cubic Foot",
+				Units.Distance => unitType == UnitType.Metric ? "Metre" : "Foot",
+				Units.DistanceAccurate => unitType == UnitType.Metric ? "Metre" : "Yard",
+				Units.DistanceLong => unitType == UnitType.Metric ? "Kilometre" : "Mile",
+				Units.ElectricCapacity => unitType == UnitType.Metric ? "KiloWatt Hour" : "KiloWatt Hour",
+				Units.Force => unitType == UnitType.Metric ? "Newton" : "Newton",
+				Units.Frequency => unitType == UnitType.Metric ? "Hertz" : "Hertz",
+				Units.FuelConsumption => unitType == UnitType.Metric ? "Litres per 100 Kilometre" : "Miles per Gallon",
+				Units.Liquid => unitType == UnitType.Metric ? "Litre" : "Gallon",
+				Units.Power => unitType == UnitType.Metric ? "Horsepower" : "KiloWatt",
+				Units.Pressure => unitType == UnitType.Metric ? "Bar" : "Pounds per Square Inch",
+				Units.Size => unitType == UnitType.Metric ? "Centimetre" : "Inch",
+				Units.SizeAccurate => unitType == UnitType.Metric ? "Millimetre" : "Millimetre",
+				Units.Speed => unitType == UnitType.Metric ? "Kilometres per Hour" : "Miles per Hour",
+				Units.Time => unitType == UnitType.Metric ? "Second" : "Second",
+				Units.TimeAccurate => unitType == UnitType.Metric ? "Millisecond" : "Millisecond",
+				Units.Torque => unitType == UnitType.Metric ? "Newton⋅Metre" : "Pound⋅Feet",
+				Units.Velocity => unitType == UnitType.Metric ? "Metres per Second" : "Feet per Second",
+				Units.Volume => unitType == UnitType.Metric ? "Cubic Metre" : "Cubic Foot",
+				Units.VolumeAccurate => unitType == UnitType.Metric ? "Cubic Centimetre" : "Cubic Inch",
+				Units.VolumeLarge => unitType == UnitType.Metric ? "Cubic Kilometre" : "Cubic Mile",
+				Units.Weight => unitType == UnitType.Metric ? "Kilogram" : "Pound",
+				_ => default,
+			};
 		}
 		public static float ValueWithUnitToNumber(string value)
 		{
@@ -1508,7 +2227,7 @@ namespace Utilities
 				if (float.TryParse(valueArray[i], out float number))
 					value += number + (i < valueArray.Length - 1 ? " " : "");
 
-			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? result : 0f;
+			return !value.IsNullOrEmpty() && !value.IsNullOrWhiteSpace() && float.TryParse(value, out float result) ? result : 0f;
 		}
 		public static float ValueWithUnitToNumber(string value, Units unit, UnitType unitType)
 		{
@@ -1520,48 +2239,48 @@ namespace Utilities
 				if (float.TryParse(valueArray[i], out float number))
 					value += number + (i < valueArray.Length - 1 ? " " : "");
 
-			return !string.IsNullOrEmpty(value) && !string.IsNullOrWhiteSpace(value) && float.TryParse(value, out float result) ? (IsDeviderUnit(unit) && unitType != UnitType.Metric ? UnitMultiplier(unit, unitType) / result : result / UnitMultiplier(unit, unitType)) : 0f;
+			return !value.IsNullOrEmpty() && !value.IsNullOrWhiteSpace() && float.TryParse(value, out float result) ? (IsDividerUnit(unit) && unitType != UnitType.Metric ? UnitMultiplier(unit, unitType) / result : result / UnitMultiplier(unit, unitType)) : 0f;
 		}
 		public static string NumberToValueWithUnit(float number, string unit, bool rounded)
 		{
-			if (number == Mathf.Infinity)
+			if (number == math.INFINITY)
 				return "Infinity";
-			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+			else if (number == -math.INFINITY || number == -math.INFINITY)
 				return "-Infinity";
 
-			return $"{(rounded ? Mathf.Round(number) : number)} {unit}";
+			return $"{(rounded ? math.round(number) : number)} {unit}";
 		}
 		public static string NumberToValueWithUnit(float number, string unit, uint decimals)
 		{
-			if (number == Mathf.Infinity)
+			if (number == math.INFINITY)
 				return "Infinity";
-			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+			else if (number == -math.INFINITY || number == -math.INFINITY)
 				return "-Infinity";
 
 			return $"{Round(number, decimals)} {unit}";
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, bool rounded)
 		{
-			if (number == Mathf.Infinity)
+			if (number == math.INFINITY)
 				return "Infinity";
-			else if (number == Mathf.NegativeInfinity)
+			else if (number == -math.INFINITY)
 				return "-Infinity";
 
-			if (IsDeviderUnit(unit) && unitType != UnitType.Metric)
+			if (IsDividerUnit(unit) && unitType != UnitType.Metric)
 				number = UnitMultiplier(unit, unitType) / number;
 			else
 				number *= UnitMultiplier(unit, unitType);
 
-			return $"{(rounded ? Mathf.Round(number) : number)} {Unit(unit, unitType)}";
+			return $"{(rounded ? math.round(number) : number)} {Unit(unit, unitType)}";
 		}
 		public static string NumberToValueWithUnit(float number, Units unit, UnitType unitType, uint decimals)
 		{
-			if (number == Mathf.Infinity)
+			if (number == math.INFINITY)
 				return "Infinity";
-			else if (number == Mathf.NegativeInfinity || number == -Mathf.Infinity)
+			else if (number == -math.INFINITY || number == -math.INFINITY)
 				return "-Infinity";
 
-			if (IsDeviderUnit(unit) && unitType != UnitType.Metric)
+			if (IsDividerUnit(unit) && unitType != UnitType.Metric)
 				number = UnitMultiplier(unit, unitType) / number;
 			else
 				number *= UnitMultiplier(unit, unitType);
@@ -1570,20 +2289,13 @@ namespace Utilities
 		}
 		public static string ClassifyNumber(int number)
 		{
-			switch (number.ToString().LastOrDefault())
+			return number.ToString().LastOrDefault() switch
 			{
-				case '1':
-					return number + "st";
-
-				case '2':
-					return number + "nd";
-
-				case '3':
-					return number + "rd";
-
-				default:
-					return number + "th";
-			}
+				'1' => number + "st",
+				'2' => number + "nd",
+				'3' => number + "rd",
+				_ => number + "th",
+			};
 		}
 		public static GameObject[] GetChilds(GameObject gameObject)
 		{
@@ -1591,49 +2303,31 @@ namespace Utilities
 		}
 		public static float EvaluateFriction(float slip, PhysicMaterial refMaterial, PhysicMaterial material)
 		{
-			switch (refMaterial.frictionCombine)
+			return refMaterial.frictionCombine switch
 			{
-				case PhysicMaterialCombine.Average:
-					return Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + material.dynamicFriction) * .5f : (refMaterial.staticFriction + material.staticFriction) * .5f;
-
-				case PhysicMaterialCombine.Multiply:
-					return Round(slip, 2) != 0f ? refMaterial.dynamicFriction * material.dynamicFriction : refMaterial.staticFriction * material.staticFriction;
-
-				case PhysicMaterialCombine.Minimum:
-					return Round(slip, 2) != 0f ? Mathf.Min(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
-
-				case PhysicMaterialCombine.Maximum:
-					return Round(slip, 2) != 0f ? Mathf.Max(refMaterial.dynamicFriction, material.dynamicFriction) : Mathf.Max(refMaterial.staticFriction, material.staticFriction);
-
-				default:
-					return 0f;
-			}
+				PhysicMaterialCombine.Average => Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + material.dynamicFriction) * .5f : (refMaterial.staticFriction + material.staticFriction) * .5f,
+				PhysicMaterialCombine.Multiply => Round(slip, 2) != 0f ? refMaterial.dynamicFriction * material.dynamicFriction : refMaterial.staticFriction * material.staticFriction,
+				PhysicMaterialCombine.Minimum => Round(slip, 2) != 0f ? math.min(refMaterial.dynamicFriction, material.dynamicFriction) : math.min(refMaterial.staticFriction, material.staticFriction),
+				PhysicMaterialCombine.Maximum => Round(slip, 2) != 0f ? math.max(refMaterial.dynamicFriction, material.dynamicFriction) : math.max(refMaterial.staticFriction, material.staticFriction),
+				_ => 0f,
+			};
 		}
 		public static float EvaluateFriction(float slip, PhysicMaterial refMaterial, float stiffness)
 		{
-			switch (refMaterial.frictionCombine)
+			return refMaterial.frictionCombine switch
 			{
-				case PhysicMaterialCombine.Average:
-					return Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + stiffness) * .5f : (refMaterial.staticFriction + stiffness) * .5f;
-
-				case PhysicMaterialCombine.Multiply:
-					return Round(slip, 2) != 0f ? refMaterial.dynamicFriction * stiffness : refMaterial.staticFriction * stiffness;
-
-				case PhysicMaterialCombine.Minimum:
-					return Round(slip, 2) != 0f ? Mathf.Min(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
-
-				case PhysicMaterialCombine.Maximum:
-					return Round(slip, 2) != 0f ? Mathf.Max(refMaterial.dynamicFriction, stiffness) : Mathf.Max(refMaterial.staticFriction, stiffness);
-
-				default:
-					return 0f;
-			}
+				PhysicMaterialCombine.Average => Round(slip, 2) != 0f ? (refMaterial.dynamicFriction + stiffness) * .5f : (refMaterial.staticFriction + stiffness) * .5f,
+				PhysicMaterialCombine.Multiply => Round(slip, 2) != 0f ? refMaterial.dynamicFriction * stiffness : refMaterial.staticFriction * stiffness,
+				PhysicMaterialCombine.Minimum => Round(slip, 2) != 0f ? math.min(refMaterial.dynamicFriction, stiffness) : math.max(refMaterial.staticFriction, stiffness),
+				PhysicMaterialCombine.Maximum => Round(slip, 2) != 0f ? math.max(refMaterial.dynamicFriction, stiffness) : math.max(refMaterial.staticFriction, stiffness),
+				_ => 0f,
+			};
 		}
 		public static float BrakingDistance(float speed, float friction)
 		{
 			friction = InverseLerpUnclamped(1f, 1.5f, friction);
 
-			return ClampInfinity(Mathf.LerpUnclamped(Mathf.LerpUnclamped(30f, 26f, friction), Mathf.LerpUnclamped(143f, 113f, friction), InverseLerpUnclamped(40f, 110f, speed)));
+			return ClampInfinity(LerpUnclamped(LerpUnclamped(30f, 26f, friction), LerpUnclamped(143f, 113f, friction), InverseLerpUnclamped(40f, 110f, speed)));
 		}
 		public static float RPMToSpeed(float rpm, float radius)
 		{
@@ -1692,9 +2386,132 @@ namespace Utilities
 		}
 		public static bool NumberToBool(float number)
 		{
-			return Mathf.Clamp01(Mathf.RoundToInt(number)) != 0f;
+			return Clamp01((int)math.round(number)) != 0f;
 		}
-		public static bool ValidDate(string date)
+		public static bool ValidateUsername(string username)
+		{
+			if (username.IsNullOrEmpty())
+				return false;
+
+			int count = username.Length;
+
+			if (count < 6 || count > 64)
+				return false;
+
+			for (int i = 0; i < count; i++)
+				if (IsSymbol(username[i]) && username[i] != '_' && username[i] != '-' && username[i] != '.')
+					return false;
+
+			return true;
+		}
+		public static bool ValidateName(string name)
+		{
+			if ((name?.Trim()).IsNullOrEmpty())
+				return false;
+
+			int count = name.Length;
+
+			if (count < 2 || count > 64)
+				return false;
+
+			for (int i = 0; i < count; i++)
+				if (IsNumber(name[i]) || IsSymbol(name[i]) && name[i] != ' ' && name[i] != '.' && name[i] != '-')
+					return false;
+
+			return true;
+		}
+		public static bool ValidateEmail(string email, bool lookUpDomain)
+		{
+			if (email.IsNullOrEmpty())
+				return false;
+
+			try
+			{
+				new MailAddress(email);
+			}
+			catch
+			{
+				return false;
+			}
+
+			string emailDomain = email.Split('@')[1].ToLower();
+			string emailDomainName = emailDomain.Split('.')[0];
+
+			foreach (string disposableDomain in disposableEmailDomains)
+				if (emailDomain == disposableDomain || emailDomainName.Contains(disposableDomain))
+					return false;
+
+			if (!lookUpDomain)
+				return true;
+
+			try
+			{
+				IPHostEntry entry = Dns.GetHostEntry(emailDomain);
+
+				return entry.AddressList != null && entry.AddressList.Length > 0;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+		public static bool ValidateURL(ref string url, bool lookUpURL, bool throwOnError = true)
+		{
+			if (url.IsNullOrEmpty())
+				return false;
+
+			url = url.Replace("\\", "/");
+
+			if (!url.ToLower().StartsWith("https://") && !url.ToLower().StartsWith("http://"))
+			{
+				if (url.Contains("://"))
+					return false;
+
+				url = $"http://{url}";
+			}
+
+			string noProtocolURL = url.ToLower().Split("://")[1];
+
+			if (noProtocolURL == "localhost" || noProtocolURL.StartsWith("localhost/"))
+				return false;
+
+			if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
+				return false;
+
+			if (lookUpURL)
+			{
+				using UnityWebRequest request = UnityWebRequest.Get(uri);
+
+				request.method = "HEAD";
+				request.timeout = 15;
+				request.disposeDownloadHandlerOnDispose = true;
+				request.disposeCertificateHandlerOnDispose = true;
+
+				try
+				{
+					request.SendWebRequest();
+
+					while (request.result == UnityWebRequest.Result.InProgress)
+						continue;
+
+					return request.result == UnityWebRequest.Result.Success;
+				}
+				catch (Exception e)
+				{
+					if (throwOnError)
+						throw e;
+
+					return false;
+				}
+				finally
+				{
+					request.Dispose();
+				}
+			}
+
+			return true;
+		}
+		public static bool ValidateDate(string date)
 		{
 			if (date.Length != 10)
 				return false;
@@ -1709,11 +2526,16 @@ namespace Utilities
 
 			return true;
 		}
+		[Obsolete("Use Utility.ValidateDate instead", true)]
+		public static bool ValidDate(string data)
+		{
+			return false;
+		}
 		public static string TimeConverter(float time)
 		{
-			int seconds = Mathf.FloorToInt(time % 60);
-			int minutes = Mathf.FloorToInt(time / 60);
-			int hours = Mathf.FloorToInt(time / 3600);
+			int seconds = (int)math.floor(time % 60);
+			int minutes = (int)math.floor(time / 60);
+			int hours = (int)math.floor(time / 3600);
 
 			return (hours == 0 ? minutes.ToString() : (hours + ":" + minutes.ToString("00"))) + ":" + seconds.ToString("00");
 		}
@@ -1794,10 +2616,10 @@ namespace Utilities
 		public static void DrawBoundsForDebug(Bounds bounds)
 		{
 			// bottom
-			Vector3 p1 = new Vector3(bounds.min.x, bounds.min.y, bounds.min.z);
-			Vector3 p2 = new Vector3(bounds.max.x, bounds.min.y, bounds.min.z);
-			Vector3 p3 = new Vector3(bounds.max.x, bounds.min.y, bounds.max.z);
-			Vector3 p4 = new Vector3(bounds.min.x, bounds.min.y, bounds.max.z);
+			Vector3 p1 = new(bounds.min.x, bounds.min.y, bounds.min.z);
+			Vector3 p2 = new(bounds.max.x, bounds.min.y, bounds.min.z);
+			Vector3 p3 = new(bounds.max.x, bounds.min.y, bounds.max.z);
+			Vector3 p4 = new(bounds.min.x, bounds.min.y, bounds.max.z);
 
 			Debug.DrawLine(p1, p2, UnityEngine.Color.blue);
 			Debug.DrawLine(p2, p3, UnityEngine.Color.red);
@@ -1805,10 +2627,10 @@ namespace Utilities
 			Debug.DrawLine(p4, p1, UnityEngine.Color.magenta);
 
 			// top
-			Vector3 p5 = new Vector3(bounds.min.x, bounds.max.y, bounds.min.z);
-			Vector3 p6 = new Vector3(bounds.max.x, bounds.max.y, bounds.min.z);
-			Vector3 p7 = new Vector3(bounds.max.x, bounds.max.y, bounds.max.z);
-			Vector3 p8 = new Vector3(bounds.min.x, bounds.max.y, bounds.max.z);
+			Vector3 p5 = new(bounds.min.x, bounds.max.y, bounds.min.z);
+			Vector3 p6 = new(bounds.max.x, bounds.max.y, bounds.min.z);
+			Vector3 p7 = new(bounds.max.x, bounds.max.y, bounds.max.z);
+			Vector3 p8 = new(bounds.min.x, bounds.max.y, bounds.max.z);
 
 			Debug.DrawLine(p5, p6, UnityEngine.Color.blue);
 			Debug.DrawLine(p6, p7, UnityEngine.Color.red);
@@ -1842,18 +2664,18 @@ namespace Utilities
 			switch (surface)
 			{
 				case WorldSurface.XY:
-					newPosition.x += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
-					newPosition.y += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+					newPosition.x += radius * math.sin(math.radians(angle));
+					newPosition.y += radius * math.cos(math.radians(angle));
 					break;
 
 				case WorldSurface.XZ:
-					newPosition.x += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
-					newPosition.z += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+					newPosition.x += radius * math.sin(math.radians(angle));
+					newPosition.z += radius * math.cos(math.radians(angle));
 					break;
 
 				case WorldSurface.YZ:
-					newPosition.y += radius * Mathf.Cos(angle * Mathf.Deg2Rad);
-					newPosition.z += radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+					newPosition.y += radius * math.cos(math.radians(angle));
+					newPosition.z += radius * math.sin(math.radians(angle));
 					break;
 			}
 
@@ -1863,19 +2685,41 @@ namespace Utilities
 		{
 			return start + length * position * direction;
 		}
+		public static Vector3 PointWorldToLocal(Vector3 worldPoint, Vector3 parentPosition, Quaternion parentRotation)
+		{
+			return parentRotation * (worldPoint - parentPosition);
+		}
+		public static float3 PointWorldToLocal(float3 worldPoint, float3 parentPosition, quaternion parentRotation)
+		{
+			return math.mul(parentRotation, worldPoint - parentPosition);
+		}
+		public static Vector3 PointWorldToLocal(Vector3 worldPoint, Vector3 parentPosition, Quaternion parentRotation, Vector3 parentScale)
+		{
+			return Quaternion.Inverse(parentRotation) * Divide(worldPoint - parentPosition, parentScale);
+		}
+		public static float3 PointWorldToLocal(float3 worldPoint, float3 parentPosition, quaternion parentRotation, float3 parentScale)
+		{
+			return math.mul(math.inverse(parentRotation), Divide(worldPoint - parentPosition, parentScale));
+		}
+		public static Vector3 PointLocalToWorld(Vector3 localPoint, Vector3 parentPosition, Quaternion parentRotation, Vector3 parentScale)
+		{
+			return Multiply(parentRotation * localPoint, parentScale) + parentPosition;
+		}
+		public static float3 PointLocalToWorld(float3 localPoint, float3 parentPosition, quaternion parentRotation, float3 parentScale)
+		{
+			return Multiply(math.mul(parentRotation, localPoint), parentScale) + parentPosition;
+		}
 		public static Vector3 Abs(Vector3 vector)
 		{
 			return new Vector3(vector.x, vector.y, vector.z);
 		}
-		public static Vector3 VectorsOffset(Vector3 a, Vector3 b, bool abs = false)
+		public static float3 Abs(float3 vector)
 		{
-			Vector3 vector = new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
-
-			return abs ? Abs(vector) : vector;
+			return new float3(vector.x, vector.y, vector.z);
 		}
 		public static Vector3 Round(Vector3 vector)
 		{
-			return new Vector3(Mathf.Round(vector.x), Mathf.Round(vector.y), Mathf.Round(vector.z));
+			return new Vector3(math.round(vector.x), math.round(vector.y), math.round(vector.z));
 		}
 		public static Vector3 Round(Vector3 vector, uint decimals)
 		{
@@ -1883,7 +2727,7 @@ namespace Utilities
 		}
 		public static Vector2 Round(Vector2 vector)
 		{
-			return new Vector2(Mathf.Round(vector.x), Mathf.Round(vector.y));
+			return new Vector2(math.round(vector.x), math.round(vector.y));
 		}
 		public static Vector2 Round(Vector2 vector, uint decimals)
 		{
@@ -1891,17 +2735,17 @@ namespace Utilities
 		}
 		public static Vector3Int RoundToInt(Vector3 vector)
 		{
-			return new Vector3Int(Mathf.RoundToInt(vector.x), Mathf.RoundToInt(vector.y), Mathf.RoundToInt(vector.z));
+			return new Vector3Int((int)math.round(vector.x), (int)math.round(vector.y), (int)math.round(vector.z));
 		}
 		public static Vector2Int RoundToInt(Vector2 vector)
 		{
-			return new Vector2Int(Mathf.RoundToInt(vector.x), Mathf.RoundToInt(vector.y));
+			return new Vector2Int((int)math.round(vector.x), (int)math.round(vector.y));
 		}
 		public static float Round(float number, uint decimals)
 		{
-			float multiplier = Mathf.Pow(10, decimals);
+			float multiplier = math.pow(10f, decimals);
 
-			return Mathf.Round(number * multiplier) / multiplier;
+			return math.round(number * multiplier) / multiplier;
 		}
 		public static Vector3 Direction(Vector3 origin, Vector3 destination)
 		{
@@ -1914,6 +2758,34 @@ namespace Utilities
 		public static Vector3 DirectionRight(Vector3 forward, Vector3 up)
 		{
 			return Quaternion.AngleAxis(90f, up) * forward;
+		}
+		public static float3 Direction(float3 origin, float3 destination)
+		{
+			return math.normalize(destination - origin);
+		}
+		public static float3 DirectionUnNormalized(float3 origin, float3 destination)
+		{
+			return destination - origin;
+		}
+		public static float3 DirectionRight(float3 forward, float3 up)
+		{
+			return math.mul(quaternion.AxisAngle(up, math.PI * .5f), forward);
+		}
+		public static Vector2 Direction(Vector2 origin, Vector2 destination)
+		{
+			return (destination - origin).normalized;
+		}
+		public static Vector2 DirectionUnNormalized(Vector2 origin, Vector2 destination)
+		{
+			return destination - origin;
+		}
+		public static float2 Direction(float2 origin, float2 destination)
+		{
+			return math.normalize(destination - origin);
+		}
+		public static float2 DirectionUnNormalized(float2 origin, float2 destination)
+		{
+			return destination - origin;
 		}
 		public static WorldSide GetPointSideCompared(Vector3 point, Vector3 comparingPoint, Vector3 comparingForward, Vector3 comparingUp)
 		{
@@ -1933,11 +2805,19 @@ namespace Utilities
 
 			forward = Vector3.Cross(right, axis).normalized;
 
-			return Mathf.Atan2(Vector3.Dot(direction, right), Vector3.Dot(direction, forward)) * Mathf.Rad2Deg;
+			return math.atan2(Vector3.Dot(direction, right), Vector3.Dot(direction, forward)) * Mathf.Rad2Deg;
+		}
+		public static float AngleAroundAxis(float3 direction, float3 axis, float3 forward)
+		{
+			float3 right = math.normalizesafe(math.cross(axis, forward), Float3Right);
+
+			forward = math.normalizesafe(math.cross(right, axis), Float3Forward);
+
+			return math.atan2(math.dot(direction, right), math.dot(direction, forward)) * Mathf.Rad2Deg;
 		}
 		public static float InverseLerp(Vector3 a, Vector3 b, Vector3 t)
 		{
-			return Mathf.Clamp01(InverseLerpUnclamped(a, b, t));
+			return Clamp01(InverseLerpUnclamped(a, b, t));
 		}
 		public static float InverseLerpUnclamped(Vector3 a, Vector3 b, Vector3 t)
 		{
@@ -1946,13 +2826,72 @@ namespace Utilities
 
 			return Vector3.Dot(AT, AB) / Vector3.Dot(AB, AB);
 		}
+		public static float InverseLerp(float3 a, float3 b, float3 t)
+		{
+			return Clamp01(InverseLerpUnclamped(a, b, t));
+		}
+		public static float InverseLerpUnclamped(float3 a, float3 b, float3 t)
+		{
+			float3 AB = b - a;
+			float3 AT = t - a;
+
+			return math.dot(AT, AB) / math.dot(AB, AB);
+		}
 		public static float InverseLerp(float a, float b, float t)
 		{
-			return Mathf.Clamp01(InverseLerpUnclamped(a, b, t));
+			return Clamp01(InverseLerpUnclamped(a, b, t));
 		}
 		public static float InverseLerpUnclamped(float a, float b, float t)
 		{
 			return (t - a) / (b - a);
+		}
+		public static float LerpUnclamped(float a, float b, float t)
+		{
+			return a + (b - a) * t;
+		}
+		public static float3 LerpUnclamped(float3 a, float3 b, float t)
+		{
+			return new(LerpUnclamped(a.x, b.x, t), LerpUnclamped(a.y, b.y, t), LerpUnclamped(a.z, b.z, t));
+		}
+		public static Vector3 LerpUnclamped(Vector3 a, Vector3 b, float t)
+		{
+			return new(LerpUnclamped(a.x, b.x, t), LerpUnclamped(a.y, b.y, t), LerpUnclamped(a.z, b.z, t));
+		}
+		public static float2 LerpUnclamped(float2 a, float2 b, float t)
+		{
+			return new(LerpUnclamped(a.x, b.x, t), LerpUnclamped(a.y, b.y, t));
+		}
+		public static Vector2 LerpUnclamped(Vector2 a, Vector2 b, float t)
+		{
+			return new(LerpUnclamped(a.x, b.x, t), LerpUnclamped(a.y, b.y, t));
+		}
+		public static quaternion LerpUnclamped(quaternion a, quaternion b, float t)
+		{
+			return math.nlerp(a, b, t);
+		}
+		public static float Lerp(float a, float b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
+		}
+		public static Vector3 Lerp(Vector3 a, Vector3 b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
+		}
+		public static float3 Lerp(float3 a, float3 b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
+		}
+		public static Vector2 Lerp(Vector2 a, Vector2 b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
+		}
+		public static float2 Lerp(float2 a, float2 b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
+		}
+		public static quaternion Lerp(quaternion a, quaternion b, float t)
+		{
+			return LerpUnclamped(a, b, Clamp01(t));
 		}
 		public static UnityEngine.Color MoveTowards(UnityEngine.Color a, UnityEngine.Color b, float maxDelta)
 		{
@@ -1974,7 +2913,29 @@ namespace Utilities
 				a = Mathf.MoveTowards(a.a, b.a, maxDelta.a)
 			};
 		}
+		public static float Distance(params Transform[] transforms)
+		{
+			float distance = 0f;
+
+			for (int i = 0; i < transforms.Length - 1; i++)
+				distance += Distance(transforms[i], transforms[i + 1]);
+
+			return distance;
+		}
+		public static float Distance(Transform a, Transform b)
+		{
+			return Utility.Distance(a.position, b.position);
+		}
 		public static float Distance(params Vector3[] vectors)
+		{
+			float distance = 0f;
+
+			for (int i = 0; i < vectors.Length - 1; i++)
+				distance += Distance(vectors[i], vectors[i + 1]);
+
+			return distance;
+		}
+		public static float Distance(params float3[] vectors)
 		{
 			float distance = 0f;
 
@@ -1987,13 +2948,47 @@ namespace Utilities
 		{
 			return (a - b).magnitude;
 		}
+		public static float Distance(float3 a, float3 b)
+		{
+			return math.length(a - b);
+		}
+		public static float Distance(params Vector2[] vectors)
+		{
+			float distance = 0f;
+
+			for (int i = 0; i < vectors.Length - 1; i++)
+				distance += Distance(vectors[i], vectors[i + 1]);
+
+			return distance;
+		}
+		public static float Distance(params float2[] vectors)
+		{
+			float distance = 0f;
+
+			for (int i = 0; i < vectors.Length - 1; i++)
+				distance += Distance(vectors[i], vectors[i + 1]);
+
+			return distance;
+		}
+		public static float Distance(Vector2 a, Vector2 b)
+		{
+			return (a - b).magnitude;
+		}
+		public static float Distance(float2 a, float2 b)
+		{
+			return math.length(a - b);
+		}
 		public static float DistanceSqr(Vector3 a, Vector3 b)
 		{
 			return (a - b).sqrMagnitude;
 		}
+		public static float DistanceSqr(float3 a, float3 b)
+		{
+			return math.lengthsq(a - b);
+		}
 		public static float Distance(float a, float b)
 		{
-			return Mathf.Max(a, b) - Mathf.Min(a, b);
+			return math.max(a, b) - math.min(a, b);
 		}
 		public static float Velocity(float current, float last, float deltaTime)
 		{
@@ -2001,7 +2996,7 @@ namespace Utilities
 		}
 		public static Vector3 Velocity(Vector3 current, Vector3 last, float deltaTime)
 		{
-			return Devide(last - current, deltaTime);
+			return Divide(last - current, deltaTime);
 		}
 		public static float LoopNumber(float number, float after)
 		{
@@ -2037,11 +3032,19 @@ namespace Utilities
 		{
 			return last && !current;
 		}
-		public static Vector3 Devide(params Vector3[] vectors)
+		public static float3 Divide(float3 a, float3 b)
 		{
-			return Devide(vectors as IEnumerable<Vector3>);
+			return new Vector3(b.x != 0f ? a.x / b.x : 0f, b.y != 0f ? a.y / b.y : 0f, b.z != 0f ? a.z / b.z : 0f);
 		}
-		public static Vector3 Devide(IEnumerable<Vector3> vectors)
+		public static Vector3 Divide(Vector3 a, Vector3 b)
+		{
+			return new Vector3(b.x != 0f ? a.x / b.x : 0f, b.y != 0f ? a.y / b.y : 0f, b.z != 0f ? a.z / b.z : 0f);
+		}
+		public static Vector3 Divide(params Vector3[] vectors)
+		{
+			return Divide(vectors as IEnumerable<Vector3>);
+		}
+		public static Vector3 Divide(IEnumerable<Vector3> vectors)
 		{
 			if (vectors.Count() < 1)
 				return default;
@@ -2050,19 +3053,34 @@ namespace Utilities
 
 			for (int i = 1; i < vectors.Count(); i++)
 			{
-				result.x /= vectors.ElementAt(i).x != 0f ? vectors.ElementAt(i).x : 1f;
-				result.y /= vectors.ElementAt(i).y != 0f ? vectors.ElementAt(i).y : 1f;
-				result.z /= vectors.ElementAt(i).z != 0f ? vectors.ElementAt(i).z : 1f;
+				result.x /= vectors.ElementAt(i).x != 0f ? vectors.ElementAt(i).x : 0f;
+				result.y /= vectors.ElementAt(i).y != 0f ? vectors.ElementAt(i).y : 0f;
+				result.z /= vectors.ElementAt(i).z != 0f ? vectors.ElementAt(i).z : 0f;
 			}
 
 			return result;
 		}
-		public static Vector3 Devide(Vector3 vector, float devider)
+		public static Vector3 Divide(Vector3 vector, float divider)
 		{
-			if (devider == 0f)
+			if (divider == 0f)
 				return default;
 
-			return new Vector3(vector.x / devider, vector.y / devider, vector.z / devider);
+			return new Vector3(vector.x / divider, vector.y / divider, vector.z / divider);
+		}
+		public static float3 Divide(float3 vector, float divider)
+		{
+			if (divider == 0f)
+				return default;
+
+			return new float3(vector.x / divider, vector.y / divider, vector.z / divider);
+		}
+		public static float3 Multiply(float3 a, float3 b)
+		{
+			return new float3(a.x * b.x, a.y * b.y, a.z * b.z);
+		}
+		public static Vector3 Multiply(Vector3 a, Vector3 b)
+		{
+			return new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
 		}
 		public static Vector3 Multiply(params Vector3[] vectors)
 		{
@@ -2083,6 +3101,14 @@ namespace Utilities
 			}
 
 			return result;
+		}
+		public static float3 Average(float3 a, float3 b)
+		{
+			return new float3((a.x + b.x) * .5f, (a.y + b.y) * .5f, (a.z + b.z) * .5f);
+		}
+		public static float3 Average(float3 a, float3 b, float3 c)
+		{
+			return new float3((a.x + b.x + c.x) / 3f, (a.y + b.y + c.y) / 3f, (a.z + b.z + c.z) / 3f);
 		}
 		public static Vector3 Average(params Vector3[] vectors)
 		{
@@ -2166,6 +3192,22 @@ namespace Utilities
 
 			return average;
 		}
+		public static float Average(float a, float b)
+		{
+			return (a + b) * .5f;
+		}
+		public static float Average(float a, float b, float c)
+		{
+			return (a + b + c) / 3f;
+		}
+		public static float Average(float a, float b, float c, float d)
+		{
+			return (a + b + c + d) * .25f;
+		}
+		public static float Average(float a, float b, float c, float d, float e)
+		{
+			return (a + b + c + d + e) * .2f;
+		}
 		public static float Average(params float[] floats)
 		{
 			if (floats.Length < 1)
@@ -2178,14 +3220,14 @@ namespace Utilities
 			if (bytes.Length < 1)
 				return 0;
 
-			return (byte)Mathf.RoundToInt(bytes.Select(@byte => (float)@byte).Average());
+			return (byte)(int)math.round(bytes.Select(@byte => (float)@byte).Average());
 		}
-		public static int Average(params int[] ints)
+		public static int Average(params int[] integers)
 		{
-			if (ints.Length < 1)
+			if (integers.Length < 1)
 				return 0;
 
-			return Mathf.RoundToInt((float)ints.Average());
+			return (int)math.round((float)integers.Average());
 		}
 		public static int Square(int number)
 		{
@@ -2221,25 +3263,115 @@ namespace Utilities
 
 			return min;
 		}
+		public static float Max(float a, float b, float c)
+		{
+			return math.max(a, math.max(b, c));
+		}
+		public static float Min(float a, float b, float c)
+		{
+			return math.min(a, math.min(b, c));
+		}
+		public static float Max(float a, float b, float c, float d)
+		{
+			return math.max(math.max(a, b), math.max(c, d));
+		}
+		public static float Min(float a, float b, float c, float d)
+		{
+			return math.min(math.min(a, b), math.min(c, d));
+		}
+		public static float Max(params float[] numbers)
+		{
+			if (numbers.Length < 1)
+				return default;
+
+			float max = numbers[0];
+
+			for (int i = 1; i < numbers.Length; i++)
+				if (numbers[i] > max)
+					max = numbers[i];
+
+			return max;
+		}
+		public static float Min(params float[] numbers)
+		{
+			if (numbers.Length < 1)
+				return default;
+
+			float min = numbers[0];
+
+			for (int i = 1; i < numbers.Length; i++)
+				if (min > numbers[i])
+					min = numbers[i];
+
+			return min;
+		}
 		public static float ClampInfinity(float number, float min = 0f)
 		{
-			return min >= 0f ? Mathf.Max(number, min) : Mathf.Min(number, min);
+			return min >= 0f ? math.max(number, min) : math.min(number, min);
 		}
 		public static int ClampInfinity(int number, int min = 0)
 		{
-			return min >= 0 ? Mathf.Max(number, min) : Mathf.Min(number, min);
+			return min >= 0 ? math.max(number, min) : math.min(number, min);
+		}
+		public static float ClampInfinityAbs(float number, float min = 0f)
+		{
+			return math.max(math.abs(number), min);
+		}
+		public static int ClampInfinityAbs(int number, int min = 0)
+		{
+			return math.max(math.abs(number), min);
 		}
 		public static Vector3 ClampInfinity(Vector3 vector, float min = 0f)
 		{
-			return min >= 0f ? new Vector3(Mathf.Max(vector.x, min), Mathf.Max(vector.y, min), Mathf.Max(vector.z, min)) : new Vector3(Mathf.Min(vector.x, min), Mathf.Min(vector.y, min), Mathf.Min(vector.z, min));
+			return min >= 0f ? new Vector3(math.max(vector.x, min), math.max(vector.y, min), math.max(vector.z, min)) : new Vector3(math.min(vector.x, min), math.min(vector.y, min), math.min(vector.z, min));
 		}
 		public static Vector3 ClampInfinity(Vector3 vector, Vector3 min)
 		{
-			return Utility.Average(min.x, min.y, min.z) >= 0f ? new Vector3(Mathf.Max(vector.x, min.x), Mathf.Max(vector.y, min.y), Mathf.Max(vector.z, min.z)) : new Vector3(Mathf.Min(vector.x, min.x), Mathf.Min(vector.y, min.y), Mathf.Min(vector.z, min.z));
+			return Average(min.x, min.y, min.z) >= 0f ? new Vector3(math.max(vector.x, min.x), math.max(vector.y, min.y), math.max(vector.z, min.z)) : new Vector3(math.min(vector.x, min.x), math.min(vector.y, min.y), math.min(vector.z, min.z));
+		}
+		public static Vector2 ClampInfinity(Vector2 vector, float min = 0f)
+		{
+			return min >= 0f ? new Vector2(math.max(vector.x, min), math.max(vector.y, min)) : new Vector2(math.min(vector.x, min), math.min(vector.y, min));
+		}
+		public static Vector2 ClampInfinity(Vector2 vector, Vector2 min)
+		{
+			return Average(min.x, min.y) >= 0f ? new Vector2(math.max(vector.x, min.x), math.max(vector.y, min.y)) : new Vector2(math.min(vector.x, min.x), math.min(vector.y, min.y));
+		}
+		public static float3 ClampInfinity(float3 vector, float min = 0f)
+		{
+			return min >= 0f ? new float3(math.max(vector.x, min), math.max(vector.y, min), math.max(vector.z, min)) : new float3(math.min(vector.x, min), math.min(vector.y, min), math.min(vector.z, min));
+		}
+		public static float3 ClampInfinity(float3 vector, float3 min)
+		{
+			return Average(min.x, min.y, min.z) >= 0f ? new float3(math.max(vector.x, min.x), math.max(vector.y, min.y), math.max(vector.z, min.z)) : new float3(math.min(vector.x, min.x), math.min(vector.y, min.y), math.min(vector.z, min.z));
+		}
+		public static float2 ClampInfinity(float2 vector, float min = 0f)
+		{
+			return min >= 0f ? new float2(math.max(vector.x, min), math.max(vector.y, min)) : new float2(math.min(vector.x, min), math.min(vector.y, min));
+		}
+		public static float2 ClampInfinity(float2 vector, float2 min)
+		{
+			return Average(min.x, min.y) >= 0f ? new float2(math.max(vector.x, min.x), math.max(vector.y, min.y)) : new float2(math.min(vector.x, min.x), math.min(vector.y, min.y));
+		}
+		public static float Clamp01(float number)
+		{
+			return math.clamp(number, 0f, 1f);
 		}
 		public static bool Approximately(Vector3 vector1, Vector3 vector2)
 		{
 			return Mathf.Approximately(vector1.x, vector2.x) && Mathf.Approximately(vector1.y, vector2.y) && Mathf.Approximately(vector1.z, vector2.z);
+		}
+		public static bool Approximately(float3 vector1, float3 vector2)
+		{
+			return Mathf.Approximately(vector1.x, vector2.x) && Mathf.Approximately(vector1.y, vector2.y) && Mathf.Approximately(vector1.z, vector2.z);
+		}
+		public static bool Approximately(Vector2 vector1, Vector2 vector2)
+		{
+			return Mathf.Approximately(vector1.x, vector2.x) && Mathf.Approximately(vector1.y, vector2.y);
+		}
+		public static bool Approximately(float2 vector1, float2 vector2)
+		{
+			return Mathf.Approximately(vector1.x, vector2.x) && Mathf.Approximately(vector1.y, vector2.y);
 		}
 		public static long GetTimestamp(DateTime dateTime)
 		{
@@ -2278,36 +3410,7 @@ namespace Utilities
 			rigid.AddForceAtPosition(.5f * torque.z * Vector3.right, point + Vector3.up, mode);
 			rigid.AddForceAtPosition(.5f * torque.z * Vector3.left, point + Vector3.down, mode);
 		}
-		public static string ParsePath(params string[] path)
-		{
-			string newPath = string.Join(Path.AltDirectorySeparatorChar.ToString(), path);
-
-			while (newPath.IndexOf(Path.AltDirectorySeparatorChar) > -1)
-				newPath = newPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-
-			string[] pathArray = newPath.Split(Path.DirectorySeparatorChar).Where(s => !string.IsNullOrEmpty(s) && !string.IsNullOrWhiteSpace(s)).ToArray();
-
-			var index = Array.IndexOf(pathArray, '.');
-
-			while (index > -1)
-			{
-				pathArray = new ArraySegment<string>(pathArray, index, 1).Array;
-
-				index = Array.IndexOf(pathArray, '.');
-			}
-
-			index = Array.IndexOf(pathArray, "..");
-
-			while (index > -1)
-			{
-				pathArray = new ArraySegment<string>(pathArray, index > 0 ? index - 1 : index, index > 0 ? 2 : 1).Array;
-
-				index = Array.IndexOf(pathArray, "..");
-			}
-
-			return string.Join(Path.DirectorySeparatorChar.ToString(), pathArray);
-		}
-		public static bool IsDriectoryEmpty(string path)
+		public static bool IsDirectoryEmpty(string path)
 		{
 			IEnumerable<string> items = Directory.EnumerateFileSystemEntries(path);
 
@@ -2349,7 +3452,7 @@ namespace Utilities
 		}
 		public static string[] GetEventListeners(UnityEvent unityEvent)
 		{
-			List<string> result = new List<string>();
+			List<string> result = new();
 
 			for (int i = 0; i < unityEvent.GetPersistentEventCount(); i++)
 				result.Add(unityEvent.GetPersistentMethodName(i));
@@ -2361,26 +3464,26 @@ namespace Utilities
 			Type type = typeof(T);
 			T target = destination.AddComponent<T>();
 			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
-			PropertyInfo[] pinfos = type.GetProperties(flags);
+			PropertyInfo[] propertyInfos = type.GetProperties(flags);
 
-			foreach (var pinfo in pinfos)
-				if (pinfo.CanWrite)
+			foreach (var propertyInfo in propertyInfos)
+				if (propertyInfo.CanWrite)
 					try
 					{
-						pinfo.SetValue(target, pinfo.GetValue(original, null), null);
+						propertyInfo.SetValue(target, propertyInfo.GetValue(original, null), null);
 					}
 					catch { }
 
-			FieldInfo[] finfos = type.GetFields(flags);
+			FieldInfo[] fieldInfos = type.GetFields(flags);
 
-			foreach (var finfo in finfos)
+			foreach (var fieldInfo in fieldInfos)
 				try
 				{
-					finfo.SetValue(target, finfo.GetValue(original));
+					fieldInfo.SetValue(target, fieldInfo.GetValue(original));
 				}
 				catch { }
 
-			return target as T;
+			return target;
 		}
 		public static Texture2D GetTextureArrayItem(Texture2DArray array, int index)
 		{
@@ -2389,7 +3492,7 @@ namespace Utilities
 			if (!isReadable)
 				array.Apply(false, false);
 
-			Texture2D texture = new Texture2D(array.width, array.height, array.format, array.mipMapBias > 0f);
+			Texture2D texture = new(array.width, array.height, array.format, array.mipMapBias > 0f);
 
 			texture.SetPixels32(array.GetPixels32(index));
 			texture.Apply();
@@ -2426,27 +3529,13 @@ namespace Utilities
 			if (!texture)
 				return;
 
-			byte[] bytes;
-
-			switch (type)
+			byte[] bytes = type switch
 			{
-				case TextureEncodingType.EXR:
-					bytes = texture.EncodeToEXR();
-					break;
-
-				case TextureEncodingType.JPG:
-					bytes = texture.EncodeToJPG();
-					break;
-
-				case TextureEncodingType.TGA:
-					bytes = texture.EncodeToTGA();
-					break;
-
-				default:
-					bytes = texture.EncodeToPNG();
-					break;
-			}
-
+				TextureEncodingType.EXR => texture.EncodeToEXR(),
+				TextureEncodingType.JPG => texture.EncodeToJPG(),
+				TextureEncodingType.TGA => texture.EncodeToTGA(),
+				_ => texture.EncodeToPNG(),
+			};
 			string fileName = Path.GetFileNameWithoutExtension(path);
 
 			path = Path.GetDirectoryName(path);
@@ -2456,17 +3545,17 @@ namespace Utilities
 
 			File.WriteAllBytes($"{path}/{fileName}.{type.ToString().ToLower()}", bytes);
 		}
-		public static Texture2D TakeScreenshot(UnityEngine.Camera camera, Vector2Int size, int depth = 72)
+		public static Texture2D TakeScreenshot(Camera camera, Vector2Int size, int depth = 72)
 		{
-			RenderTexture renderTexture = new RenderTexture(size.x, size.y, depth);
+			RenderTexture renderTexture = new(size.x, size.y, depth);
 
 			camera.targetTexture = renderTexture;
 			RenderTexture.active = renderTexture;
 
-			Texture2D texture = new Texture2D(size.x, size.y, TextureFormat.RGB24, false);
+			Texture2D texture = new(size.x, size.y, TextureFormat.RGB24, false);
 
 			camera.Render();
-			texture.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0);
+			texture.ReadPixels(new(0, 0, size.x, size.y), 0, 0);
 
 			camera.targetTexture = null;
 			RenderTexture.active = null;
@@ -2513,7 +3602,7 @@ namespace Utilities
 		}
 		public static GameObject[] FindGameObjectsWithLayerMask(int layerMask, bool includeInactive = true)
 		{
-			List<GameObject> gameObjects = new List<GameObject>();
+			List<GameObject> gameObjects = new();
 			IEnumerable<GameObject> rootGameObjects = SceneManager.GetActiveScene().GetRootGameObjects();
 
 			foreach (GameObject rootGameObject in rootGameObjects)
@@ -2588,6 +3677,30 @@ namespace Utilities
 
 			return bounds;
 		}
+		public static Bounds GetUIBounds(RectTransform rectTransform, float scaleFactor)
+		{
+			Bounds bounds = default;
+
+			if (!rectTransform)
+				return bounds;
+
+			RectTransform[] rectTransforms = rectTransform.GetComponentsInChildren<RectTransform>();
+
+			if (rectTransforms.Length < 1)
+				return bounds;
+
+			for (int i = 0; i < rectTransforms.Length; i++)
+			{
+				Bounds newBounds = new(Divide(rectTransforms[i].position * scaleFactor, rectTransforms[i].lossyScale), new Vector3(rectTransforms[i].rect.width, rectTransforms[i].rect.height) * scaleFactor);
+
+				if (i == 0)
+					bounds = newBounds;
+				else
+					bounds.Encapsulate(newBounds);
+			}
+
+			return bounds;
+		}
 		public static bool CheckPointInCollider(Collider collider, Vector3 point)
 		{
 			return CheckPointInCollider(collider, point, out _);
@@ -2614,7 +3727,7 @@ namespace Utilities
 			UnityEngine.Object.DestroyImmediate(obj, allowDestroyingAssets);
 		}
 
-		private static bool IsDeviderUnit(Units unit)
+		private static bool IsDividerUnit(Units unit)
 		{
 			return unit == Units.FuelConsumption;
 		}

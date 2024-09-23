@@ -1,0 +1,19 @@
+{
+    "name": "Utilities.Test.Editor",
+    "rootNamespace": "Utilities.Test.Editor",
+    "references": [
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:c5ad65fbcffd5674eacfda0d379fd1f2",
+        "GUID:43c535e2f9d8f044fab2c778ceb8c382",
+        "GUID:4a19d5d63bd5a624a87cefbebad46b40"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

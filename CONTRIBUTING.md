@@ -8,13 +8,13 @@ We love your input! We want to make contributing to this project as easy and tra
 - Becoming a maintainer
 
 ## We develop with GitHub
-We use github to host code, to track issues and feature requests, as well as accept pull requests.
+We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
 
 ## Any contributions you make will be under the MIT Software License
 In short, when you submit code changes, your submissions are understood to be under the same MIT License that covers the project. Feel free to contact the maintainers if that's a concern.
 
-## Report bugs using Github's [issues](https://github.com/mediamax07/Inputs-Manager/issues)
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/mediamax07/Inputs-Manager/issues). It's that easy!
+## Report bugs using GitHub's [issues](https://github.com/BxB-Studio/Inputs-Manager/issues)
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/BxB-Studio/Inputs-Manager/issues). It's that easy!
 
 ## Write bug reports with detail, background, and sample code
 **Great Bug Reports** tend to have:

@@ -1,0 +1,22 @@
+{
+    "name": "InputsManager.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:c5ad65fbcffd5674eacfda0d379fd1f2",
+        "GUID:181c560409109a54da23fb20b47985c1",
+        "GUID:4a19d5d63bd5a624a87cefbebad46b40"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -34,6 +34,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 ## Dependencies
 - Input System: 1.7.0 or newer
 - Collections: 1.2.4 or newer
+- Utilities 1.1.0 or newer
 
 ## Release Notes
 - 1.1.0

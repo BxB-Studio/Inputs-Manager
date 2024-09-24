@@ -1,7 +1,6 @@
 ﻿#region Namespaces
 
 using UnityEngine;
-using Utilities.Inputs;
 
 #endregion
 
@@ -39,9 +38,7 @@ namespace Utilities.Inputs.Samples
 
 		private void Update()
 		{
-#if INPUTS_MANAGER
 			InputsManager.Update();
-#endif
 		}
 		private void FixedUpdate()
 		{
@@ -55,7 +52,6 @@ namespace Utilities.Inputs.Samples
 			if (grounded)
 			{
 				// Get inputs
-#if INPUTS_MANAGER
 				float vertical = InputsManager.InputValue("Vertical");
 				float horizontal = InputsManager.InputValue("Horizontal");
 				float jump;
@@ -64,16 +60,6 @@ namespace Utilities.Inputs.Samples
 					jump = 1f;
 				else
 					jump = 0f;
-#else
-				float vertical = Input.GetAxis("Vertical");
-				float horizontal = Input.GetAxis("Horizontal");
-				float jump;
-
-				if (Input.GetButtonDown("Jump"))
-					jump = 1f;
-				else
-					jump = 0f;
-#endif
 
 				// Calculate ball force and velocity
 				Vector3 force = Vector3.zero;

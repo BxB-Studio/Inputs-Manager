@@ -1,7 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-This packages includes some additional [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities).
+**IMPORTANT: Make sure to add the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) to your Unity project for the Inputs Manager to work.**
 
 **Version:** 1.1.0
 

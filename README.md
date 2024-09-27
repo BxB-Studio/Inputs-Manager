@@ -4,15 +4,14 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 **Version:** 1.1.2
 
 ## Features
-- High performant code (Using C# Jobs System)
+- High-performant code (Using C# Jobs System & Burst)
 - Joysticks/Gamepad compatibility
 - Runtime double press and hold binding
 - Bind keys within the Unity Editor
 - Edit inputs at runtime
-- High performant code
-- Easy inputs setup
+- Easy input setup
 - Save and import presets
-- Editor ready JSON presets
+- Editor-ready JSON presets
 - Fully customizable API
 - Dynamic editor window
 - Secured data saving
@@ -26,7 +25,7 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 **Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**.<br/>
 Use the Automatic install method to avoid importing errors.<br/>
 This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
-Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
+Please do not change the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## How to Install
 There are multiple methods to install the Inputs Manager in your Unity project.<br/>
@@ -67,7 +66,7 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 	- Fixed backward compatibility for Unity 2020.3
 - 1.1.1
 	- Added default gamepad override
-	- Optimized inputs calculation
+	- Optimized input calculation
 	- Fixed input constructor
 - 1.1.0
 	- Added C# Jobs System integration
@@ -75,7 +74,7 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - 1.0.3
 	- Added a default Inputs Manager data asset file
 	- Some minor API syntax improvements
-	- A small code refresh
+	- A small code Refresh
 - 1.0.2
 	- Easier input edit through scripting
 	- Added scripting custom data loading
@@ -88,7 +87,7 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 	- Added joystick/gamepad support
 	- Optimized code
 	- Optimized performance
-	- Fixed bunch of bugs
+	- Fixed a bunch of bugs
 	- Ability to bind joystick/gamepad inputs
 - 0.4-beta
 	- Fixed some performance issues
@@ -96,7 +95,7 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - 0.3-beta
 	- Verified the Inputs Manager code
 	- Added the ability to check for inputs double press
-	- Optimized the code by adding some updating improvements and removed some unnecessary lines
+	- Optimized the code by adding some updating improvements and removing some unnecessary lines
 	- Updated the Utilities library
 	- Fixed some major bugs
 - 0.2-beta
@@ -117,7 +116,7 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 	- Fixed some compatibility issues
 - 0.1-preview (First Commit)
 	- Add, remove, duplicate inputs
-	- Bind keys in editor
+	- Bind keys in the editor
 	- JSON preset importer
 
 ## Contributing

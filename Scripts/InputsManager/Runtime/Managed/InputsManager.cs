@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -26,6 +25,7 @@ namespace Utilities.Inputs
 	public enum InputType { Axis, Button }
 	public enum InputAxisType { Main, Alt }
 	public enum InputAxisSide { Positive, Negative }
+	public enum InputAxisStrongSide { None, Positive, Negative, FirstPressing }
 	public enum InputInterpolation { Instant = 2, Jump = 1, Smooth = 0 }
 	public enum InputSource { Keyboard, Gamepad }
 	public enum MouseButton { Left, Right, Middle, Back, Forward }
@@ -68,6 +68,13 @@ namespace Utilities.Inputs
 
 		public static readonly string DataAssetPath = $"Assets{Path.DirectorySeparatorChar}InputsManager_Data";
 		public static string DataAssetFullPath => Path.Combine(Application.dataPath, "Resources", $"{DataAssetPath}.bytes").Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+		public static InputSource LastDefaultInputSource
+		{
+			get
+			{
+				return lastDefaultInputSource;
+			}
+		}
 		public static InputSource InputSourcePriority
 		{
 			get
@@ -182,6 +189,32 @@ namespace Utilities.Inputs
 				SaveData();
 			}
 		}
+		public static byte DefaultGamepadIndexFallback
+		{
+			get
+			{
+				return defaultGamepadIndex < gamepadsCount ? defaultGamepadIndex : default;
+			}
+		}
+		public static byte DefaultGamepadIndex
+		{
+			get
+			{
+				if (!Application.isPlaying && defaultGamepadIndex == byte.MaxValue)
+					LoadData();
+
+				return defaultGamepadIndex;
+			}
+			set
+			{
+				if (Application.isPlaying || defaultGamepadIndex == value)
+					return;
+
+				defaultGamepadIndex = value;
+
+				SaveData();
+			}
+		}
 		public static bool DataLoaded
 		{
 			get
@@ -247,7 +280,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (gamepads == null || gamepads.Length != GamepadsCount)
+				if (gamepads == null || gamepads.Length != gamepadsCount)
 					gamepads = Gamepad.all.ToArray();
 
 				return gamepads;
@@ -257,7 +290,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (gamepadNames == null || gamepadNames.Length != GamepadsCount)
+				if (gamepadNames == null || gamepadNames.Length != gamepadsCount)
 					gamepadNames = Gamepad.all.Select(gamepad => gamepad.name).ToArray();
 
 				return gamepadNames;
@@ -267,7 +300,12 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return Gamepad.all.Count;
+#if UNITY_EDITOR
+				if (!Application.isPlaying)
+					gamepadsCount = Gamepad.all.Count;
+
+#endif
+				return gamepadsCount;
 			}
 		}
 		public static UnityEngine.InputSystem.EnhancedTouch.Touch[] Touches
@@ -301,6 +339,15 @@ namespace Utilities.Inputs
 			}
 		}
 
+		private static InputSource lastDefaultInputSource;
+		private static InputSource inputSourcePriority;
+		private static float interpolationTime = .25f;
+		private static float holdTriggerTime = .3f;
+		private static float holdWaitTime = .1f;
+		private static float doublePressTimeout = .2f;
+		private static float gamepadThreshold = .5f;
+		private static byte defaultGamepadIndex = byte.MaxValue;
+
 		private static NativeArray<InputSourceAccess>[] inputsGamepadAccess;
 		private static NativeArray<InputSourceAccess> inputsKeyboardAccess;
 		private static NativeArray<InputAccess> inputsAccess;
@@ -312,12 +359,6 @@ namespace Utilities.Inputs
 		private static Keyboard keyboard;
 		private static Mouse mouse;
 		private static DateTime dataLastWriteTime;
-		private static InputSource inputSourcePriority;
-		private static float interpolationTime = .25f;
-		private static float holdTriggerTime = .3f;
-		private static float holdWaitTime = .1f;
-		private static float doublePressTimeout = .2f;
-		private static float gamepadThreshold = .5f;
 		private static float mouseLeftHoldTimer;
 		private static float mouseMiddleHoldTimer;
 		private static float mouseRightHoldTimer;
@@ -346,7 +387,9 @@ namespace Utilities.Inputs
 		private static bool mousePressed;
 		private static bool dataChanged;
 		private static bool dataLoadedOnBuild;
+		private static int newGamepadsCount;
 		private static int gamepadsCount;
+		private static int t_gamepadsCount;
 
 		#endregion
 
@@ -1169,19 +1212,19 @@ namespace Utilities.Inputs
 
 		#region Gamepad Outputs
 
-		public static void GamepadVibration(float lowFrequency, float highFrequency, Gamepad gamepad)
+		public static void GamepadVibration(float leftMotorIntensity, float rightMotorIntensity, Gamepad gamepad)
 		{
 			if (gamepad == null)
 				return;
 
-			gamepad.SetMotorSpeeds(lowFrequency, highFrequency);
+			gamepad.SetMotorSpeeds(leftMotorIntensity, rightMotorIntensity);
 		}
-		public static void GamepadVibration(float lowFrequency, float highFrequency, int gamepadIndex = 0)
+		public static void GamepadVibration(float leftMotorIntensity, float rightMotorIntensity, int gamepadIndex = 0)
 		{
-			if (gamepadIndex < 0 || gamepadIndex >= GamepadsCount)
+			if (gamepadIndex < 0 || gamepadIndex >= gamepadsCount)
 				return;
 
-			GamepadVibration(lowFrequency, highFrequency, gamepads[gamepadIndex]);
+			GamepadVibration(leftMotorIntensity, rightMotorIntensity, gamepads[gamepadIndex]);
 		}
 
 		#endregion
@@ -1192,6 +1235,9 @@ namespace Utilities.Inputs
 		{
 			if (!Application.isPlaying)
 				throw new Exception("The `Start` method can only be called during Play mode.");
+
+			newGamepadsCount = gamepadsCount = Gamepad.all.Count;
+			lastDefaultInputSource = gamepadsCount > 0 ? inputSourcePriority : InputSource.Keyboard;
 
 			LoadData();
 
@@ -1214,7 +1260,7 @@ namespace Utilities.Inputs
 				inputsGamepadAccess = new NativeArray<InputSourceAccess>[inputs.Length];
 
 				for (int i = 0; i < inputs.Length; i++)
-					inputsGamepadAccess[i] = new(GamepadsCount, Allocator.Persistent);
+					inputsGamepadAccess[i] = new(gamepadsCount, Allocator.Persistent);
 			}
 
 			for (int i = 0; i < inputs.Length; i++)
@@ -1222,7 +1268,7 @@ namespace Utilities.Inputs
 				inputsAccess[i] = new(inputs[i]);
 				inputsKeyboardAccess[i] = new(inputs[i], InputSource.Keyboard);
 
-				for (int j = 0; j < GamepadsCount; j++)
+				for (int j = 0; j < gamepadsCount; j++)
 					inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
 			}
 		}
@@ -1231,15 +1277,23 @@ namespace Utilities.Inputs
 			if (!Application.isPlaying)
 				throw new Exception("The `Update` method can only be called during Play mode.");
 
+			newGamepadsCount = Gamepad.all.Count;
+
+			if (gamepadsCount != newGamepadsCount)
+			{
+				lastDefaultInputSource = newGamepadsCount > 0 ? inputSourcePriority : InputSource.Keyboard;
+				gamepadsCount = newGamepadsCount;
+			}
+
 			if (Mouse != null)
 				UpdateMouse();
 
 			if (inputs == null || inputs.Length < 1 || Keyboard == null && Gamepads.Length < 1)
 				return;
 
-			if (GamepadsCount > 0)
-				if (Gamepad.current != gamepads[0])
-					gamepads[0].MakeCurrent();
+			if (gamepadsCount > 0)
+				if (Gamepad.current != gamepads[DefaultGamepadIndexFallback])
+					gamepads[DefaultGamepadIndexFallback].MakeCurrent();
 
 			for (int i = 0; i < inputs.Length; i++)
 			{
@@ -1248,30 +1302,30 @@ namespace Utilities.Inputs
 					inputsAccess[i] = new(inputs[i]);
 					inputsKeyboardAccess[i] = new(inputs[i], InputSource.Keyboard);
 
-					for (int j = 0; j < GamepadsCount; j++)
+					for (int j = 0; j < gamepadsCount; j++)
 						inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
 				}
-				else if (GamepadsCount != gamepadsCount)
+				else if (gamepadsCount != t_gamepadsCount)
 				{
 					if (inputsGamepadAccess[i].IsCreated)
 						inputsGamepadAccess[i].Dispose();
 
-					inputsGamepadAccess[i] = new(GamepadsCount, Allocator.Persistent);
+					inputsGamepadAccess[i] = new(gamepadsCount, Allocator.Persistent);
 
-					for (int j = 0; j < GamepadsCount; j++)
+					for (int j = 0; j < gamepadsCount; j++)
 						inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
 				}
 
 				inputsKeyboardAccess[i] = inputsKeyboardAccess[i].UpdateControls(inputs[i]);
 
-				for (int j = 0; j < GamepadsCount; j++)
+				for (int j = 0; j < gamepadsCount; j++)
 					inputsGamepadAccess[i][j] = inputsGamepadAccess[i][j].UpdateControls(inputs[i], j);
 			}
 
-			gamepadsCount = GamepadsCount;
+			t_gamepadsCount = gamepadsCount;
 			dataChanged = false;
 
-			NativeList<JobHandle> jobHandles = new(inputs.Length + 1, Allocator.Temp);
+			NativeList<JobHandle> jobHandles = new(inputs.Length + 2, Allocator.Temp);
 			InputKeyboardJob inputKeyboardJob = new()
 			{
 				sourceAccess = inputsKeyboardAccess,
@@ -1285,7 +1339,7 @@ namespace Utilities.Inputs
 
 			jobHandles.Add(inputKeyboardJob.ScheduleParallel(inputs.Length, 1, default));
 
-			if (GamepadsCount > 0)
+			if (gamepadsCount > 0)
 				for (int i = 0; i < inputs.Length; i++)
 				{
 					InputGamepadJob inputGamepadJob = new()
@@ -1299,11 +1353,24 @@ namespace Utilities.Inputs
 						deltaTime = Utility.DeltaTime
 					};
 
-					jobHandles.Add(inputGamepadJob.ScheduleParallel(GamepadsCount, 1, default));
+					jobHandles.Add(inputGamepadJob.ScheduleParallel(gamepadsCount, 1, default));
 				}
 
 			JobHandle.CompleteAll(jobHandles);
 			jobHandles.Dispose();
+
+			if (gamepadsCount > 0)
+				for (int i = 0; i < inputs.Length; i++)
+				{
+					bool gamepadUsed = DefaultGamepadIndexFallback < inputsGamepadAccess[i].Length && inputsGamepadAccess[i][DefaultGamepadIndexFallback].mainValue != 0f;
+					bool gamepadPrioritized = inputSourcePriority == InputSource.Gamepad;
+					bool keyboardUsed = inputsKeyboardAccess[i].mainValue != 0f;
+
+					if ((gamepadPrioritized || !keyboardUsed) && gamepadUsed)
+						lastDefaultInputSource = InputSource.Gamepad;
+					else if (keyboardUsed)
+						lastDefaultInputSource = InputSource.Keyboard;
+				}
 		}
 		public static void Dispose()
 		{
@@ -1469,7 +1536,7 @@ namespace Utilities.Inputs
 			List<Input> inputs = new();
 
 			for (int i = 0; i < Count; i++)
-				if (Inputs[i].Main.Positive == key || Inputs[i].Main.Negative == key || Inputs[i].Alt.Positive == key || Inputs[i].Alt.Negative == key)
+				if (InputsManager.inputs[i].Main.Positive == key || InputsManager.inputs[i].Main.Negative == key || InputsManager.inputs[i].Alt.Positive == key || InputsManager.inputs[i].Alt.Negative == key)
 					inputs.Add(Inputs[i]);
 
 			return inputs.ToArray();
@@ -1482,7 +1549,7 @@ namespace Utilities.Inputs
 			List<Input> inputs = new();
 
 			for (int i = 0; i < Count; i++)
-				if (Inputs[i].Main.GamepadPositive == binding || Inputs[i].Main.GamepadNegative == binding || Inputs[i].Alt.GamepadPositive == binding || Inputs[i].Alt.GamepadNegative == binding)
+				if (InputsManager.inputs[i].Main.GamepadPositive == binding || InputsManager.inputs[i].Main.GamepadNegative == binding || InputsManager.inputs[i].Alt.GamepadPositive == binding || InputsManager.inputs[i].Alt.GamepadNegative == binding)
 					inputs.Add(Inputs[i]);
 
 			return inputs.ToArray();
@@ -1615,17 +1682,17 @@ namespace Utilities.Inputs
 		}
 		public static string[] GetInputsNames()
 		{
-			if (dataChanged || inputNames == null || inputNames.Length != Inputs.Length)
+			if (dataChanged || inputNames == null || inputNames.Length != Count)
 			{
-				if (inputNames == null || inputNames.Length != Inputs.Length)
-					inputNames = new string[Inputs.Length];
+				if (inputNames == null || inputNames.Length != inputs.Length)
+					inputNames = new string[inputs.Length];
 
-				for (int i = 0; i < Inputs.Length; i++)
+				for (int i = 0; i < inputs.Length; i++)
 				{
-					if (Inputs[i].Name.IsNullOrEmpty())
+					if (inputs[i].Name.IsNullOrEmpty())
 						continue;
 						
-					inputNames[i] = Inputs[i].Name;
+					inputNames[i] = inputs[i].Name;
 				}
 			}
 
@@ -1633,19 +1700,19 @@ namespace Utilities.Inputs
 		}
 		public static Dictionary<string, int> GetInputsNamesAndIndexesAsDictionary()
 		{
-			if (dataChanged || inputNamesDictionary == null || inputNamesDictionary.Count != Inputs.Length)
+			if (dataChanged || inputNamesDictionary == null || inputNamesDictionary.Count != Count)
 			{
-				if (inputNamesDictionary == null || inputNamesDictionary.Count != Inputs.Length)
+				if (inputNamesDictionary == null || inputNamesDictionary.Count != inputs.Length)
 					inputNamesDictionary = new();
 				else
 					inputNamesDictionary.Clear();
 
-				for (int i = 0; i < Inputs.Length; i++)
+				for (int i = 0; i < inputs.Length; i++)
 				{
-					if (Inputs[i].Name.IsNullOrEmpty())
+					if (inputs[i].Name.IsNullOrEmpty())
 						continue;
 
-					inputNamesDictionary.Add(Inputs[i].Name, i);
+					inputNamesDictionary.Add(inputs[i].Name, i);
 				}
 			}
 
@@ -1707,10 +1774,10 @@ namespace Utilities.Inputs
 			if (IndexOf(input.Name) > -1)
 				throw new ArgumentException($"We couldn't add the input `{input.Name}` to the list because its name matches another one", "input");
 
-			Array.Resize(ref inputs, Inputs.Length + 1);
+			Array.Resize(ref inputs, inputs.Length + 1);
 			Array.Resize(ref inputNames, inputNames.Length + 1);
 
-			Inputs[^1] = input;
+			inputs[^1] = input;
 			dataChanged = true;
 
 			return input;
@@ -1732,13 +1799,13 @@ namespace Utilities.Inputs
 			}
 
 			Input newInput = new(input);
-			int index = Inputs.Length;
+			int index = Count;
 			int newLength = index + 1;
 
 			Array.Resize(ref inputs, newLength);
 			Array.Resize(ref inputNames, newLength);
 
-			Inputs[index] = newInput;
+			inputs[index] = newInput;
 			dataChanged = true;
 
 			return newInput;
@@ -1833,6 +1900,7 @@ namespace Utilities.Inputs
 			holdWaitTime = data.HoldWaitTime;
 			doublePressTimeout = data.DoublePressTimeout;
 			gamepadThreshold = data.GamepadThreshold;
+			defaultGamepadIndex = data.DefaultGamepadIndex;
 			dataLastWriteTime = Application.isEditor ? File.GetLastWriteTime(DataAssetFullPath) : DateTime.Now;
 			dataChanged = !Application.isPlaying;
 			dataLoadedOnBuild = !Application.isEditor;

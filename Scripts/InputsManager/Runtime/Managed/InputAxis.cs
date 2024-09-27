@@ -13,13 +13,14 @@ namespace Utilities.Inputs
 	{
 		#region Enumerators
 
+		[Obsolete("Use `InputAxisStrongSide` instead.", true)]
 		public enum Side { None, Positive, Negative, FirstPressing }
 
 		#endregion
 
 		#region Variables
 
-		public Side StrongSide
+		public InputAxisStrongSide StrongSide
 		{
 			get
 			{
@@ -55,7 +56,7 @@ namespace Utilities.Inputs
 				InputsManager.DataChanged = true;
 			}
 		}
-		public Side GamepadStrongSide
+		public InputAxisStrongSide GamepadStrongSide
 		{
 			get
 			{
@@ -93,13 +94,13 @@ namespace Utilities.Inputs
 		}
 
 		[SerializeField]
-		private Side strongSide;
+		private InputAxisStrongSide strongSide;
 		[SerializeField]
 		private Key positive;
 		[SerializeField]
 		private Key negative;
 		[SerializeField]
-		private Side gamepadStrongSide;
+		private InputAxisStrongSide gamepadStrongSide;
 		[SerializeField]
 		private GamepadBinding gamepadPositive;
 		[SerializeField]
@@ -113,10 +114,10 @@ namespace Utilities.Inputs
 
 		public InputAxis()
 		{
-			strongSide = Side.None;
+			strongSide = InputAxisStrongSide.None;
 			positive = Key.None;
 			negative = Key.None;
-			gamepadStrongSide = Side.None;
+			gamepadStrongSide = InputAxisStrongSide.None;
 			gamepadPositive = GamepadBinding.None;
 			gamepadNegative = GamepadBinding.None;
 		}

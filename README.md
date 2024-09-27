@@ -1,9 +1,9 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-**IMPORTANT: Make sure to add the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) to your Unity project for the Inputs Manager to work.**
+This packages includes some additional [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities).
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 
 ## Start-up Tutorial
 The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
@@ -29,14 +29,17 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Wide range of settings
 
 ## Compatibility
-- Unity 2021.3 or newer<br/>
+- Unity 2020.3.17f1 or newer<br/>
 
 ## Dependencies
-- Input System: 1.7.0 or newer
 - Collections: 1.2.4 or newer
-- Utilities 1.1.0 or newer
+- Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.1
+	- Added default gamepad override
+	- Optimized inputs calculation
+	- Fixed input constructor
 - 1.1.0
 	- Added C# Jobs System integration
 	- Updated Utilities library

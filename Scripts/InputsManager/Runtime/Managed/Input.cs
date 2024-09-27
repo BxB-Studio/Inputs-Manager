@@ -287,46 +287,46 @@ namespace Utilities.Inputs
 			if (!Alt)
 				alt = new();
 
-			if (Main.Positive == Key.None && Alt.Positive != Key.None)
+			if (main.Positive == Key.None && alt.Positive != Key.None)
 			{
-				Main.Positive = Alt.Positive;
-				Alt.Positive = Key.None;
+				main.Positive = alt.Positive;
+				alt.Positive = Key.None;
 			}
 
-			if (Main.GamepadPositive == GamepadBinding.None && Alt.GamepadPositive != GamepadBinding.None)
+			if (main.GamepadPositive == GamepadBinding.None && alt.GamepadPositive != GamepadBinding.None)
 			{
-				Main.GamepadPositive = Alt.GamepadPositive;
-				Alt.GamepadPositive = GamepadBinding.None;
+				main.GamepadPositive = alt.GamepadPositive;
+				alt.GamepadPositive = GamepadBinding.None;
 			}
 
-			if (Main.Negative == Key.None && Alt.Negative != Key.None)
+			if (main.Negative == Key.None && alt.Negative != Key.None)
 			{
-				Main.Negative = Alt.Negative;
-				Alt.Negative = Key.None;
+				main.Negative = alt.Negative;
+				alt.Negative = Key.None;
 			}
 
-			if (Main.GamepadNegative == GamepadBinding.None && Alt.GamepadNegative != GamepadBinding.None)
+			if (main.GamepadNegative == GamepadBinding.None && alt.GamepadNegative != GamepadBinding.None)
 			{
-				Main.GamepadNegative = Alt.GamepadNegative;
-				Alt.GamepadNegative = GamepadBinding.None;
+				main.GamepadNegative = alt.GamepadNegative;
+				alt.GamepadNegative = GamepadBinding.None;
 			}
 
-			if (Type == InputType.Button)
+			if (type == InputType.Button)
 			{
 				if (valueInterval.x != 0f)
 					valueInterval.x = 0f;
 
-				if (Main.Negative != Key.None)
-					Main.Negative = Key.None;
+				if (main.Negative != Key.None)
+					main.Negative = Key.None;
 
-				if (Main.GamepadNegative != GamepadBinding.None)
-					Main.GamepadNegative = GamepadBinding.None;
+				if (main.GamepadNegative != GamepadBinding.None)
+					main.GamepadNegative = GamepadBinding.None;
 
-				if (Alt.Negative != Key.None)
-					Alt.Negative = Key.None;
+				if (alt.Negative != Key.None)
+					alt.Negative = Key.None;
 
-				if (Alt.GamepadNegative != GamepadBinding.None)
-					Alt.GamepadNegative = GamepadBinding.None;
+				if (alt.GamepadNegative != GamepadBinding.None)
+					alt.GamepadNegative = GamepadBinding.None;
 			}
 
 			if (Application.isPlaying)
@@ -375,6 +375,7 @@ namespace Utilities.Inputs
 			valueInterval = input.valueInterval;
 			main = new(input.main);
 			alt = new(input.alt);
+			invert = input.invert;
 
 			Trim();
 		}

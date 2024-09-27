@@ -441,14 +441,14 @@ namespace Utilities.Inputs.Editor
 				else
 					enumDisabled = axis.Positive == Key.None || axis.Negative == Key.None;
 
-				InputAxis.Side newStrongSide = isGamepadEditor ? axis.GamepadStrongSide : axis.StrongSide;
+				InputAxisStrongSide newStrongSide = isGamepadEditor ? axis.GamepadStrongSide : axis.StrongSide;
 
 				if (enumDisabled)
-					newStrongSide = InputAxis.Side.None;
+					newStrongSide = InputAxisStrongSide.None;
 
 				EditorGUI.BeginDisabledGroup(enumDisabled);
 
-				newStrongSide = (InputAxis.Side)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), newStrongSide);
+				newStrongSide = (InputAxisStrongSide)EditorGUILayout.EnumPopup(new GUIContent("Strong Side", "The Strong Side indicates which pressed side wins at runtime"), newStrongSide);
 
 				if (!isGamepadEditor && axis.StrongSide != newStrongSide)
 					axis.StrongSide = newStrongSide;
@@ -1202,6 +1202,16 @@ namespace Utilities.Inputs.Editor
 				if (InputsManager.InputSourcePriority != newInputSourcePriority)
 					InputsManager.InputSourcePriority = newInputSourcePriority;
 
+				byte newDefaultGamepadIndex = (byte)EditorGUILayout.IntField(new GUIContent("Default Gamepad Index", "The index of the default gamepad used by the player that acts as a keyboard alternative"), InputsManager.DefaultGamepadIndex);
+
+				if (InputsManager.DefaultGamepadIndex != newDefaultGamepadIndex)
+					InputsManager.DefaultGamepadIndex = newDefaultGamepadIndex;
+
+				if (newDefaultGamepadIndex >= InputsManager.GamepadsCount)
+					EditorGUILayout.HelpBox("The current gamepad index doesn't refer to any existing connected device. This won't cause any errors, but the value will fallback to 0 at runtime when no device is found.", MessageType.Info);
+				else
+					EditorGUILayout.HelpBox($"Default Gamepad: {InputsManager.GamepadNames[newDefaultGamepadIndex]}", MessageType.None);
+
 				EditorGUI.indentLevel--;
 
 				EditorGUILayout.Space();
@@ -1398,10 +1408,14 @@ namespace Utilities.Inputs.Editor
 				EditorGUILayout.EndHorizontal();
 			}
 
-			EditorGUILayout.Space();
-
 			if (EditorApplication.isPlaying)
+			{
+				EditorGUILayout.HelpBox($"Current Input Source: {InputsManager.LastDefaultInputSource}", MessageType.None);
 				EditorGUILayout.HelpBox("You can't change or modify some settings in play mode. Keep in mind that any changes on the Inputs Manager editor won't be saved unless using a custom script to override this behaviour!", MessageType.Info);
+				Repaint();
+			}
+
+			EditorGUILayout.Space();
 
 			if (InputsManager.Count > 0)
 				for (int i = 0; i < InputsManager.Count; i++)

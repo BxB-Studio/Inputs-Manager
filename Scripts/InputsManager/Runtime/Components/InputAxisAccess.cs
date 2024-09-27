@@ -11,10 +11,10 @@ namespace Utilities.Inputs.Components
 	{
 		#region Variables
 
-		public InputAxis.Side strongSide;
+		public InputAxisStrongSide strongSide;
 		public Key positive;
 		public Key negative;
-		public InputAxis.Side gamepadStrongSide;
+		public InputAxisStrongSide gamepadStrongSide;
 		public GamepadBinding gamepadPositive;
 		public GamepadBinding gamepadNegative;
 

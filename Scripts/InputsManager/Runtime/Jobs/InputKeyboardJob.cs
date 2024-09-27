@@ -60,7 +60,7 @@ namespace Utilities.Inputs.Jobs
 
 			switch (input.main.strongSide)
 			{
-				case InputAxis.Side.FirstPressing:
+				case InputAxisStrongSide.FirstPressing:
 					if (inputSource.mainValue > 0f)
 						positiveCoefficient = 2f;
 					else if (inputSource.mainValue < 0f)
@@ -68,12 +68,12 @@ namespace Utilities.Inputs.Jobs
 
 					break;
 
-				case InputAxis.Side.Positive:
+				case InputAxisStrongSide.Positive:
 					positiveCoefficient = 2f;
 
 					break;
 
-				case InputAxis.Side.Negative:
+				case InputAxisStrongSide.Negative:
 					negativeCoefficient = 2f;
 
 					break;
@@ -106,7 +106,7 @@ namespace Utilities.Inputs.Jobs
 
 			switch (input.alt.strongSide)
 			{
-				case InputAxis.Side.FirstPressing:
+				case InputAxisStrongSide.FirstPressing:
 					if (inputSource.altValue > 0f)
 						positiveCoefficient = 2f;
 					else if (inputSource.altValue < 0f)
@@ -114,12 +114,12 @@ namespace Utilities.Inputs.Jobs
 
 					break;
 
-				case InputAxis.Side.Positive:
+				case InputAxisStrongSide.Positive:
 					positiveCoefficient = 2f;
 
 					break;
 
-				case InputAxis.Side.Negative:
+				case InputAxisStrongSide.Negative:
 					negativeCoefficient = 2f;
 
 					break;

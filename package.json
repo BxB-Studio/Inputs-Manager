@@ -2,9 +2,9 @@
 	"displayName": "Inputs Manager",
 	"name": "dev.bxbstudio.inputs-manager",
 	"description": "A simple and customization input alternative for Unity based on the New Input System.",
-	"version": "1.1.0",
-	"unity": "2021.3",
-	"unityRelease": "41f1",
+	"version": "1.1.1",
+	"unity": "2020.3",
+	"unityRelease": "17f1",
 	"dependencies": {
 		"com.unity.collections": "1.2.4",
 		"com.unity.inputsystem": "1.7.0"
@@ -16,5 +16,12 @@
 		"name": "BxB Studio",
 		"email": "contact@bxbstudio.dev",
 		"url": "https://bxbstudio.dev"
-	}
+	},
+	"samples": [
+		{
+				"displayName": "Simple Ball Movement",
+				"description": "Contains a sample scene to test and try the Inputs Manager by moving a ball on a simple plane.",
+				"path": "Samples~/Simple Ball Movement"
+		}
+	]
 }

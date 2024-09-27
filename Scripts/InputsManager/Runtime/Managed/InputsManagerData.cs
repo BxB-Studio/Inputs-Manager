@@ -61,6 +61,13 @@ namespace Utilities.Inputs
 				return gamepadThreshold;
 			}
 		}
+		public byte DefaultGamepadIndex
+		{
+			get
+			{
+				return defaultGamepadIndex;
+			}
+		}
 
 		[SerializeField]
 		private readonly Input[] inputs;
@@ -76,6 +83,8 @@ namespace Utilities.Inputs
 		private readonly float doublePressTimeout;
 		[SerializeField]
 		private readonly float gamepadThreshold;
+		[SerializeField]
+		private readonly byte defaultGamepadIndex;
 
 		#endregion
 
@@ -91,8 +100,9 @@ namespace Utilities.Inputs
 			holdTriggerTime = InputsManager.HoldTriggerTime;
 			holdWaitTime = InputsManager.HoldWaitTime;
 			doublePressTimeout = InputsManager.DoublePressTimeout;
-			gamepadThreshold = InputsManager.GamepadThreshold;
-		}
+            gamepadThreshold = InputsManager.GamepadThreshold;
+            defaultGamepadIndex = InputsManager.DefaultGamepadIndex;
+        }
 
 		#endregion
 

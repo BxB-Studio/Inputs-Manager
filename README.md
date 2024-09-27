@@ -1,17 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-This packages includes some additional [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities).
-
 **Version:** 1.1.1
-
-## Start-up Tutorial
-The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
-You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
-
-## Documentation
-Will be available soon...<br/>
-You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
 
 ## Features
 - High performant code (Using C# Jobs System)
@@ -28,10 +18,47 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 - Secured data saving
 - Wide range of settings
 
+## Documentation
+Will be available soon...<br/>
+You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
+
+## Important Notes!
+**Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**s.<br/>
+Use the Automatic install method to avoid importing errors.<br/>
+This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
+Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
+
+## How to Install
+There are multiple methods to install the Inputs Manager in your Unity project.<br/>
+1. **Automatically: Requires Git to be installed on your machine ([Learn more](https://docs.unity3d.com/Manual/upm-ui-giturl.html))**:
+	- Open Unity's Package Manager by going to `Window > Package Manager`.
+	- Click on the `+` button on the top left of the Package Manager window.
+	- Click on `Add package from git URL`.
+	- Enter the following Git URL: `https://github.com/BxB-Studio/Unity-CSharp-Utilities.git` to add the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library.
+	- Click the `Add` button.
+	- Repeat the same steps to add the Inputs Manager.
+	- Click on the `+` button on the top left of the Package Manager window.
+	- Click on `Add package from git URL`.
+	- Enter the following Git URL: `https://github.com/BxB-Studio/Inputs-Manager.git`.
+	- Click the `Add` button.
+
+2. **Manually**.
+	- Clone the GitHub repository of the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library.
+	- Extract the ZIP archive to a folder.
+	- Move the extracted folder to your project's `Assets` folder.
+	- Clone the GitHub repository of the [Inputs Manager](https://www.github.com/BxB-Studio/Inputs-Manager) repository.
+	- Extract the ZIP archive to a folder.
+	- Move the extracted folder to your project's `Assets` folder.
+
+## Start-up Tutorial
+The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
+You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
+
 ## Compatibility
 - Unity 2020.3.17f1 or newer<br/>
 
 ## Dependencies
+- Utilities: 1.1.1 or newer
 - Collections: 1.2.4 or newer
 - Input System: 1.7.0 or newer
 
@@ -90,11 +117,6 @@ You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you.
 	- Add, remove, duplicate inputs
 	- Bind keys in editor
 	- JSON preset importer
-
-## Important Notes!
-**The Inputs Manager requires an API Compatibility Level of .NET 4.x or newer (If available).<br/>
-This package requires the New Input System package to be installed from the Package Manager.<br/>
-Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## Contributing
 Please read the [contributing guidelines](https://github.com/BxB-Studio/Inputs-Manager/blob/master/CONTRIBUTING.md) for this repository.

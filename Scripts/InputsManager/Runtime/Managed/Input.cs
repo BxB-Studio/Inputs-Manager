@@ -282,10 +282,10 @@ namespace Utilities.Inputs
 		private void Trim()
 		{
 			if (!Main)
-				main = new();
+				main = new InputAxis();
 
 			if (!Alt)
-				alt = new();
+				alt = new InputAxis();
 
 			if (main.Positive == Key.None && alt.Positive != Key.None)
 			{
@@ -363,9 +363,9 @@ namespace Utilities.Inputs
 		public Input(string name)
 		{
 			this.name = name;
-			valueInterval = new(-1f, 1f);
-			main = new();
-			alt = new();
+			valueInterval = new Utility.SerializableVector2(-1f, 1f);
+			main = new InputAxis();
+			alt = new InputAxis();
 		}
 		public Input(Input input)
 		{
@@ -373,8 +373,8 @@ namespace Utilities.Inputs
 			type = input.type;
 			interpolation = input.interpolation;
 			valueInterval = input.valueInterval;
-			main = new(input.main);
-			alt = new(input.alt);
+			main = new InputAxis(input.main);
+			alt = new InputAxis(input.alt);
 			invert = input.invert;
 
 			Trim();

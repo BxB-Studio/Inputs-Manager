@@ -134,7 +134,7 @@ namespace Utilities.Inputs.Editor
 			float minWindowWidth = 360f;
 
 			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
-			editorInstance.minSize = new(minWindowWidth, 512f);
+			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
 		}
 		public static void OpenInputsManager(Input input)
 		{
@@ -153,7 +153,7 @@ namespace Utilities.Inputs.Editor
 				return;
 
 			string dataPath = Path.Combine(Application.dataPath, "Resources", $"{InputsManager.DataAssetPath}.bytes");
-			DataSerializationUtility<InputsManagerData> data = new(dataPath, false);
+			DataSerializationUtility<InputsManagerData> data = new DataSerializationUtility<InputsManagerData>(dataPath, false);
 
 			if (!data.Delete())
 			{
@@ -302,7 +302,7 @@ namespace Utilities.Inputs.Editor
 			addingInput = state;
 
 			if (state)
-				EditInput(new("New input"));
+				EditInput(new Input("New input"));
 			else
 				SaveInput();
 
@@ -310,7 +310,7 @@ namespace Utilities.Inputs.Editor
 		}
 		private static void DuplicateInput(Input input)
 		{
-			EditInput(new(input));
+			EditInput(new Input(input));
 			addingInput = true;
 		}
 		private static void BindAxis(InputAxis axis, BindTarget target)
@@ -354,7 +354,7 @@ namespace Utilities.Inputs.Editor
 		}
 		private static void GamepadBindEvent(InputEventPtr eventPtr, InputDevice device)
 		{
-			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>() || device is not Gamepad gamepad)
+			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>() || !(device is Gamepad gamepad))
 				return;
 
 			if (gamepad.dpad.ReadValueFromEvent(eventPtr, out Vector2 dpad) && dpad != Vector2.zero)
@@ -424,7 +424,7 @@ namespace Utilities.Inputs.Editor
 		{
 			#region Editor Styles
 
-			GUIStyle unstretchableMiniButtonWide = new(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = 28f
@@ -790,66 +790,66 @@ namespace Utilities.Inputs.Editor
 			float miniButtonWidth = 20f;
 			float miniButtonWideWidth = 25f;
 
-			GUIStyle unstretchableMiniButtonSmall = new(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonSmall = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
 			};
-			GUIStyle unstretchableMiniButton = new(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButton = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
 			};
-			GUIStyle unstretchableMiniButtonNormal = new(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonNormal = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false
 			};
-			GUIStyle unstretchableMiniButtonWide = new(EditorStyles.miniButton)
+			GUIStyle unstretchableMiniButtonWide = new GUIStyle(EditorStyles.miniButton)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
 			};
-			GUIStyle unstretchableMiniButtonLeftSmall = new(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeftSmall = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
 			};
-			GUIStyle unstretchableMiniButtonLeft = new(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeft = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
 			};
-			GUIStyle unstretchableMiniButtonLeftWide = new(EditorStyles.miniButtonLeft)
+			GUIStyle unstretchableMiniButtonLeftWide = new GUIStyle(EditorStyles.miniButtonLeft)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
 			};
-			GUIStyle unstretchableMiniButtonMiddleSmall = new(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddleSmall = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
 			};
-			GUIStyle unstretchableMiniButtonMiddle = new(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddle = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
 			};
-			GUIStyle unstretchableMiniButtonMiddleWide = new(EditorStyles.miniButtonMid)
+			GUIStyle unstretchableMiniButtonMiddleWide = new GUIStyle(EditorStyles.miniButtonMid)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
 			};
-			GUIStyle unstretchableMiniButtonRightSmall = new(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRightSmall = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonSmallWidth
 			};
-			GUIStyle unstretchableMiniButtonRight = new(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRight = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWidth
 			};
-			GUIStyle unstretchableMiniButtonRightWide = new(EditorStyles.miniButtonRight)
+			GUIStyle unstretchableMiniButtonRightWide = new GUIStyle(EditorStyles.miniButtonRight)
 			{
 				stretchWidth = false,
 				fixedWidth = miniButtonWideWidth
@@ -975,7 +975,7 @@ namespace Utilities.Inputs.Editor
 
 						EditorUtility.DisplayProgressBar("Inputs Manager", "Generating Json...", (InputsManager.Count - 1) / InputsManager.Count);
 
-						Utility.JsonArray<Input> jsonArray = new(inputs);
+						Utility.JsonArray<Input> jsonArray = new Utility.JsonArray<Input>(inputs);
 						string json = JsonUtility.ToJson(jsonArray, exportPretty);
 
 						if (File.Exists(exportPath))

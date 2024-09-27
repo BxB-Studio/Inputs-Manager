@@ -28,8 +28,8 @@ namespace Utilities.Inputs.Components
 			input.Start();
 
 			type = input.Type;
-			main = new(input.Main);
-			alt = new(input.Alt);
+			main = new InputAxisAccess(input.Main);
+			alt = new InputAxisAccess(input.Alt);
 			interpolation = input.Interpolation;
 			valueInterval = input.ValueInterval;
 			invert = input.Invert;

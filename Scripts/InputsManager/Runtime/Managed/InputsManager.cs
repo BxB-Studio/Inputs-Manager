@@ -1245,10 +1245,10 @@ namespace Utilities.Inputs
 				return;
 
 			if (!inputsAccess.IsCreated)
-				inputsAccess = new(inputs.Length, Allocator.Persistent);
+				inputsAccess = new NativeArray<InputAccess>(inputs.Length, Allocator.Persistent);
 
 			if (!inputsKeyboardAccess.IsCreated)
-				inputsKeyboardAccess = new(inputs.Length, Allocator.Persistent);
+				inputsKeyboardAccess = new NativeArray<InputSourceAccess>(inputs.Length, Allocator.Persistent);
 
 			if (inputsGamepadAccess == null || inputsGamepadAccess.Length != inputs.Length)
 			{
@@ -1260,16 +1260,16 @@ namespace Utilities.Inputs
 				inputsGamepadAccess = new NativeArray<InputSourceAccess>[inputs.Length];
 
 				for (int i = 0; i < inputs.Length; i++)
-					inputsGamepadAccess[i] = new(gamepadsCount, Allocator.Persistent);
+					inputsGamepadAccess[i] = new NativeArray<InputSourceAccess>(gamepadsCount, Allocator.Persistent);
 			}
 
 			for (int i = 0; i < inputs.Length; i++)
 			{
-				inputsAccess[i] = new(inputs[i]);
-				inputsKeyboardAccess[i] = new(inputs[i], InputSource.Keyboard);
+				inputsAccess[i] = new InputAccess(inputs[i]);
+				inputsKeyboardAccess[i] = new InputSourceAccess(inputs[i], InputSource.Keyboard);
 
 				for (int j = 0; j < gamepadsCount; j++)
-					inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
+					inputsGamepadAccess[i][j] = new InputSourceAccess(inputs[i], InputSource.Gamepad);
 			}
 		}
 		public static void Update()
@@ -1299,21 +1299,21 @@ namespace Utilities.Inputs
 			{
 				if (dataChanged)
 				{
-					inputsAccess[i] = new(inputs[i]);
-					inputsKeyboardAccess[i] = new(inputs[i], InputSource.Keyboard);
+					inputsAccess[i] = new InputAccess(inputs[i]);
+					inputsKeyboardAccess[i] = new InputSourceAccess(inputs[i], InputSource.Keyboard);
 
 					for (int j = 0; j < gamepadsCount; j++)
-						inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
+						inputsGamepadAccess[i][j] = new InputSourceAccess(inputs[i], InputSource.Gamepad);
 				}
 				else if (gamepadsCount != t_gamepadsCount)
 				{
 					if (inputsGamepadAccess[i].IsCreated)
 						inputsGamepadAccess[i].Dispose();
 
-					inputsGamepadAccess[i] = new(gamepadsCount, Allocator.Persistent);
+					inputsGamepadAccess[i] = new NativeArray<InputSourceAccess>(gamepadsCount, Allocator.Persistent);
 
 					for (int j = 0; j < gamepadsCount; j++)
-						inputsGamepadAccess[i][j] = new(inputs[i], InputSource.Gamepad);
+						inputsGamepadAccess[i][j] = new InputSourceAccess(inputs[i], InputSource.Gamepad);
 				}
 
 				inputsKeyboardAccess[i] = inputsKeyboardAccess[i].UpdateControls(inputs[i]);
@@ -1325,8 +1325,8 @@ namespace Utilities.Inputs
 			t_gamepadsCount = gamepadsCount;
 			dataChanged = false;
 
-			NativeList<JobHandle> jobHandles = new(inputs.Length + 2, Allocator.Temp);
-			InputKeyboardJob inputKeyboardJob = new()
+			NativeList<JobHandle> jobHandles = new NativeList<JobHandle>(inputs.Length + 2, Allocator.Temp);
+			InputKeyboardJob inputKeyboardJob = new InputKeyboardJob()
 			{
 				sourceAccess = inputsKeyboardAccess,
 				access = inputsAccess,
@@ -1342,7 +1342,7 @@ namespace Utilities.Inputs
 			if (gamepadsCount > 0)
 				for (int i = 0; i < inputs.Length; i++)
 				{
-					InputGamepadJob inputGamepadJob = new()
+					InputGamepadJob inputGamepadJob = new InputGamepadJob()
 					{
 						sourceAccess = inputsGamepadAccess[i],
 						input = inputsAccess[i],
@@ -1533,7 +1533,7 @@ namespace Utilities.Inputs
 			if (key == Key.None)
 				return new Input[] { };
 
-			List<Input> inputs = new();
+			List<Input> inputs = new List<Input>();
 
 			for (int i = 0; i < Count; i++)
 				if (InputsManager.inputs[i].Main.Positive == key || InputsManager.inputs[i].Main.Negative == key || InputsManager.inputs[i].Alt.Positive == key || InputsManager.inputs[i].Alt.Negative == key)
@@ -1546,7 +1546,7 @@ namespace Utilities.Inputs
 			if (binding == GamepadBinding.None)
 				return new Input[] { };
 
-			List<Input> inputs = new();
+			List<Input> inputs = new List<Input>();
 
 			for (int i = 0; i < Count; i++)
 				if (InputsManager.inputs[i].Main.GamepadPositive == binding || InputsManager.inputs[i].Main.GamepadNegative == binding || InputsManager.inputs[i].Alt.GamepadPositive == binding || InputsManager.inputs[i].Alt.GamepadNegative == binding)
@@ -1703,7 +1703,7 @@ namespace Utilities.Inputs
 			if (dataChanged || inputNamesDictionary == null || inputNamesDictionary.Count != Count)
 			{
 				if (inputNamesDictionary == null || inputNamesDictionary.Count != inputs.Length)
-					inputNamesDictionary = new();
+					inputNamesDictionary = new Dictionary<string, int>();
 				else
 					inputNamesDictionary.Clear();
 
@@ -1777,7 +1777,11 @@ namespace Utilities.Inputs
 			Array.Resize(ref inputs, inputs.Length + 1);
 			Array.Resize(ref inputNames, inputNames.Length + 1);
 
+#if UNITY_2021_2_OR_NEWER
 			inputs[^1] = input;
+#else
+			inputs[inputs.Length - 1] = input;
+#endif
 			dataChanged = true;
 
 			return input;
@@ -1798,7 +1802,7 @@ namespace Utilities.Inputs
 				return null;
 			}
 
-			Input newInput = new(input);
+			Input newInput = new Input(input);
 			int index = Count;
 			int newLength = index + 1;
 
@@ -1915,7 +1919,7 @@ namespace Utilities.Inputs
 			if (DataLoaded)
 				return true;
 
-			DataSerializationUtility<InputsManagerData> serializer = new(DataAssetPath, true);
+			DataSerializationUtility<InputsManagerData> serializer = new DataSerializationUtility<InputsManagerData>(DataAssetPath, true);
 			bool dataLoaded = LoadDataFromSheet(serializer.Load());
 
 			dataChanged = false;
@@ -1940,12 +1944,12 @@ namespace Utilities.Inputs
 			if (File.Exists(DataAssetFullPath))
 				File.Delete(DataAssetFullPath);
 
-			DataSerializationUtility<InputsManagerData> serializer = new(DataAssetFullPath, false);
+			DataSerializationUtility<InputsManagerData> serializer = new DataSerializationUtility<InputsManagerData>(DataAssetFullPath, false);
 
 			inputNames = null;
 			dataChanged = false;
 
-			return serializer.SaveOrCreate(new());
+			return serializer.SaveOrCreate(new InputsManagerData());
 		}
 
 		private static int GetInputIndex(Input input)

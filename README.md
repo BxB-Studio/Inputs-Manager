@@ -23,7 +23,7 @@ Will be available soon...<br/>
 You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
 
 ## Important Notes!
-**Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**s.<br/>
+**Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**.<br/>
 Use the Automatic install method to avoid importing errors.<br/>
 This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
 Please do not changes the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
@@ -42,7 +42,7 @@ There are multiple methods to install the Inputs Manager in your Unity project.<
 	- Enter the following Git URL: `https://github.com/BxB-Studio/Inputs-Manager.git`.
 	- Click the `Add` button.
 
-2. **Manually**.
+2. **Manually:**
 	- Clone the GitHub repository of the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library.
 	- Extract the ZIP archive to a folder.
 	- Move the extracted folder to your project's `Assets` folder.

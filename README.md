@@ -1,7 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-**Version:** 1.1.2
+**Version:** 1.1.3
 
 ## Features
 - High-performant code (Using C# Jobs System & Burst)
@@ -62,6 +62,9 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.3
+	- Improved exceptions handling
+	- Updated `Readme.md`
 - 1.1.2
 	- Fixed backward compatibility for Unity 2020.3
 - 1.1.1

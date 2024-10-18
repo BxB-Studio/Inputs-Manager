@@ -19,13 +19,13 @@ A new customizable and dynamic Input alternative for Unity based on the New Inpu
 
 ## Documentation
 Will be available soon...<br/>
-You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also you the editor **tooltips** whenever you need something to be explained.
+You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also use the editor **tooltips** whenever you need something to be explained.
 
 ## Important Notes!
 **Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**.<br/>
-Use the Automatic install method to avoid importing errors.<br/>
-This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
-Please do not change the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
+- Use the Automatic install method to avoid importing errors.<br/>
+- This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
+- Please do not change the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
 
 ## How to Install
 There are multiple methods to install the Inputs Manager in your Unity project.<br/>

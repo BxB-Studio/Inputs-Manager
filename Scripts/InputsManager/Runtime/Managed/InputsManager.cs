@@ -1704,7 +1704,10 @@ namespace Utilities.Inputs
 					jobHandles.Add(inputGamepadJob.ScheduleParallel(gamepadsCount, 1, default));
 				}
 
-			JobHandle.CompleteAll(jobHandles);
+			NativeArray<JobHandle> jobHandlesArray = jobHandles.ToArray(Allocator.Temp);
+			
+			JobHandle.CompleteAll(jobHandlesArray);
+			jobHandlesArray.Dispose();
 			jobHandles.Dispose();
 
 			if (gamepadsCount > 0)

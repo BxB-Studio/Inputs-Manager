@@ -291,7 +291,7 @@ namespace Utilities.Inputs
 			get
 			{
 				if (gamepadNames == null || gamepadNames.Length != gamepadsCount)
-					gamepadNames = Gamepad.all.Select(gamepad => gamepad.name).ToArray();
+					gamepadNames = Gamepads.Select(gamepad => gamepad.name).ToArray();
 
 				return gamepadNames;
 			}
@@ -513,19 +513,19 @@ namespace Utilities.Inputs
 		{
 			CheckStarted();
 
-			return keyboard != null && keyboard.anyKey.isPressed || !ignoreMouse && InputMouseAnyButtonPress() || gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.isPressed));
+			return keyboard != null && keyboard.anyKey.isPressed || !ignoreMouse && InputMouseAnyButtonPress() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.isPressed));
 		}
 		public static bool AnyInputDown(bool ignoreMouse = false)
 		{
 			CheckStarted();
 
-			return keyboard != null && keyboard.anyKey.wasPressedThisFrame || !ignoreMouse && InputMouseAnyButtonDown() || gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasPressedThisFrame));
+			return keyboard != null && keyboard.anyKey.wasPressedThisFrame || !ignoreMouse && InputMouseAnyButtonDown() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasPressedThisFrame));
 		}
 		public static bool AnyInputUp(bool ignoreMouse = false)
 		{
 			CheckStarted();
 
-			return keyboard != null && keyboard.anyKey.wasReleasedThisFrame || !ignoreMouse && InputMouseAnyButtonUp() || gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasReleasedThisFrame));
+			return keyboard != null && keyboard.anyKey.wasReleasedThisFrame || !ignoreMouse && InputMouseAnyButtonUp() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasReleasedThisFrame));
 		}
 
 		public static bool InputPress(Input input, int gamepadIndex = 0)
@@ -1631,6 +1631,7 @@ namespace Utilities.Inputs
 			{
 				lastDefaultInputSource = newGamepadsCount > 0 ? inputSourcePriority : InputSource.Keyboard;
 				gamepadsCount = newGamepadsCount;
+				gamepads = Gamepads;
 			}
 
 			if (Mouse != null)

@@ -1736,6 +1736,8 @@ namespace Utilities.Inputs
 				for (int i = 0; i < inputsGamepadAccess.Length; i++)
 					if (inputsGamepadAccess[i].IsCreated)
 						inputsGamepadAccess[i].Dispose();
+
+			inputsGamepadAccess = null;
 		}
 
 		private static void UpdateMouse()

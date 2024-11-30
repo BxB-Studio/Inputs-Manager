@@ -9,6 +9,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using Utilities.Editor;
 
+using Object = UnityEngine.Object;
+
 #endregion
 
 namespace Utilities.Inputs.Editor
@@ -79,7 +81,15 @@ namespace Utilities.Inputs.Editor
 
 		#region Variables
 
+		#region Properties
+
 		public static bool EditingInput { get; private set; }
+
+		private static string OldDataAssetFullPath => OldDataAssetExists(out Object dataAsset) ? AssetDatabase.GetAssetPath(dataAsset) : string.Empty;
+
+		#endregion
+
+		#region Fields
 
 		private static InputsManagerEditor editorInstance;
 		private static InputAxis bindingAxis;
@@ -113,6 +123,8 @@ namespace Utilities.Inputs.Editor
 		private static bool importOverride;
 
 		private Vector2 scroll;
+
+		#endregion
 
 		#endregion
 
@@ -213,9 +225,15 @@ namespace Utilities.Inputs.Editor
 
 		#region Utilities
 
+		private static bool OldDataAssetExists(out Object dataAsset)
+		{
+			dataAsset = Resources.Load($"Assets{Path.DirectorySeparatorChar}InputsManager_Data");
+
+			return dataAsset;
+		}
 		private static bool RecreateDataFile()
 		{
-			bool process = InputsManager.SaveData();
+			bool process = InputsManager.EditorSaveData();
 
 			AssetDatabase.Refresh();
 
@@ -769,9 +787,25 @@ namespace Utilities.Inputs.Editor
 
 			if (!InputsManager.DataAssetExists)
 			{
-				EditorGUILayout.HelpBox($"We couldn't find the data asset file at the following path \"Resources/{InputsManager.DataAssetPath}\". You can create a new one from `Tools > Utilities > Inputs Manager > Create data asset`", MessageType.Error);
+				if (!OldDataAssetExists(out _))
+				{
+					EditorGUILayout.HelpBox($"We couldn't find the data asset file at the following path \"Resources{Path.DirectorySeparatorChar}{InputsManager.DataAssetPath}\". You can create a new one from `Tools > Utilities > Inputs Manager > Create data asset`", MessageType.Error);
 
-				return;
+					return;
+				}
+				else
+				{
+					string newAssetPath = OldDataAssetFullPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+					newAssetPath = newAssetPath.Replace($"{Path.DirectorySeparatorChar}Resources{Path.DirectorySeparatorChar}Assets{Path.DirectorySeparatorChar}", $"{Path.DirectorySeparatorChar}Resources{Path.DirectorySeparatorChar}Settings{Path.DirectorySeparatorChar}");
+
+					string newAssetDirectoryPath = Path.GetDirectoryName(newAssetPath);
+
+					if (!Directory.Exists(newAssetDirectoryPath))
+						Directory.CreateDirectory(newAssetDirectoryPath);
+
+					AssetDatabase.MoveAsset(OldDataAssetFullPath, newAssetPath);
+				}
 			}
 
 			if (!InputsManager.DataLoaded)
@@ -1370,7 +1404,7 @@ namespace Utilities.Inputs.Editor
 
 				if (GUILayout.Button(new GUIContent(EditorUtilities.Icons.Save), unstretchableMiniButtonWide))
 				{
-					InputsManager.SaveData();
+					InputsManager.EditorSaveData();
 					AssetDatabase.Refresh();
 				}
 
@@ -1501,7 +1535,7 @@ namespace Utilities.Inputs.Editor
 
 			if (InputsManager.DataChanged && EditorUtility.DisplayDialog("Inputs Manager: Warning", "You have some unsaved data that you might lose! Do you want to save it?", "Save", "Discard"))
 			{
-				InputsManager.SaveData();
+				InputsManager.EditorSaveData();
 				AssetDatabase.Refresh();
 			}
 

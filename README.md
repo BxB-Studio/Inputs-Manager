@@ -1,7 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-**Version:** 1.1.6
+**Version:** 1.1.7
 
 ## Features
 - High-performant code (Using C# Jobs System & Burst)
@@ -62,6 +62,10 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.7
+	- Changed data asset path
+	- Replaced `DataAssetFullPath` with `EditorDataAssetFullPath`
+	- Replaced `SaveData` with `EditorSaveData`
 - 1.1.6
 	- Upgraded to Utilities 1.1.6
 	- Fixed un-disposed `inputsGamepadAccess` array

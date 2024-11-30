@@ -66,8 +66,12 @@ namespace Utilities.Inputs
 	{
 		#region Variables
 
-		public static readonly string DataAssetPath = $"Assets{Path.DirectorySeparatorChar}InputsManager_Data";
-		public static string DataAssetFullPath => Path.Combine(Application.dataPath, "Resources", $"{DataAssetPath}.bytes").Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+		public static readonly string DataAssetPath = $"Settings{Path.DirectorySeparatorChar}InputsManager_Data";
+#if UNITY_EDITOR
+		[Obsolete("Use `EditorDataAssetFullPath` instead.")]
+		public static string DataAssetFullPath => EditorDataAssetFullPath;
+		public static string EditorDataAssetFullPath => DataAssetExists ? UnityEditor.AssetDatabase.GetAssetPath(Resources.Load(DataAssetPath)) : DataAssetPath;
+#endif
 		public static InputSource LastDefaultInputSource
 		{
 			get
@@ -91,7 +95,9 @@ namespace Utilities.Inputs
 
 				inputSourcePriority = value;
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static float InterpolationTime
@@ -110,7 +116,9 @@ namespace Utilities.Inputs
 
 				interpolationTime = Utility.ClampInfinity(value, 0f);
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static float HoldTriggerTime
@@ -129,7 +137,9 @@ namespace Utilities.Inputs
 
 				holdTriggerTime = Utility.ClampInfinity(value, 0f);
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static float HoldWaitTime
@@ -148,7 +158,9 @@ namespace Utilities.Inputs
 
 				holdWaitTime = Utility.ClampInfinity(value, 0f);
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static float DoublePressTimeout
@@ -167,7 +179,9 @@ namespace Utilities.Inputs
 
 				doublePressTimeout = Utility.ClampInfinity(value, 0f);
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static float GamepadThreshold
@@ -186,7 +200,9 @@ namespace Utilities.Inputs
 
 				gamepadThreshold = Mathf.Clamp01(value);
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static byte DefaultGamepadIndexFallback
@@ -212,17 +228,20 @@ namespace Utilities.Inputs
 
 				defaultGamepadIndex = value;
 
-				SaveData();
+#if UNITY_EDITOR
+				EditorSaveData();
+#endif
 			}
 		}
 		public static bool DataLoaded
 		{
 			get
 			{
-				if (!Application.isEditor)
-					return dataLoadedOnBuild;
-
-				return DataAssetExists && File.GetLastWriteTime(DataAssetFullPath) == dataLastWriteTime;
+#if UNITY_EDITOR
+				return DataAssetExists && File.GetLastWriteTime(EditorDataAssetFullPath) == dataLastWriteTime;
+#else
+				return dataLoadedOnBuild;
+#endif
 			}
 		}
 		public static bool DataChanged
@@ -246,7 +265,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return Application.isEditor ? File.Exists(DataAssetFullPath) : Resources.Load(DataAssetPath);
+				return Resources.Load(DataAssetPath);
 			}
 		}
 		public static int Count
@@ -386,7 +405,9 @@ namespace Utilities.Inputs
 		private static bool mouseForwardDoublePressInitiated;
 		private static bool mousePressed;
 		private static bool dataChanged;
+#if !UNITY_EDITOR
 		private static bool dataLoadedOnBuild;
+#endif
 		private static bool started;
 		private static int newGamepadsCount;
 		private static int gamepadsCount;
@@ -2259,9 +2280,14 @@ namespace Utilities.Inputs
 			doublePressTimeout = data.DoublePressTimeout;
 			gamepadThreshold = data.GamepadThreshold;
 			defaultGamepadIndex = data.DefaultGamepadIndex;
-			dataLastWriteTime = Application.isEditor ? File.GetLastWriteTime(DataAssetFullPath) : DateTime.Now;
-			dataChanged = !Application.isPlaying;
+			dataLastWriteTime =
+#if UNITY_EDITOR
+				File.GetLastWriteTime(EditorDataAssetFullPath);
+#else
+				DateTime.Now;
 			dataLoadedOnBuild = !Application.isEditor;
+#endif
+			dataChanged = !Application.isPlaying;
 
 			return data;
 		}
@@ -2290,21 +2316,28 @@ namespace Utilities.Inputs
 			dataLastWriteTime = DateTime.MinValue;
 			dataChanged = true;
 		}
+#if UNITY_EDITOR
+		[Obsolete("Use `EditorSaveData` instead.")]
 		public static bool SaveData()
+		{
+			return EditorSaveData();
+		}
+		public static bool EditorSaveData()
 		{
 			if (Application.isPlaying || !Application.isEditor)
 				return false;
 
-			if (File.Exists(DataAssetFullPath))
-				File.Delete(DataAssetFullPath);
+			if (File.Exists(EditorDataAssetFullPath))
+				File.Delete(EditorDataAssetFullPath);
 
-			DataSerializationUtility<InputsManagerData> serializer = new DataSerializationUtility<InputsManagerData>(DataAssetFullPath, false);
+			DataSerializationUtility<InputsManagerData> serializer = new DataSerializationUtility<InputsManagerData>(EditorDataAssetFullPath, false);
 
 			inputNames = null;
 			dataChanged = false;
 
 			return serializer.SaveOrCreate(new InputsManagerData());
 		}
+#endif
 
 		private static int GetInputIndex(Input input)
 		{

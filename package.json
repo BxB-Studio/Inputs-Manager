@@ -1,27 +1,27 @@
 {
-	"displayName": "Inputs Manager",
-	"name": "dev.bxbstudio.inputs-manager",
-	"description": "A simple and customization input alternative for Unity based on the New Input System.",
-	"version": "1.1.6",
-	"unity": "2020.3",
-	"unityRelease": "17f1",
-	"dependencies": {
-		"com.unity.collections": "1.2.4",
-		"com.unity.inputsystem": "1.7.0"
-	},
-	"documentationUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/README.md",
-	"changelogUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/README.md",
-	"licensesUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/LICENSE.md",
-	"author": {
-		"name": "BxB Studio",
-		"email": "contact@bxbstudio.dev",
-		"url": "https://bxbstudio.dev"
-	},
-	"samples": [
-		{
-				"displayName": "Simple Ball Movement",
-				"description": "Contains a sample scene to test and try the Inputs Manager by moving a ball on a simple plane.",
-				"path": "Samples~/Simple Ball Movement"
-		}
-	]
+  "displayName": "Inputs Manager",
+  "name": "dev.bxbstudio.inputs-manager",
+  "description": "A simple and customization input alternative for Unity based on the New Input System.",
+  "version": "1.1.7",
+  "unity": "2020.3",
+  "unityRelease": "17f1",
+  "dependencies": {
+    "com.unity.collections": "1.2.4",
+    "com.unity.inputsystem": "1.7.0"
+  },
+  "documentationUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/README.md",
+  "changelogUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/README.md",
+  "licensesUrl": "https://github.com/BxB-Studio/Inputs-Manager/blob/master/LICENSE.md",
+  "author": {
+    "name": "BxB Studio",
+    "email": "contact@bxbstudio.dev",
+    "url": "https://bxbstudio.dev"
+  },
+  "samples": [
+    {
+      "displayName": "Simple Ball Movement",
+      "description": "Contains a sample scene to test and try the Inputs Manager by moving a ball on a simple plane.",
+      "path": "Samples~/Simple Ball Movement"
+    }
+  ]
 }

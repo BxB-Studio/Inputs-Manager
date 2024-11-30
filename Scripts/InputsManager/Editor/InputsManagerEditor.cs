@@ -133,6 +133,27 @@ namespace Utilities.Inputs.Editor
 		#region Menu Items
 
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
+		public static void OpenWindow()
+		{
+			if (!EditorPrefs.HasKey(initializerKey))
+			{
+				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay!");
+				CreateInputsManager();
+
+				return;
+			}
+
+			float minWindowWidth = 360f;
+
+			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
+			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
+		}
+		public static void OpenWindow(Input input)
+		{
+			OpenWindow();
+			EditInput(input);
+		}
+		[Obsolete("Use `OpenWindow` instead.")]
 		public static void OpenInputsManager()
 		{
 			if (!EditorPrefs.HasKey(initializerKey))
@@ -148,10 +169,10 @@ namespace Utilities.Inputs.Editor
 			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
 			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
 		}
+		[Obsolete("Use `OpenWindow(Input)` instead.")]
 		public static void OpenInputsManager(Input input)
 		{
-			OpenInputsManager();
-			EditInput(input);
+			OpenWindow(input);
 		}
 		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", true)]
 		protected static bool CheckResetInputsManager()
@@ -196,11 +217,12 @@ namespace Utilities.Inputs.Editor
 			else if (EditorUtility.DisplayDialog("Inputs Manager: Info", "A new Inputs Manager asset has been created! Do you want to load a Json preset file?", "Yes", "No"))
 			{
 				LoadPreset();
-				OpenInputsManager();
+				OpenWindow();
 			}
 			else
 			{
-				OpenInputsManager();
+				OpenWindow();
+
 				settings = false;
 			}
 		}
@@ -224,6 +246,11 @@ namespace Utilities.Inputs.Editor
 		#endregion
 
 		#region Utilities
+
+		public static void CloseWindow()
+		{
+
+		}
 
 		private static bool OldDataAssetExists(out Object dataAsset)
 		{

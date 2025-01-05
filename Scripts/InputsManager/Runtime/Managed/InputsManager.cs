@@ -83,7 +83,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && inputSourcePriority == 0)
+				if (!Application.isPlaying && (int)inputSourcePriority < -1)
 					LoadData();
 
 				return inputSourcePriority;
@@ -104,7 +104,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && interpolationTime == 0f)
+				if (!Application.isPlaying && interpolationTime < 0f)
 					LoadData();
 
 				return interpolationTime;
@@ -125,7 +125,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && holdTriggerTime == 0f)
+				if (!Application.isPlaying && holdTriggerTime < 0f)
 					LoadData();
 
 				return holdTriggerTime;
@@ -146,7 +146,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && holdWaitTime == 0f)
+				if (!Application.isPlaying && holdWaitTime < 0f)
 					LoadData();
 
 				return holdWaitTime;
@@ -167,7 +167,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && doublePressTimeout == 0f)
+				if (!Application.isPlaying && doublePressTimeout < 0f)
 					LoadData();
 
 				return doublePressTimeout;
@@ -188,7 +188,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying && gamepadThreshold == 0f)
+				if (!Application.isPlaying && gamepadThreshold < 0f)
 					LoadData();
 
 				return gamepadThreshold;
@@ -205,18 +205,18 @@ namespace Utilities.Inputs
 #endif
 			}
 		}
-		public static byte DefaultGamepadIndexFallback
+		public static sbyte DefaultGamepadIndexFallback
 		{
 			get
 			{
 				return defaultGamepadIndex < gamepadsCount ? defaultGamepadIndex : default;
 			}
 		}
-		public static byte DefaultGamepadIndex
+		public static sbyte DefaultGamepadIndex
 		{
 			get
 			{
-				if (!Application.isPlaying && defaultGamepadIndex == byte.MaxValue)
+				if (!Application.isPlaying && defaultGamepadIndex < 0)
 					LoadData();
 
 				return defaultGamepadIndex;
@@ -349,7 +349,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				if (!Application.isPlaying)
+				if (!Application.isPlaying && !DataLoaded && !editorSavingData)
 					LoadData();
 
 				inputs ??= new Input[] { };
@@ -359,13 +359,13 @@ namespace Utilities.Inputs
 		}
 
 		private static InputSource lastDefaultInputSource;
-		private static InputSource inputSourcePriority;
-		private static float interpolationTime = .25f;
-		private static float holdTriggerTime = .3f;
-		private static float holdWaitTime = .1f;
-		private static float doublePressTimeout = .2f;
-		private static float gamepadThreshold = .5f;
-		private static byte defaultGamepadIndex = byte.MaxValue;
+		private static InputSource inputSourcePriority = (InputSource)(-1);
+		private static float interpolationTime = -1f;
+		private static float holdTriggerTime = -1f;
+		private static float holdWaitTime = -1f;
+		private static float doublePressTimeout = -1f;
+		private static float gamepadThreshold = -1f;
+		private static sbyte defaultGamepadIndex = -1;
 
 		private static NativeArray<InputSourceAccess>[] inputsGamepadAccess;
 		private static NativeArray<InputSourceAccess> inputsKeyboardAccess;
@@ -408,6 +408,7 @@ namespace Utilities.Inputs
 #if !UNITY_EDITOR
 		private static bool dataLoadedOnBuild;
 #endif
+		private static bool editorSavingData;
 		private static bool started;
 		private static int newGamepadsCount;
 		private static int gamepadsCount;
@@ -2327,15 +2328,20 @@ namespace Utilities.Inputs
 			if (Application.isPlaying || !Application.isEditor)
 				return false;
 
+			editorSavingData = true;
+
 			if (File.Exists(EditorDataAssetFullPath))
 				File.Delete(EditorDataAssetFullPath);
 
-			DataSerializationUtility<InputsManagerData> serializer = new DataSerializationUtility<InputsManagerData>(EditorDataAssetFullPath, false);
-
-			inputNames = null;
 			dataChanged = false;
+			inputNames = null;
 
-			return serializer.SaveOrCreate(new InputsManagerData());
+			DataSerializationUtility<InputsManagerData> serializationUtility = new DataSerializationUtility<InputsManagerData>(EditorDataAssetFullPath, false);
+			bool result = serializationUtility.SaveOrCreate(new InputsManagerData());
+
+			editorSavingData = false;
+
+			return result;
 		}
 #endif
 

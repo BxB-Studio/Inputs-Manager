@@ -61,7 +61,7 @@ namespace Utilities.Inputs
 				return gamepadThreshold;
 			}
 		}
-		public byte DefaultGamepadIndex
+		public sbyte DefaultGamepadIndex
 		{
 			get
 			{
@@ -70,21 +70,21 @@ namespace Utilities.Inputs
 		}
 
 		[SerializeField]
-		private readonly Input[] inputs;
+		private Input[] inputs;
 		[SerializeField]
 		private InputSource inputSourcePriority;
 		[SerializeField]
-		private readonly float interpolationTime;
+		private float interpolationTime;
 		[SerializeField]
-		private readonly float holdTriggerTime;
+		private float holdTriggerTime;
 		[SerializeField]
-		private readonly float holdWaitTime;
+		private float holdWaitTime;
 		[SerializeField]
-		private readonly float doublePressTimeout;
+		private float doublePressTimeout;
 		[SerializeField]
-		private readonly float gamepadThreshold;
+		private float gamepadThreshold;
 		[SerializeField]
-		private readonly byte defaultGamepadIndex;
+		private sbyte defaultGamepadIndex;
 
 		#endregion
 
@@ -96,13 +96,40 @@ namespace Utilities.Inputs
 		{
 			inputs = InputsManager.Inputs ?? new Input[] { };
 			inputSourcePriority = InputsManager.InputSourcePriority;
-			interpolationTime = InputsManager.InterpolationTime;
+
+			if (inputSourcePriority < 0)
+				inputSourcePriority = 0;
+
+				interpolationTime = InputsManager.InterpolationTime;
+
+			if (interpolationTime < 0f)
+				interpolationTime = .25f;
+
 			holdTriggerTime = InputsManager.HoldTriggerTime;
+
+			if (holdTriggerTime < 0f)
+				holdTriggerTime = .3f;
+
 			holdWaitTime = InputsManager.HoldWaitTime;
+
+			if (holdWaitTime < 0f)
+				holdWaitTime = .1f;
+
 			doublePressTimeout = InputsManager.DoublePressTimeout;
-            gamepadThreshold = InputsManager.GamepadThreshold;
-            defaultGamepadIndex = InputsManager.DefaultGamepadIndex;
-        }
+
+			if (doublePressTimeout < 0f)
+				doublePressTimeout = .2f;
+
+			gamepadThreshold = InputsManager.GamepadThreshold;
+
+			if (gamepadThreshold < 0f)
+				gamepadThreshold = .5f;
+
+			defaultGamepadIndex = InputsManager.DefaultGamepadIndex;
+
+			if (defaultGamepadIndex < 0)
+				defaultGamepadIndex = sbyte.MaxValue;
+		}
 
 		#endregion
 

@@ -1263,7 +1263,7 @@ namespace Utilities.Inputs.Editor
 				if (InputsManager.InputSourcePriority != newInputSourcePriority)
 					InputsManager.InputSourcePriority = newInputSourcePriority;
 
-				byte newDefaultGamepadIndex = (byte)EditorGUILayout.IntField(new GUIContent("Default Gamepad Index", "The index of the default gamepad used by the player that acts as a keyboard alternative"), InputsManager.DefaultGamepadIndex);
+				sbyte newDefaultGamepadIndex = (sbyte)Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("Default Gamepad Index", "The index of the default gamepad used by the player that acts as a keyboard alternative"), InputsManager.DefaultGamepadIndex), 0, 127);
 
 				if (InputsManager.DefaultGamepadIndex != newDefaultGamepadIndex)
 					InputsManager.DefaultGamepadIndex = newDefaultGamepadIndex;

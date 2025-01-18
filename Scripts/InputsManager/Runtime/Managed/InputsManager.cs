@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -114,7 +115,7 @@ namespace Utilities.Inputs
 				if (interpolationTime == value)
 					return;
 
-				interpolationTime = Utility.ClampInfinity(value, 0f);
+				interpolationTime = math.max(value, 0f);
 
 #if UNITY_EDITOR
 				EditorSaveData();
@@ -135,7 +136,7 @@ namespace Utilities.Inputs
 				if (holdTriggerTime == value)
 					return;
 
-				holdTriggerTime = Utility.ClampInfinity(value, 0f);
+				holdTriggerTime = math.max(value, 0f);
 
 #if UNITY_EDITOR
 				EditorSaveData();
@@ -156,7 +157,7 @@ namespace Utilities.Inputs
 				if (holdWaitTime == value)
 					return;
 
-				holdWaitTime = Utility.ClampInfinity(value, 0f);
+				holdWaitTime = math.max(value, 0f);
 
 #if UNITY_EDITOR
 				EditorSaveData();
@@ -177,7 +178,7 @@ namespace Utilities.Inputs
 				if (doublePressTimeout == value)
 					return;
 
-				doublePressTimeout = Utility.ClampInfinity(value, 0f);
+				doublePressTimeout = math.max(value, 0f);
 
 #if UNITY_EDITOR
 				EditorSaveData();

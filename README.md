@@ -57,11 +57,13 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - Unity 2020.3.17f1 or newer<br/>
 
 ## Dependencies
-- Utilities: 1.1.6 or newer
+- Utilities: 1.1.7 or newer
 - Collections: 1.2.4 or newer
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.10
+	- Upgraded `Utilities` package to `1.1.7`
 - 1.1.9
 	- Fixed data save bug
 	- Optimized data load

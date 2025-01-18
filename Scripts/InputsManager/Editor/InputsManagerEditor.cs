@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.InputSystem;
@@ -137,7 +138,7 @@ namespace Utilities.Inputs.Editor
 		{
 			if (!EditorPrefs.HasKey(initializerKey))
 			{
-				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay!");
+				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems.", "Okay");
 				CreateInputsManager();
 
 				return;
@@ -158,7 +159,7 @@ namespace Utilities.Inputs.Editor
 		{
 			if (!EditorPrefs.HasKey(initializerKey))
 			{
-				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Beta version of the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay!");
+				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay");
 				CreateInputsManager();
 
 				return;
@@ -1282,22 +1283,22 @@ namespace Utilities.Inputs.Editor
 
 				EditorGUI.indentLevel++;
 
-				float newInterpolationTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Interpolation Time", $"How much time does it take an input to reach it's target. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.InterpolationTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+				float newInterpolationTime = Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Interpolation Time", $"How much time does it take an input to reach it's target. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.InterpolationTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f;
 
 				if (InputsManager.InterpolationTime != newInterpolationTime)
 					InputsManager.InterpolationTime = newInterpolationTime;
 
-				float newHoldTriggerTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Trigger", $"How much time does it take an input to be triggered as held. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldTriggerTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+				float newHoldTriggerTime = Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Trigger", $"How much time does it take an input to be triggered as held. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldTriggerTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f;
 
 				if (InputsManager.HoldTriggerTime != newHoldTriggerTime)
 					InputsManager.HoldTriggerTime = newHoldTriggerTime;
 
-				float newHoldWaitTime = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Wait", $"How much time does it take an input to be triggered as held once more. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldWaitTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+				float newHoldWaitTime = Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Hold Wait", $"How much time does it take an input to be triggered as held once more. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.HoldWaitTime * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f;
 
 				if (InputsManager.HoldWaitTime != newHoldWaitTime)
 					InputsManager.HoldWaitTime = newHoldWaitTime;
 
-				float newDoublePressTimeout = Utility.ClampInfinity(Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Double Press Timeout", $"Double press check time range. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.DoublePressTimeout * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f);
+				float newDoublePressTimeout = Utility.ValueWithUnitToNumber(EditorGUILayout.TextField(new GUIContent("Double Press Timeout", $"Double press check time range. Measured in {Utility.FullUnit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)}s ({Utility.Unit(Utility.Units.TimeAccurate, Utility.UnitType.Metric)})"), Utility.NumberToValueWithUnit(InputsManager.DoublePressTimeout * 1000f, Utility.Units.TimeAccurate, Utility.UnitType.Metric, true)), Utility.Units.TimeAccurate, Utility.UnitType.Metric) * .001f;
 
 				if (InputsManager.DoublePressTimeout != newDoublePressTimeout)
 					InputsManager.DoublePressTimeout = newDoublePressTimeout;

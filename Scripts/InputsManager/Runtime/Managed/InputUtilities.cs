@@ -166,9 +166,10 @@ namespace Utilities.Inputs
 
 		internal static float MainValue(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool gamepadUsed = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainValue != 0f;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool gamepadUsed = validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainValue != 0f;
 			bool gamepadPrioritized = InputsManager.InputSourcePriority == InputSource.Gamepad;
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 			bool keyboardUsed = keyboardAccess[index].mainValue != 0f;
 
 			if ((gamepadPrioritized || !keyboardUsed) && gamepadUsed || ignoreKeyboard)
@@ -178,9 +179,10 @@ namespace Utilities.Inputs
 		}
 		internal static float AltValue(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool gamepadUsed = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altValue != 0f;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool gamepadUsed = validGamepadIndex && gamepadsAccess[index][gamepadIndex].altValue != 0f;
 			bool gamepadPrioritized = InputsManager.InputSourcePriority == InputSource.Gamepad;
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 			bool keyboardUsed = keyboardAccess[index].altValue != 0f;
 
 			if ((gamepadPrioritized || !keyboardUsed) && gamepadUsed || ignoreKeyboard)
@@ -190,9 +192,10 @@ namespace Utilities.Inputs
 		}
 		internal static float Value(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool gamepadUsed = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].value != 0f;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool gamepadUsed = validGamepadIndex && gamepadsAccess[index][gamepadIndex].value != 0f;
 			bool gamepadPrioritized = InputsManager.InputSourcePriority == InputSource.Gamepad;
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 			bool keyboardUsed = keyboardAccess[index].value != 0f;
 
 			if ((gamepadPrioritized || !keyboardUsed) && gamepadUsed || ignoreKeyboard)
@@ -203,277 +206,322 @@ namespace Utilities.Inputs
 
 		internal static bool PositiveMainPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveMainPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveMainPress;
+			return !ignoreKeyboard && keyboardAccess[index].positiveMainPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveMainPress;
 		}
 		internal static bool NegativeMainPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeMainPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeMainPress;
+			return !ignoreKeyboard && keyboardAccess[index].negativeMainPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeMainPress;
 		}
 		internal static bool PositiveAltPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveAltPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveAltPress;
+			return !ignoreKeyboard && keyboardAccess[index].positiveAltPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveAltPress;
 		}
 		internal static bool NegativeAltPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeAltPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeAltPress;
+			return !ignoreKeyboard && keyboardAccess[index].negativeAltPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeAltPress;
 		}
 		internal static bool PositivePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positivePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positivePress;
+			return !ignoreKeyboard && keyboardAccess[index].positivePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positivePress;
 		}
 		internal static bool NegativePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativePress;
+			return !ignoreKeyboard && keyboardAccess[index].negativePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativePress;
 		}
 		internal static bool MainPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].mainPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainPress;
+			return !ignoreKeyboard && keyboardAccess[index].mainPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainPress;
 		}
 		internal static bool AltPress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].altPress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altPress;
+			return !ignoreKeyboard && keyboardAccess[index].altPress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].altPress;
 		}
 		internal static bool Press(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].press || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].press;
+			return !ignoreKeyboard && keyboardAccess[index].press || validGamepadIndex && gamepadsAccess[index][gamepadIndex].press;
 		}
 
 		internal static bool PositiveMainDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveMainDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveMainDown;
+			return !ignoreKeyboard && keyboardAccess[index].positiveMainDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveMainDown;
 		}
 		internal static bool NegativeMainDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeMainDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeMainDown;
+			return !ignoreKeyboard && keyboardAccess[index].negativeMainDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeMainDown;
 		}
 		internal static bool PositiveAltDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveAltDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveAltDown;
+			return !ignoreKeyboard && keyboardAccess[index].positiveAltDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveAltDown;
 		}
 		internal static bool NegativeAltDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeAltDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeAltDown;
+			return !ignoreKeyboard && keyboardAccess[index].negativeAltDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeAltDown;
 		}
 		internal static bool PositiveDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveDown;
+			return !ignoreKeyboard && keyboardAccess[index].positiveDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveDown;
 		}
 		internal static bool NegativeDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeDown;
+			return !ignoreKeyboard && keyboardAccess[index].negativeDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeDown;
 		}
 		internal static bool MainDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].mainDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainDown;
+			return !ignoreKeyboard && keyboardAccess[index].mainDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainDown;
 		}
 		internal static bool AltDown(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].altDown || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altDown;
+			return !ignoreKeyboard && keyboardAccess[index].altDown || validGamepadIndex && gamepadsAccess[index][gamepadIndex].altDown;
 		}
 		internal static bool Down(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].down || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].down;
+			return !ignoreKeyboard && keyboardAccess[index].down || validGamepadIndex && gamepadsAccess[index][gamepadIndex].down;
 		}
 
 		internal static bool PositiveMainUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveMainUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveMainUp;
+			return !ignoreKeyboard && keyboardAccess[index].positiveMainUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveMainUp;
 		}
 		internal static bool NegativeMainUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeMainUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeMainUp;
+			return !ignoreKeyboard && keyboardAccess[index].negativeMainUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeMainUp;
 		}
 		internal static bool PositiveAltUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveAltUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveAltUp;
+			return !ignoreKeyboard && keyboardAccess[index].positiveAltUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveAltUp;
 		}
 		internal static bool NegativeAltUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeAltUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeAltUp;
+			return !ignoreKeyboard && keyboardAccess[index].negativeAltUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeAltUp;
 		}
 		internal static bool PositiveUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveUp;
+			return !ignoreKeyboard && keyboardAccess[index].positiveUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveUp;
 		}
 		internal static bool NegativeUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeUp;
+			return !ignoreKeyboard && keyboardAccess[index].negativeUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeUp;
 		}
 		internal static bool MainUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].mainUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainUp;
+			return !ignoreKeyboard && keyboardAccess[index].mainUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainUp;
 		}
 		internal static bool AltUp(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].altUp || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altUp;
+			return !ignoreKeyboard && keyboardAccess[index].altUp || validGamepadIndex && gamepadsAccess[index][gamepadIndex].altUp;
 		}
 		internal static bool Up(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].up || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].up;
+			return !ignoreKeyboard && keyboardAccess[index].up || validGamepadIndex && gamepadsAccess[index][gamepadIndex].up;
 		}
 
 		internal static bool PositiveMainHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveMainHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveMainHeld;
+			return !ignoreKeyboard && keyboardAccess[index].positiveMainHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveMainHeld;
 		}
 		internal static bool NegativeMainHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeMainHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeMainHeld;
+			return !ignoreKeyboard && keyboardAccess[index].negativeMainHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeMainHeld;
 		}
 		internal static bool PositiveAltHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveAltHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveAltHeld;
+			return !ignoreKeyboard && keyboardAccess[index].positiveAltHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveAltHeld;
 		}
 		internal static bool NegativeAltHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeAltHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeAltHeld;
+			return !ignoreKeyboard && keyboardAccess[index].negativeAltHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeAltHeld;
 		}
 		internal static bool PositiveHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveHeld;
+			return !ignoreKeyboard && keyboardAccess[index].positiveHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveHeld;
 		}
 		internal static bool NegativeHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeHeld;
+			return !ignoreKeyboard && keyboardAccess[index].negativeHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeHeld;
 		}
 		internal static bool MainHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].mainHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainHeld;
+			return !ignoreKeyboard && keyboardAccess[index].mainHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainHeld;
 		}
 		internal static bool AltHold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].altHeld || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altHeld;
+			return !ignoreKeyboard && keyboardAccess[index].altHeld || validGamepadIndex && gamepadsAccess[index][gamepadIndex].altHeld;
 		}
 		internal static bool Hold(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].held || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].held;
+			return !ignoreKeyboard && keyboardAccess[index].held || validGamepadIndex && gamepadsAccess[index][gamepadIndex].held;
 		}
 
 		internal static bool PositiveMainDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveMainDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveMainDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].positiveMainDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveMainDoublePress;
 		}
 		internal static bool NegativeMainDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeMainDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeMainDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].negativeMainDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeMainDoublePress;
 		}
 		internal static bool PositiveAltDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveAltDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveAltDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].positiveAltDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveAltDoublePress;
 		}
 		internal static bool NegativeAltDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeAltDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeAltDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].negativeAltDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeAltDoublePress;
 		}
 		internal static bool PositiveDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].positiveDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].positiveDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].positiveDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].positiveDoublePress;
 		}
 		internal static bool NegativeDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].negativeDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].negativeDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].negativeDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].negativeDoublePress;
 		}
 		internal static bool MainDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].mainDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].mainDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].mainDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].mainDoublePress;
 		}
 		internal static bool AltDoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].altDoublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].altDoublePress;
+			return !ignoreKeyboard && keyboardAccess[index].altDoublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].altDoublePress;
 		}
 		internal static bool DoublePress(NativeArray<InputSourceAccess> keyboardAccess, NativeArray<InputSourceAccess>[] gamepadsAccess, int index, int gamepadIndex)
 		{
-			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && gamepadIndex < gamepadsAccess[index].Length;
+			bool validGamepadIndex = gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length;
+			bool ignoreKeyboard = gamepadIndex != InputsManager.DefaultGamepadIndexFallback && validGamepadIndex;
 
-			return !ignoreKeyboard && keyboardAccess[index].doublePress || gamepadIndex > -1 && gamepadIndex < gamepadsAccess[index].Length && gamepadsAccess[index][gamepadIndex].doublePress;
+			return !ignoreKeyboard && keyboardAccess[index].doublePress || validGamepadIndex && gamepadsAccess[index][gamepadIndex].doublePress;
 		}
 	}
 }

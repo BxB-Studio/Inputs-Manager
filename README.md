@@ -1,7 +1,7 @@
 # Inputs-Manager
 A new customizable and dynamic Input alternative for Unity based on the New Input System.
 
-**Version:** 1.1.11
+**Version:** 1.1.12
 
 ## Features
 - High-performant code (Using C# Jobs System & Burst)
@@ -57,11 +57,13 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - Unity 2020.3.17f1 or newer<br/>
 
 ## Dependencies
-- Utilities: 1.1.7 or newer
+- Utilities: 1.1.8 or newer
 - Collections: 1.2.4 or newer
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.12
+	- Upgraded `Utilities` package to `1.1.8`
 - 1.1.11
 	- Fixed `IndexOutOfRangeException` when getting values from an invalid gamepad index
 - 1.1.10

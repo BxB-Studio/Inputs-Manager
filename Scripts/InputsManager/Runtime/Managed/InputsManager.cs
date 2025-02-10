@@ -210,7 +210,7 @@ namespace Utilities.Inputs
 		{
 			get
 			{
-				return defaultGamepadIndex < gamepadsCount ? defaultGamepadIndex : default;
+				return defaultGamepadIndex > -1 && defaultGamepadIndex < gamepadsCount ? defaultGamepadIndex : default;
 			}
 		}
 		public static sbyte DefaultGamepadIndex

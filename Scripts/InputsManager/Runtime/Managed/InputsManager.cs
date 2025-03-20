@@ -71,7 +71,7 @@ namespace Utilities.Inputs
 #if UNITY_EDITOR
 		[Obsolete("Use `EditorDataAssetFullPath` instead.")]
 		public static string DataAssetFullPath => EditorDataAssetFullPath;
-		public static string EditorDataAssetFullPath => DataAssetExists ? UnityEditor.AssetDatabase.GetAssetPath(Resources.Load(DataAssetPath)) : DataAssetPath;
+		public static string EditorDataAssetFullPath => DataAssetExists ? UnityEditor.AssetDatabase.GetAssetPath(Resources.Load(DataAssetPath)) : $"{Application.dataPath}/Resources/{DataAssetPath}.bytes";
 #endif
 		public static InputSource LastDefaultInputSource
 		{

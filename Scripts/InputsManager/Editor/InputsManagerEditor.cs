@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.InputSystem;
@@ -268,7 +267,7 @@ namespace Utilities.Inputs.Editor
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
 		public static void OpenWindow()
 		{
-			if (!EditorPrefs.HasKey(initializerKey))
+			if (!PlayerPrefs.HasKey(initializerKey))
 			{
 				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems.", "Okay");
 				CreateInputsManager();
@@ -298,7 +297,7 @@ namespace Utilities.Inputs.Editor
 		[Obsolete("Use `OpenWindow` instead.")]
 		public static void OpenInputsManager()
 		{
-			if (!EditorPrefs.HasKey(initializerKey))
+			if (!PlayerPrefs.HasKey(initializerKey))
 			{
 				EditorUtility.DisplayDialog("Inputs Manager: Welcome!", "Hey! Thank you for using the Inputs Manager, we are looking forward to improve it based on your honourable reviews and reports in case of any problems!", "Okay");
 				CreateInputsManager();
@@ -354,7 +353,7 @@ namespace Utilities.Inputs.Editor
 		[MenuItem("Tools/Utilities/Inputs Manager/Create Data Asset", false, 3)]
 		public static void CreateInputsManager()
 		{
-			EditorPrefs.SetInt(initializerKey, 0);
+			PlayerPrefs.SetInt(initializerKey, 0);
 
 			if (!RecreateDataFile())
 			{

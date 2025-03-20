@@ -73,6 +73,8 @@ Requires Git on your machine ([Unity Documentation](https://docs.unity3d.com/Man
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.15
+	- Fixed `DataAssetFullPath` and data asset recreation
 - 1.1.14
 	- Added code summary documentation
 	- Fixed `InvalidOperationException`

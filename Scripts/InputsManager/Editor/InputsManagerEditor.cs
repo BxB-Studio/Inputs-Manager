@@ -16,11 +16,21 @@ using Object = UnityEngine.Object;
 
 namespace Utilities.Inputs.Editor
 {
+	/// <summary>
+	/// A class that contains the editor for the Inputs Manager.
+	/// </summary>
 	public class InputsManagerEditor : EditorWindow
 	{
 		#region Enumerators
 
+		/// <summary>
+		/// The target of the binding operation, indicating which input binding is being configured.
+		/// </summary>
 		private enum BindTarget { None, Positive, Negative, GamepadPositive, GamepadNegative }
+		
+		/// <summary>
+		/// Gets all available keyboard keys for input binding, filtering out numeric values.
+		/// </summary>
 		private static string[] Keys
 		{
 			get
@@ -48,7 +58,15 @@ namespace Utilities.Inputs.Editor
 				return keys;
 			}
 		}
+		
+		/// <summary>
+		/// Cached array of keyboard key names for the input binding UI.
+		/// </summary>
 		private static string[] keys;
+		
+		/// <summary>
+		/// Gets all available gamepad bindings for input configuration, filtering out numeric values.
+		/// </summary>
 		private static string[] GamepadBindings
 		{
 			get
@@ -76,6 +94,10 @@ namespace Utilities.Inputs.Editor
 				return gamepadBindings;
 			}
 		}
+		
+		/// <summary>
+		/// Cached array of gamepad binding names for the input binding UI.
+		/// </summary>
 		private static string[] gamepadBindings;
 
 		#endregion
@@ -84,31 +106,110 @@ namespace Utilities.Inputs.Editor
 
 		#region Properties
 
+		/// <summary>
+		/// Indicates whether an input is currently being edited in the editor window.
+		/// Used to control UI state and prevent conflicting operations.
+		/// </summary>
 		public static bool EditingInput { get; private set; }
-
+		
+		/// <summary>
+		/// Gets the full file path of the old data asset if it exists.
+		/// Returns an empty string if the asset doesn't exist.
+		/// </summary>
 		private static string OldDataAssetFullPath => OldDataAssetExists(out Object dataAsset) ? AssetDatabase.GetAssetPath(dataAsset) : string.Empty;
 
 		#endregion
 
 		#region Fields
 
+		/// <summary>
+		/// Reference to the current instance of the InputsManagerEditor window.
+		/// </summary>
 		private static InputsManagerEditor editorInstance;
+		
+		/// <summary>
+		/// The input axis currently being configured in the binding process.
+		/// </summary>
 		private static InputAxis bindingAxis;
+		
+		/// <summary>
+		/// The input currently being edited in the editor.
+		/// </summary>
 		private static Input input;
+		
+		/// <summary>
+		/// The current binding target (positive/negative, keyboard/gamepad) being configured.
+		/// </summary>
 		private static BindTarget bindingTarget;
+		
+		/// <summary>
+		/// The event captured during key binding to detect keyboard input.
+		/// </summary>
 		private static Event bindingEvent;
+		
+		/// <summary>
+		/// The gamepad binding detected during the binding process.
+		/// </summary>
 		private static GamepadBinding boundGamepadBind;
+		
+		/// <summary>
+		/// EditorPrefs key used to track if the InputsManager has been initialized.
+		/// </summary>
 		private readonly static string initializerKey = "InputsManager_Init";
+		
+		/// <summary>
+		/// The name of the input currently being edited.
+		/// </summary>
 		private static string inputName;
+		
+		/// <summary>
+		/// Flag indicating if a new input is being added.
+		/// </summary>
 		private static bool addingInput;
+		
+		/// <summary>
+		/// Flag indicating if inputs are being sorted in the editor.
+		/// </summary>
 		private static bool sortingInputs;
+		
+		/// <summary>
+		/// Flag indicating if a binding has been detected during the binding process.
+		/// </summary>
 		private static bool hasBind;
+		
+		/// <summary>
+		/// Flag indicating if a shift key binding has been detected.
+		/// </summary>
 		private static bool hasShiftBind;
+		
+		/// <summary>
+		/// Flag indicating if the settings panel is currently open.
+		/// </summary>
 		private static bool settings;
+		
+		/// <summary>
+		/// Flag indicating if the export panel is currently open.
+		/// </summary>
 		private static bool export;
+		
+		/// <summary>
+		/// Flag indicating if all inputs should be exported.
+		/// </summary>
 		private static bool exportAll = true;
+		
+		/// <summary>
+		/// Array of flags indicating which inputs should be exported.
+		/// </summary>
 		private static bool[] exportInputs;
+		
+		/// <summary>
+		/// The key code of the binding currently being configured.
+		/// </summary>
 		private static int bindingKey;
+		
+		/// <summary>
+		/// Indicates whether import data is available and valid for processing.
+		/// </summary>
 		private static bool Import
 		{
 			get
@@ -116,13 +217,40 @@ namespace Utilities.Inputs.Editor
 				return !importJson.IsNullOrEmpty() && !importJson.IsNullOrWhiteSpace() && importInputs != null;
 			}
 		}
+		
+		/// <summary>
+		/// Flag indicating if all inputs should be imported.
+		/// </summary>
 		private static bool importAll = true;
+		
+		/// <summary>
+		/// Array of flags indicating which inputs should be imported.
+		/// </summary>
 		private static bool[] importInputsSelection;
+		
+		/// <summary>
+		/// The JSON string containing input data to be imported.
+		/// </summary>
 		private static string importJson;
+		
+		/// <summary>
+		/// Array of inputs parsed from the import JSON.
+		/// </summary>
 		private static Input[] importInputs;
+		
+		/// <summary>
+		/// Flag indicating if imported inputs should be added to existing inputs rather than replacing them.
+		/// </summary>
 		private static bool importAdditive;
+		
+		/// <summary>
+		/// Flag indicating if imported inputs should override existing inputs with the same name.
+		/// </summary>
 		private static bool importOverride;
 
+		/// <summary>
+		/// The scroll position of the editor window's scroll view.
+		/// </summary>
 		private Vector2 scroll;
 
 		#endregion
@@ -133,6 +261,10 @@ namespace Utilities.Inputs.Editor
 
 		#region Menu Items
 
+		/// <summary>
+		/// Opens the Inputs Manager editor window.
+		/// Creates a new Inputs Manager if it doesn't exist yet.
+		/// </summary>
 		[MenuItem("Tools/Utilities/Inputs Manager/Edit Settings...", false, 1)]
 		public static void OpenWindow()
 		{
@@ -149,11 +281,20 @@ namespace Utilities.Inputs.Editor
 			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
 			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
 		}
+		
+		/// <summary>
+		/// Opens the Inputs Manager window and immediately begins editing the specified input.
+		/// </summary>
+		/// <param name="input">The input to edit in the window.</param>
 		public static void OpenWindow(Input input)
 		{
 			OpenWindow();
 			EditInput(input);
 		}
+		
+		/// <summary>
+		/// Opens the Inputs Manager window.
+		/// </summary>
 		[Obsolete("Use `OpenWindow` instead.")]
 		public static void OpenInputsManager()
 		{
@@ -170,16 +311,21 @@ namespace Utilities.Inputs.Editor
 			editorInstance = GetWindow<InputsManagerEditor>(false, "Inputs Manager", true);
 			editorInstance.minSize = new Vector2(minWindowWidth, 512f);
 		}
+		
+		/// <summary>
+		/// Opens the Inputs Manager window and immediately begins editing the specified input.
+		/// </summary>
+		/// <param name="input">The input to edit in the window.</param>
 		[Obsolete("Use `OpenWindow(Input)` instead.")]
 		public static void OpenInputsManager(Input input)
 		{
 			OpenWindow(input);
 		}
-		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", true)]
-		protected static bool CheckResetInputsManager()
-		{
-			return InputsManager.DataAssetExists;
-		}
+		
+		/// <summary>
+		/// Resets the Inputs Manager to its original state after confirmation.
+		/// Deletes the current data asset and creates a new one.
+		/// </summary>
 		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", false, 2)]
 		public static void ResetInputsManager()
 		{
@@ -200,11 +346,11 @@ namespace Utilities.Inputs.Editor
 			InputsManager.RemoveAll();
 			CreateInputsManager();
 		}
-		[MenuItem("Tools/Utilities/Inputs Manager/Create Data Asset", true)]
-		protected static bool CheckCreateInputsManager()
-		{
-			return !CheckResetInputsManager();
-		}
+		
+		/// <summary>
+		/// Creates a new Inputs Manager data asset and optionally loads a preset.
+		/// Opens the editor window after creation.
+		/// </summary>
 		[MenuItem("Tools/Utilities/Inputs Manager/Create Data Asset", false, 3)]
 		public static void CreateInputsManager()
 		{
@@ -227,17 +373,51 @@ namespace Utilities.Inputs.Editor
 				settings = false;
 			}
 		}
+		
+		/// <summary>
+		/// Opens the GitHub issues page to report an error with the Inputs Manager.
+		/// </summary>
 		[MenuItem("Tools/Utilities/Inputs Manager/Report Error...", false, 4)]
 		public static void ReportError()
 		{
 			OpenExternalURL(@"https://github.com/BxB-Studio/Inputs-Manager/issues/new");
 		}
+		
+		/// <summary>
+		/// Opens the GitHub repository page for the Inputs Manager.
+		/// </summary>
 		[MenuItem("Tools/Utilities/Inputs Manager/About...", false, 5)]
 		public static void About()
 		{
 			OpenExternalURL(@"https://github.com/BxB-Studio/Inputs-Manager");
 		}
-
+		
+		/// <summary>
+		/// Validates the "Create Data Asset" menu item.
+		/// Returns true if the Inputs Manager data asset doesn't exist yet.
+		/// </summary>
+		/// <returns>True if the Inputs Manager can be created, false otherwise.</returns>
+		[MenuItem("Tools/Utilities/Inputs Manager/Create Data Asset", true)]
+		protected static bool CheckCreateInputsManager()
+		{
+			return !CheckResetInputsManager();
+		}
+		
+		/// <summary>
+		/// Validates the "Reset Settings" menu item.
+		/// Returns true if the Inputs Manager data asset exists and can be reset.
+		/// </summary>
+		/// <returns>True if the Inputs Manager can be reset, false otherwise.</returns>
+		[MenuItem("Tools/Utilities/Inputs Manager/Reset Settings", true)]
+		protected static bool CheckResetInputsManager()
+		{
+			return InputsManager.DataAssetExists;
+		}
+		
+		/// <summary>
+		/// Opens an external URL after displaying a confirmation dialog.
+		/// </summary>
+		/// <param name="url">The URL to open in the default web browser.</param>
 		private static void OpenExternalURL(string url)
 		{
 			if (EditorUtility.DisplayDialog("Inputs Manager: Info", "You're about to visit an external link. Do you want to proceed?", "Yes", "No"))
@@ -248,17 +428,37 @@ namespace Utilities.Inputs.Editor
 
 		#region Utilities
 
+		/// <summary>
+		/// Closes the Inputs Manager editor window if it's open.
+		/// Finds any existing instances and closes them.
+		/// </summary>
 		public static void CloseWindow()
 		{
+			var instance = Resources.FindObjectsOfTypeAll<InputsManagerEditor>().FirstOrDefault();
 
+			if (instance == null)
+				return;
+
+			instance.Close();
 		}
-
+		
+		/// <summary>
+		/// Checks if the old data asset exists at the legacy location.
+		/// </summary>
+		/// <param name="dataAsset">Output parameter that will contain the data asset if found.</param>
+		/// <returns>True if the old data asset exists, false otherwise.</returns>
 		private static bool OldDataAssetExists(out Object dataAsset)
 		{
 			dataAsset = Resources.Load($"Assets{Path.DirectorySeparatorChar}InputsManager_Data");
 
 			return dataAsset;
 		}
+		
+		/// <summary>
+		/// Recreates the Inputs Manager data file.
+		/// Saves the current data and refreshes the AssetDatabase.
+		/// </summary>
+		/// <returns>True if the data file was successfully recreated, false otherwise.</returns>
 		private static bool RecreateDataFile()
 		{
 			bool process = InputsManager.EditorSaveData();
@@ -267,6 +467,11 @@ namespace Utilities.Inputs.Editor
 
 			return process;
 		}
+		
+		/// <summary>
+		/// Loads a preset from a JSON file.
+		/// Prompts the user to select a file and processes it.
+		/// </summary>
 		private static void LoadPreset()
 		{
 			if (!ImportJsonFromPath())
@@ -281,6 +486,12 @@ namespace Utilities.Inputs.Editor
 			else
 				settings = true;
 		}
+		
+		/// <summary>
+		/// Imports a JSON file from a user-selected path.
+		/// Shows a progress bar while reading the file.
+		/// </summary>
+		/// <returns>True if the file was successfully imported, false otherwise.</returns>
 		private static bool ImportJsonFromPath()
 		{
 			string path = EditorUtility.OpenFilePanel("Choose a preset file", string.Empty, "json");
@@ -309,6 +520,12 @@ namespace Utilities.Inputs.Editor
 
 			return true;
 		}
+		
+		/// <summary>
+		/// Parses the imported JSON string into an array of Input objects.
+		/// Initializes the import selection array with all items selected.
+		/// </summary>
+		/// <returns>True if the JSON was successfully parsed into inputs, false otherwise.</returns>
 		private static bool InputsFromJson()
 		{
 			importInputs = JsonUtility.FromJson<Utility.JsonArray<Input>>(importJson).ToArray();
@@ -323,6 +540,13 @@ namespace Utilities.Inputs.Editor
 
 			return true;
 		}
+		
+		/// <summary>
+		/// Moves an input from one index to another in the InputsManager.
+		/// Used for reordering inputs in the editor.
+		/// </summary>
+		/// <param name="oldIndex">The current index of the input.</param>
+		/// <param name="newIndex">The target index to move the input to.</param>
 		private static void MoveInput(int oldIndex, int newIndex)
 		{
 			Input input = InputsManager.GetInput(oldIndex);
@@ -330,6 +554,12 @@ namespace Utilities.Inputs.Editor
 			InputsManager.RemoveInput(oldIndex);
 			InputsManager.InsertInput(newIndex, input);
 		}
+		
+		/// <summary>
+		/// Begins editing an existing input.
+		/// Stores the input name and sets the editing state.
+		/// </summary>
+		/// <param name="input">The input to edit.</param>
 		private static void EditInput(Input input)
 		{
 			InputsManagerEditor.input = input;
@@ -337,12 +567,23 @@ namespace Utilities.Inputs.Editor
 			EditingInput = true;
 			input.Name = "";
 		}
+		
+		/// <summary>
+		/// Saves the changes to the currently edited input.
+		/// Restores the input name and exits editing mode.
+		/// </summary>
 		private static void SaveInput()
 		{
 			input.Name = inputName;
 			EditingInput = false;
 			input = null;
 		}
+		
+		/// <summary>
+		/// Toggles the new input creation state.
+		/// Creates a new input object when entering creation mode.
+		/// </summary>
+		/// <param name="state">True to enter new input mode, false to exit.</param>
 		private static void SwitchNewInput(bool state)
 		{
 			addingInput = state;
@@ -354,16 +595,33 @@ namespace Utilities.Inputs.Editor
 
 			editorInstance.Repaint();
 		}
+		
+		/// <summary>
+		/// Creates a duplicate of an existing input and begins editing it.
+		/// </summary>
+		/// <param name="input">The input to duplicate.</param>
 		private static void DuplicateInput(Input input)
 		{
 			EditInput(new Input(input));
 			addingInput = true;
 		}
+		
+		/// <summary>
+		/// Begins the binding process for an input axis.
+		/// Sets up the binding state to capture user input.
+		/// </summary>
+		/// <param name="axis">The axis to bind.</param>
+		/// <param name="target">The specific binding target (positive/negative, keyboard/gamepad).</param>
 		private static void BindAxis(InputAxis axis, BindTarget target)
 		{
 			bindingAxis = axis;
 			bindingTarget = target;
 		}
+		
+		/// <summary>
+		/// Completes the binding process for an input axis.
+		/// Applies the captured binding to the appropriate axis property.
+		/// </summary>
 		private static void EndBindAxis()
 		{
 			bool bindingForGamepad = bindingTarget == BindTarget.GamepadPositive || bindingTarget == BindTarget.GamepadNegative;
@@ -398,6 +656,13 @@ namespace Utilities.Inputs.Editor
 			if (bindingForGamepad)
 				InputSystem.onEvent -= GamepadBindEvent;
 		}
+		
+		/// <summary>
+		/// Handles input events from gamepads during the binding process.
+		/// Detects button presses, stick movements, and trigger activations.
+		/// </summary>
+		/// <param name="eventPtr">Pointer to the input event data.</param>
+		/// <param name="device">The input device that generated the event.</param>
 		private static void GamepadBindEvent(InputEventPtr eventPtr, InputDevice device)
 		{
 			if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>() || !(device is Gamepad gamepad))
@@ -466,6 +731,14 @@ namespace Utilities.Inputs.Editor
 
 		#region Editor
 
+		/// <summary>
+		/// Renders and handles the editor UI for an input axis.
+		/// Allows configuring positive and negative bindings for keyboard or gamepad.
+		/// </summary>
+		/// <param name="axis">The input axis to edit.</param>
+		/// <param name="type">The type of input (Button or Axis).</param>
+		/// <param name="mainAxis">The main axis reference for alternative bindings.</param>
+		/// <param name="isGamepadEditor">Whether this is editing gamepad bindings or keyboard bindings.</param>
 		private static void InputAxisEditor(InputAxis axis, InputType type, InputAxis mainAxis = null, bool isGamepadEditor = false)
 		{
 			#region Editor Styles
@@ -599,6 +872,13 @@ namespace Utilities.Inputs.Editor
 			if (negativeBindingUsed)
 				EditorGUILayout.HelpBox($"The `{(isGamepadEditor ? axis.GamepadNegative.ToString() : axis.Negative.ToString())}` binding seems to be selected by another input{(positiveBindingUsed ? " as well" : ". It's alright to use it that way, but it might cause some issues if two inputs are triggered at the same frame")}.", MessageType.None);
 		}
+		/// <summary>
+		/// Edits an input configuration in the editor.
+		/// Displays and handles the UI for configuring all aspects of an input including name, type, 
+		/// interpolation, value intervals, keyboard bindings, and gamepad bindings.
+		/// Manages the binding process when a user wants to assign a key or gamepad button.
+		/// </summary>
+		/// <param name="input">The input to edit. If null, the method returns immediately.</param>
 		private static void InputEditor(Input input)
 		{
 			if (!input)
@@ -1016,11 +1296,14 @@ namespace Utilities.Inputs.Editor
 
 					EditorGUILayout.Space();
 					EditorGUILayout.EndVertical();
-					EditorGUI.BeginDisabledGroup(exportInputs.Where(boolean => boolean == true).Count() == 0);
+
+					int exportInputsCount = exportInputs.Where(value => value == true).Count();
+
+					EditorGUI.BeginDisabledGroup(exportPath.IsNullOrEmpty() || exportInputsCount == 0);
 
 					if (GUILayout.Button("Export"))
 					{
-						Input[] inputs = new Input[exportInputs.Where(boolean => boolean == true).Count()];
+						Input[] inputs = new Input[exportInputsCount];
 						int j = 0;
 
 						for (int i = 0; i < InputsManager.Count; i++)

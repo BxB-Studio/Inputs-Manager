@@ -421,6 +421,12 @@ namespace Utilities.Inputs
 
 		#region Inputs
 
+		/// <summary>
+		/// Returns the current mouse movement delta as a Vector2.
+		/// This represents how much the mouse has moved since the last frame.
+		/// Checks if the InputsManager has been started and returns default(Vector2) if the mouse is null.
+		/// </summary>
+		/// <returns>A Vector2 representing the mouse movement delta. Returns default(Vector2) if mouse is unavailable.</returns>
 		public static Vector2 InputMouseMovement()
 		{
 			CheckStarted();
@@ -430,6 +436,13 @@ namespace Utilities.Inputs
 
 			return mouse.delta.value;
 		}
+
+		/// <summary>
+		/// Returns the current mouse cursor position on screen as a Vector2.
+		/// Checks if the InputsManager has been started and returns default(Vector2) if the mouse is null.
+		/// The position is in screen coordinates (pixels).
+		/// </summary>
+		/// <returns>A Vector2 representing the mouse cursor position. Returns default(Vector2) if mouse is unavailable.</returns>
 		public static Vector2 InputMousePosition()
 		{
 			CheckStarted();
@@ -439,6 +452,13 @@ namespace Utilities.Inputs
 
 			return mouse.position.value;
 		}
+
+		/// <summary>
+		/// Returns the current mouse scroll wheel input as a Vector2.
+		/// This represents the scrolling amount and direction.
+		/// Checks if the InputsManager has been started before accessing mouse data.
+		/// </summary>
+		/// <returns>A Vector2 representing the scroll wheel movement. Returns default(Vector2) if mouse is unavailable.</returns>
 		public static Vector2 InputMouseScrollWheelVector()
 		{
 			CheckStarted();
@@ -449,54 +469,125 @@ namespace Utilities.Inputs
 			return mouse.scroll.value;
 		}
 
+		/// <summary>
+		/// Returns the main axis value for the specified input.
+		/// This retrieves the primary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the main axis input, typically in range [-1, 1].</returns>
 		public static float InputMainAxisValue(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainValue(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the main axis value for the input with the specified name.
+		/// This retrieves the primary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the main axis input, typically in range [-1, 1].</returns>
 		public static float InputMainAxisValue(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainValue(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the main axis value for the input at the specified index.
+		/// This retrieves the primary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the main axis input, typically in range [-1, 1].</returns>
 		public static float InputMainAxisValue(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainValue(inputsKeyboardAccess, inputsGamepadAccess, index, gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the alternative axis value for the specified input.
+		/// This retrieves the secondary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the alternative axis input, typically in range [-1, 1].</returns>
 		public static float InputAltAxisValue(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltValue(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the alternative axis value for the input with the specified name.
+		/// This retrieves the secondary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the alternative axis input, typically in range [-1, 1].</returns>
 		public static float InputAltAxisValue(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltValue(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the alternative axis value for the input at the specified index.
+		/// This retrieves the secondary axis value from either keyboard or gamepad input sources.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the alternative axis input, typically in range [-1, 1].</returns>
 		public static float InputAltAxisValue(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltValue(inputsKeyboardAccess, inputsGamepadAccess, index, gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the combined input value for the specified input.
+		/// This retrieves the overall input value that may combine both main and alternative axes.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the combined input value, typically in range [-1, 1].</returns>
 		public static float InputValue(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Value(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the combined input value for the input with the specified name.
+		/// This retrieves the overall input value that may combine both main and alternative axes.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the combined input value, typically in range [-1, 1].</returns>
 		public static float InputValue(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Value(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Returns the combined input value for the input at the specified index.
+		/// This retrieves the overall input value that may combine both main and alternative axes.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>A float value representing the combined input value, typically in range [-1, 1].</returns>
 		public static float InputValue(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
@@ -504,6 +595,11 @@ namespace Utilities.Inputs
 			return InputUtilities.Value(inputsKeyboardAccess, inputsGamepadAccess, index, gamepadIndex);
 		}
 
+		/// <summary>
+		/// Returns the magnitude of the mouse scroll wheel input.
+		/// This provides the overall scroll intensity regardless of direction.
+		/// </summary>
+		/// <returns>A float value representing the magnitude of the scroll wheel movement.</returns>
 		public static float InputMouseScrollWheel()
 		{
 			CheckStarted();
@@ -513,6 +609,12 @@ namespace Utilities.Inputs
 
 			return mouse.scroll.value.magnitude;
 		}
+
+		/// <summary>
+		/// Returns the horizontal component of the mouse scroll wheel input.
+		/// This represents side-to-side scrolling (e.g., with a horizontal scroll wheel or touchpad).
+		/// </summary>
+		/// <returns>A float value representing the horizontal scroll movement, typically positive for right and negative for left.</returns>
 		public static float InputMouseScrollWheelHorizontal()
 		{
 			CheckStarted();
@@ -522,6 +624,12 @@ namespace Utilities.Inputs
 
 			return mouse.scroll.value.x;
 		}
+
+		/// <summary>
+		/// Returns the vertical component of the mouse scroll wheel input.
+		/// This represents the traditional up-down scrolling of a mouse wheel.
+		/// </summary>
+		/// <returns>A float value representing the vertical scroll movement, typically positive for up and negative for down.</returns>
 		public static float InputMouseScrollWheelVertical()
 		{
 			CheckStarted();
@@ -532,18 +640,38 @@ namespace Utilities.Inputs
 			return mouse.scroll.value.y;
 		}
 
+		/// <summary>
+		/// Checks if any input device (keyboard, mouse, or gamepad) currently has a button pressed.
+		/// This method detects continuous button presses from any input source.
+		/// </summary>
+		/// <param name="ignoreMouse">When set to true, mouse button presses will be ignored. Default is false.</param>
+		/// <returns>True if any button is currently being pressed on any input device (subject to ignoreMouse parameter), otherwise false.</returns>
 		public static bool AnyInputPress(bool ignoreMouse = false)
 		{
 			CheckStarted();
 
 			return keyboard != null && keyboard.anyKey.isPressed || !ignoreMouse && InputMouseAnyButtonPress() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.isPressed));
 		}
+
+		/// <summary>
+		/// Checks if any input device (keyboard, mouse, or gamepad) has had a button pressed down in the current frame.
+		/// This method detects the initial press of any button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="ignoreMouse">When set to true, mouse button presses will be ignored. Default is false.</param>
+		/// <returns>True if any button was pressed down in this frame on any input device (subject to ignoreMouse parameter), otherwise false.</returns>
 		public static bool AnyInputDown(bool ignoreMouse = false)
 		{
 			CheckStarted();
 
 			return keyboard != null && keyboard.anyKey.wasPressedThisFrame || !ignoreMouse && InputMouseAnyButtonDown() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasPressedThisFrame));
 		}
+
+		/// <summary>
+		/// Checks if any input device (keyboard, mouse, or gamepad) has had a button released in the current frame.
+		/// This method detects when any previously pressed button is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="ignoreMouse">When set to true, mouse button releases will be ignored. Default is false.</param>
+		/// <returns>True if any button was released in this frame on any input device (subject to ignoreMouse parameter), otherwise false.</returns>
 		public static bool AnyInputUp(bool ignoreMouse = false)
 		{
 			CheckStarted();
@@ -551,810 +679,1884 @@ namespace Utilities.Inputs
 			return keyboard != null && keyboard.anyKey.wasReleasedThisFrame || !ignoreMouse && InputMouseAnyButtonUp() || gamepads != null && gamepads.Any(gamepad => gamepad.allControls.Any(control => control is ButtonControl button && !button.synthetic && button.wasReleasedThisFrame));
 		}
 
+		/// <summary>
+		/// Checks if the specified input is currently being pressed.
+		/// This method detects continuous button presses for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Press(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input with the specified name is currently being pressed.
+		/// This method detects continuous button presses for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Press(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input at the specified index is currently being pressed.
+		/// This method detects continuous button presses for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Press(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the specified input is currently being pressed.
+		/// This method detects continuous presses on the primary axis binding for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputMainAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input with the specified name is currently being pressed.
+		/// This method detects continuous presses on the primary axis binding for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputMainAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input at the specified index is currently being pressed.
+		/// This method detects continuous presses on the primary axis binding for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputMainAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the specified input is currently being pressed.
+		/// This method detects continuous presses on the secondary axis binding for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputAltAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input with the specified name is currently being pressed.
+		/// This method detects continuous presses on the secondary axis binding for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputAltAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input at the specified index is currently being pressed.
+		/// This method detects continuous presses on the secondary axis binding for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputAltAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the specified input is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPositivePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositivePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPositivePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositivePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputPositivePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositivePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the specified input is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the specified input is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the primary axis binding of the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the primary axis binding of the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the primary axis binding of the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the specified input is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the primary axis binding of the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the primary axis binding of the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the primary axis binding of the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the specified input is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the secondary axis binding of the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the secondary axis binding of the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the positive direction for the secondary axis binding of the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the specified input is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the secondary axis binding of the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisPress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input with the specified name is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the secondary axis binding of the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisPress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input at the specified index is currently being pressed.
+		/// This method detects continuous presses in the negative direction for the secondary axis binding of the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is currently being pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisPress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltPress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+		/// <summary>
+		/// Checks if the specified input has been pressed down in the current frame.
+		/// This method detects the initial press of a button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Down(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press of a button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Down(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press of a button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Down(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the specified input has been pressed down in the current frame.
+		/// This method detects the initial press on the primary axis binding for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputMainAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press on the primary axis binding for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputMainAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press on the primary axis binding for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputMainAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the specified input has been pressed down in the current frame.
+		/// This method detects the initial press on the secondary axis binding for the given input.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputAltAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press on the secondary axis binding for the given input name.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputAltAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press on the secondary axis binding for the given input index.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputAltAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the primary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the positive direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the specified input has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDown(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input with the specified name has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDown(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input at the specified index has been pressed down in the current frame.
+		/// This method detects the initial press in the negative direction for the secondary axis binding, triggering only on the first frame.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was pressed down in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDown(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltDown(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+		/// <summary>
+		/// Checks if the specified input has been released in the current frame.
+		/// This method detects when a previously pressed input is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Up(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed input is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Up(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed input is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Up(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the specified input has been released in the current frame.
+		/// This method detects when a previously pressed main axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputMainAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed main axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputMainAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed main axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputMainAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the specified input has been released in the current frame.
+		/// This method detects when a previously pressed alternative axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputAltAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed alternative axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputAltAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed alternative axis binding is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputAltAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the specified input has been released in the current frame.
+		/// This method detects when a previously pressed positive direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed positive direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed positive direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the specified input has been released in the current frame.
+		/// This method detects when a previously pressed negative direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed negative direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed negative direction is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the specified input has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveMainAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the specified input has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the main axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeMainAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the specified input has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed positive direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputPositiveAltAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the specified input has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisUp(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input with the specified name has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisUp(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input at the specified index has been released in the current frame.
+		/// This method detects when a previously pressed negative direction of the alternative axis is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was released in this frame, otherwise false.</returns>
 		public static bool InputNegativeAltAxisUp(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltUp(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+		/// <summary>
+		/// Checks if the specified input is being held down.
+		/// This method detects if an input is continuously being held, returning true for every frame the input remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is being held down, otherwise false.</returns>
 		public static bool InputHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Hold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input with the specified name is being held down.
+		/// This method detects if an input is continuously being held, returning true for every frame the input remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is being held down, otherwise false.</returns>
 		public static bool InputHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Hold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input at the specified index is being held down.
+		/// This method detects if an input is continuously being held, returning true for every frame the input remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input is being held down, otherwise false.</returns>
 		public static bool InputHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.Hold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the specified input is being held down.
+		/// This method detects if the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputMainAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input with the specified name is being held down.
+		/// This method detects if the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputMainAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input at the specified index is being held down.
+		/// This method detects if the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputMainAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the specified input is being held down.
+		/// This method detects if the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputAltAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input with the specified name is being held down.
+		/// This method detects if the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputAltAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input at the specified index is being held down.
+		/// This method detects if the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input is being held down, otherwise false.</returns>
 		public static bool InputAltAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the specified input is being held down.
+		/// This method detects if the positive direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputPositiveHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input with the specified name is being held down.
+		/// This method detects if the positive direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputPositiveHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input at the specified index is being held down.
+		/// This method detects if the positive direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputPositiveHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the specified input is being held down.
+		/// This method detects if the negative direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputNegativeHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input with the specified name is being held down.
+		/// This method detects if the negative direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputNegativeHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input at the specified index is being held down.
+		/// This method detects if the negative direction is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input is being held down, otherwise false.</returns>
 		public static bool InputNegativeHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the specified input is being held down.
+		/// This method detects if the positive direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveMainAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input with the specified name is being held down.
+		/// This method detects if the positive direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveMainAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input at the specified index is being held down.
+		/// This method detects if the positive direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveMainAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the specified input is being held down.
+		/// This method detects if the negative direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeMainAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input with the specified name is being held down.
+		/// This method detects if the negative direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeMainAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input at the specified index is being held down.
+		/// This method detects if the negative direction of the primary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeMainAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the specified input is being held down.
+		/// This method detects if the positive direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveAltAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input with the specified name is being held down.
+		/// This method detects if the positive direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveAltAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input at the specified index is being held down.
+		/// This method detects if the positive direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputPositiveAltAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the specified input is being held down.
+		/// This method detects if the negative direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeAltAxisHold(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input with the specified name is being held down.
+		/// This method detects if the negative direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeAltAxisHold(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input at the specified index is being held down.
+		/// This method detects if the negative direction of the secondary axis binding is continuously being held, returning true for every frame it remains pressed.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis is being held down, otherwise false.</returns>
 		public static bool InputNegativeAltAxisHold(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltHold(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+		/// <summary>
+		/// Checks if the specified input has been double-pressed within a short time interval.
+		/// This method detects when an input is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.DoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when an input is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.DoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when an input is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.DoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the specified input has been double-pressed within a short time interval.
+		/// This method detects when the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputMainAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputMainAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the main axis of the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the main axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputMainAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.MainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the specified input has been double-pressed within a short time interval.
+		/// This method detects when the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputAltAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputAltAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the alternative axis of the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the alternative axis of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputAltAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.AltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the specified input has been double-pressed within a short time interval.
+		/// This method detects when the positive direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the positive direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the positive direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the specified input has been double-pressed within a short time interval.
+		/// This method detects when the negative direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the negative direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the negative direction is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the specified input was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the specified input has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the main axis for the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveMainAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the specified input has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the main axis for the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the primary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the main axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeMainAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeMainDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the specified input has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the positive direction of the alternative axis for the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the positive direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the positive direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputPositiveAltAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.PositiveAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the specified input has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="input">The input enum to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDoublePress(Input input, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(input), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input with the specified name has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="name">The name of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDoublePress(string name, int gamepadIndex = 0)
 		{
 			CheckStarted();
 
 			return InputUtilities.NegativeAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(name), gamepadIndex);
 		}
+
+		/// <summary>
+		/// Checks if the negative direction of the alternative axis for the input at the specified index has been double-pressed within a short time interval.
+		/// This method detects when the negative direction of the secondary axis binding is pressed twice in quick succession.
+		/// </summary>
+		/// <param name="index">The index of the input to check.</param>
+		/// <param name="gamepadIndex">The index of the gamepad to check (default is 0).</param>
+		/// <returns>True if the negative direction of the alternative axis was double-pressed, otherwise false.</returns>
 		public static bool InputNegativeAltAxisDoublePress(int index, int gamepadIndex = 0)
 		{
 			CheckStarted();
@@ -1362,18 +2564,38 @@ namespace Utilities.Inputs
 			return InputUtilities.NegativeAltDoublePress(inputsKeyboardAccess, inputsGamepadAccess, GetInputIndex(index), gamepadIndex);
 		}
 
+		/// <summary>
+		/// Checks if the specified keyboard key is currently being pressed.
+		/// This method detects continuous presses, returning true for every frame the key remains pressed.
+		/// </summary>
+		/// <param name="key">The keyboard key to check.</param>
+		/// <returns>True if the specified key is currently being pressed, otherwise false.</returns>
 		public static bool InputKeyPress(Key key)
 		{
 			CheckStarted();
 
 			return InputUtilities.KeyToKeyControl(key).isPressed;
 		}
+
+		/// <summary>
+		/// Checks if the specified keyboard key has been pressed down in the current frame.
+		/// This method detects the initial press of a key, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="key">The keyboard key to check.</param>
+		/// <returns>True if the specified key was pressed down in this frame, otherwise false.</returns>
 		public static bool InputKeyDown(Key key)
 		{
 			CheckStarted();
 
 			return InputUtilities.KeyToKeyControl(key).wasPressedThisFrame;
 		}
+
+		/// <summary>
+		/// Checks if the specified keyboard key has been released in the current frame.
+		/// This method detects when a previously pressed key is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="key">The keyboard key to check.</param>
+		/// <returns>True if the specified key was released in this frame, otherwise false.</returns>
 		public static bool InputKeyUp(Key key)
 		{
 			CheckStarted();
@@ -1381,6 +2603,11 @@ namespace Utilities.Inputs
 			return InputUtilities.KeyToKeyControl(key).wasReleasedThisFrame;
 		}
 
+		/// <summary>
+		/// Checks if any mouse button is currently being pressed.
+		/// This method detects continuous presses for any mouse button, returning true for every frame any button remains pressed.
+		/// </summary>
+		/// <returns>True if any mouse button is currently being pressed, otherwise false.</returns>
 		public static bool InputMouseAnyButtonPress()
 		{
 			CheckStarted();
@@ -1394,6 +2621,14 @@ namespace Utilities.Inputs
 
 			return false;
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button is currently being pressed.
+		/// This method detects continuous presses for the specified button, returning true for every frame the button remains pressed.
+		/// </summary>
+		/// <param name="type">The index of the mouse button to check (0-4: left, right, middle, back, forward).</param>
+		/// <returns>True if the specified mouse button is currently being pressed, otherwise false.</returns>
+		/// <exception cref="ArgumentException">Thrown when the type parameter is outside the valid range (0-4).</exception>
 		public static bool InputMouseButtonPress(int type)
 		{
 			CheckStarted();
@@ -1414,10 +2649,23 @@ namespace Utilities.Inputs
 				_ => false,
 			};
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button is currently being pressed.
+		/// This method detects continuous presses for the specified button, returning true for every frame the button remains pressed.
+		/// </summary>
+		/// <param name="type">The mouse button to check (Left, Right, Middle, Back, Forward).</param>
+		/// <returns>True if the specified mouse button is currently being pressed, otherwise false.</returns>
 		public static bool InputMouseButtonPress(MouseButton type)
 		{
 			return InputMouseButtonPress((int)type);
 		}
+
+		/// <summary>
+		/// Checks if any mouse button has been pressed down in the current frame.
+		/// This method detects the initial press of any mouse button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <returns>True if any mouse button was pressed down in this frame, otherwise false.</returns>
 		public static bool InputMouseAnyButtonDown()
 		{
 			CheckStarted();
@@ -1431,6 +2679,14 @@ namespace Utilities.Inputs
 
 			return false;
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been pressed down in the current frame.
+		/// This method detects the initial press of the specified button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="type">The index of the mouse button to check (0-4: left, right, middle, back, forward).</param>
+		/// <returns>True if the specified mouse button was pressed down in this frame, otherwise false.</returns>
+		/// <exception cref="ArgumentException">Thrown when the type parameter is outside the valid range (0-4).</exception>
 		public static bool InputMouseButtonDown(int type)
 		{
 			CheckStarted();
@@ -1451,10 +2707,23 @@ namespace Utilities.Inputs
 				_ => false,
 			};
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been pressed down in the current frame.
+		/// This method detects the initial press of the specified button, triggering only on the first frame of the press.
+		/// </summary>
+		/// <param name="type">The mouse button to check (Left, Right, Middle, Back, Forward).</param>
+		/// <returns>True if the specified mouse button was pressed down in this frame, otherwise false.</returns>
 		public static bool InputMouseButtonDown(MouseButton type)
 		{
 			return InputMouseButtonDown((int)type);
 		}
+
+		/// <summary>
+		/// Checks if any mouse button has been released in the current frame.
+		/// This method detects when any previously pressed mouse button is released, triggering only on the frame of release.
+		/// </summary>
+		/// <returns>True if any mouse button was released in this frame, otherwise false.</returns>
 		public static bool InputMouseAnyButtonUp()
 		{
 			CheckStarted();
@@ -1468,6 +2737,14 @@ namespace Utilities.Inputs
 
 			return false;
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been released in the current frame.
+		/// This method detects when a previously pressed button is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="type">The index of the mouse button to check (0-4: left, right, middle, back, forward).</param>
+		/// <returns>True if the specified mouse button was released in this frame, otherwise false.</returns>
+		/// <exception cref="ArgumentException">Thrown when the type parameter is outside the valid range (0-4).</exception>
 		public static bool InputMouseButtonUp(int type)
 		{
 			CheckStarted();
@@ -1488,10 +2765,23 @@ namespace Utilities.Inputs
 				_ => false,
 			};
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been released in the current frame.
+		/// This method detects when a previously pressed button is released, triggering only on the frame of release.
+		/// </summary>
+		/// <param name="type">The mouse button to check (Left, Right, Middle, Back, Forward).</param>
+		/// <returns>True if the specified mouse button was released in this frame, otherwise false.</returns>
 		public static bool InputMouseButtonUp(MouseButton type)
 		{
 			return InputMouseButtonUp((int)type);
 		}
+
+		/// <summary>
+		/// Checks if any mouse button is being held down.
+		/// This method detects if any mouse button is continuously being held, using internal tracking variables.
+		/// </summary>
+		/// <returns>True if any mouse button is being held down, otherwise false.</returns>
 		public static bool InputMouseAnyButtonHold()
 		{
 			CheckStarted();
@@ -1505,6 +2795,14 @@ namespace Utilities.Inputs
 
 			return false;
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button is being held down.
+		/// This method uses internal tracking variables to detect if a button is continuously being held.
+		/// </summary>
+		/// <param name="type">The index of the mouse button to check (0-4: left, right, middle, back, forward).</param>
+		/// <returns>True if the specified mouse button is being held down, otherwise false.</returns>
+		/// <exception cref="ArgumentException">Thrown when the type parameter is outside the valid range (0-4).</exception>
 		public static bool InputMouseButtonHold(int type)
 		{
 			CheckStarted();
@@ -1525,10 +2823,23 @@ namespace Utilities.Inputs
 				_ => false,
 			};
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button is being held down.
+		/// This method uses internal tracking variables to detect if a button is continuously being held.
+		/// </summary>
+		/// <param name="type">The mouse button to check (Left, Right, Middle, Back, Forward).</param>
+		/// <returns>True if the specified mouse button is being held down, otherwise false.</returns>
 		public static bool InputMouseButtonHold(MouseButton type)
 		{
 			return InputMouseButtonHold((int)type);
 		}
+
+		/// <summary>
+		/// Checks if any mouse button has been double-pressed within a short time interval.
+		/// This method detects when any mouse button is pressed twice in quick succession.
+		/// </summary>
+		/// <returns>True if any mouse button was double-pressed, otherwise false.</returns>
 		public static bool InputMouseAnyButtonDoublePress()
 		{
 			CheckStarted();
@@ -1542,6 +2853,14 @@ namespace Utilities.Inputs
 
 			return false;
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been double-pressed within a short time interval.
+		/// This method detects when the specified button is pressed twice in quick succession, using internal tracking variables.
+		/// </summary>
+		/// <param name="type">The index of the mouse button to check (0-4: left, right, middle, back, forward).</param>
+		/// <returns>True if the specified mouse button was double-pressed, otherwise false.</returns>
+		/// <exception cref="ArgumentException">Thrown when the type parameter is outside the valid range (0-4).</exception>
 		public static bool InputMouseButtonDoublePress(int type)
 		{
 			CheckStarted();
@@ -1562,15 +2881,35 @@ namespace Utilities.Inputs
 				_ => false,
 			};
 		}
+
+		/// <summary>
+		/// Checks if a specific mouse button has been double-pressed within a short time interval.
+		/// This method detects when the specified button is pressed twice in quick succession, using internal tracking variables.
+		/// </summary>
+		/// <param name="type">The mouse button to check (Left, Right, Middle, Back, Forward).</param>
+		/// <returns>True if the specified mouse button was double-pressed, otherwise false.</returns>
 		public static bool InputMouseButtonDoublePress(MouseButton type)
 		{
 			return InputMouseButtonDoublePress((int)type);
 		}
 
+		/// <summary>
+		/// Verifies that the InputsManager has been properly initialized before accessing input values.
+		/// This method is called internally by all input-checking methods to ensure the system is ready.
+		/// If the system is not started and the application is in Play mode, it throws an InvalidOperationException.
+		/// If the application is in Editor mode, it logs a warning instead of throwing an exception.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when the InputsManager has not been started in Play mode.</exception>
 		private static void CheckStarted()
 		{
 			if (started)
 				return;
+			else if (!Application.isPlaying)
+			{
+				Debug.LogWarning("The Inputs Manager cannot be used in the Editor. Use `InputsManager.Start()` to initialize the Inputs Manager and `InputsManager.Update()` to refresh value at Runtime.");
+
+				return;
+			}
 
 			throw new InvalidOperationException("The Inputs Manager needs to be started before accessing Input values. Use `InputsManager.Start()` to initialize the Inputs Manager and `InputsManager.Update()` to refresh value at Runtime.");
 		}
@@ -1579,6 +2918,13 @@ namespace Utilities.Inputs
 
 		#region Gamepad Outputs
 
+		/// <summary>
+		/// Activates vibration on a specific gamepad by setting the intensity of its motors.
+		/// This method directly controls the haptic feedback of the specified gamepad device.
+		/// </summary>
+		/// <param name="leftMotorIntensity">The intensity of the left motor vibration, ranging from 0.0 (no vibration) to 1.0 (maximum vibration).</param>
+		/// <param name="rightMotorIntensity">The intensity of the right motor vibration, ranging from 0.0 (no vibration) to 1.0 (maximum vibration).</param>
+		/// <param name="gamepad">The specific gamepad device to apply vibration to.</param>
 		public static void GamepadVibration(float leftMotorIntensity, float rightMotorIntensity, Gamepad gamepad)
 		{
 			if (gamepad == null)
@@ -1586,6 +2932,14 @@ namespace Utilities.Inputs
 
 			gamepad.SetMotorSpeeds(leftMotorIntensity, rightMotorIntensity);
 		}
+
+		/// <summary>
+		/// Activates vibration on a gamepad at the specified index by setting the intensity of its motors.
+		/// This method provides a convenient way to control haptic feedback using the gamepad's index rather than the device reference.
+		/// </summary>
+		/// <param name="leftMotorIntensity">The intensity of the left motor vibration, ranging from 0.0 (no vibration) to 1.0 (maximum vibration).</param>
+		/// <param name="rightMotorIntensity">The intensity of the right motor vibration, ranging from 0.0 (no vibration) to 1.0 (maximum vibration).</param>
+		/// <param name="gamepadIndex">The index of the gamepad to apply vibration to (default is 0). If the index is invalid, the method returns without effect.</param>
 		public static void GamepadVibration(float leftMotorIntensity, float rightMotorIntensity, int gamepadIndex = 0)
 		{
 			if (gamepadIndex < 0 || gamepadIndex >= gamepadsCount)
@@ -1598,6 +2952,13 @@ namespace Utilities.Inputs
 
 		#region Methods
 
+		/// <summary>
+		/// Initializes the InputsManager system for use during runtime.
+		/// This method must be called before any input detection functions can be used.
+		/// It sets up the necessary native arrays for input tracking, loads input configuration data,
+		/// and prepares both keyboard and gamepad input handling.
+		/// </summary>
+		/// <exception cref="Exception">Thrown when attempting to call this method outside of Play mode.</exception>
 		public static void Start()
 		{
 			if (!Application.isPlaying)
@@ -1641,6 +3002,13 @@ namespace Utilities.Inputs
 
 			started = true;
 		}
+		/// <summary>
+		/// Updates the InputsManager system for the current frame.
+		/// This method must be called every frame to process input states and detect changes.
+		/// It handles gamepad connection/disconnection, updates mouse state, refreshes input controls,
+		/// and maintains the native arrays used for input tracking across different input sources.
+		/// </summary>
+		/// <exception cref="Exception">Thrown when attempting to call this method outside of Play mode.</exception>
 		public static void Update()
 		{
 			if (!Application.isPlaying)
@@ -1747,6 +3115,12 @@ namespace Utilities.Inputs
 						lastDefaultInputSource = InputSource.Keyboard;
 				}
 		}
+		/// <summary>
+		/// Releases all allocated resources used by the InputsManager.
+		/// This method disposes of all native collections including input access arrays for keyboard and gamepad inputs,
+		/// cleans up any allocated memory, and resets the system to an uninitialized state.
+		/// Call this method when shutting down the input system or when the application is closing to prevent memory leaks.
+		/// </summary>
 		public static void Dispose()
 		{
 			if (inputsAccess.IsCreated)
@@ -1761,8 +3135,18 @@ namespace Utilities.Inputs
 						inputsGamepadAccess[i].Dispose();
 
 			inputsGamepadAccess = null;
+			started = false;
 		}
 
+		/// <summary>
+		/// Updates the state of mouse input for the current frame.
+		/// This method tracks and processes mouse button states including:
+		/// - Left and middle mouse button hold detection with timing thresholds
+		/// - Double-click detection for left and middle mouse buttons
+		/// - Management of timers for hold and double-press functionality
+		/// The method maintains internal state variables to properly detect these input patterns
+		/// and is called each frame during the InputsManager update cycle.
+		/// </summary>
 		private static void UpdateMouse()
 		{
 			mouseLeftHeld = false;
@@ -1905,6 +3289,11 @@ namespace Utilities.Inputs
 
 		#region Utilities
 
+		/// <summary>
+		/// Finds all inputs that use a specific keyboard key.
+		/// </summary>
+		/// <param name="key">The keyboard key to check for.</param>
+		/// <returns>An array of Input objects that use the specified key in any binding position (main positive/negative or alt positive/negative).</returns>
 		public static Input[] KeyUsed(Key key)
 		{
 			if (key == Key.None)
@@ -1918,6 +3307,12 @@ namespace Utilities.Inputs
 
 			return usedInputs.ToArray();
 		}
+
+		/// <summary>
+		/// Finds all inputs that use a specific gamepad binding.
+		/// </summary>
+		/// <param name="binding">The gamepad binding to check for.</param>
+		/// <returns>An array of Input objects that use the specified gamepad binding in any position (main positive/negative or alt positive/negative).</returns>
 		public static Input[] GamepadBindingUsed(GamepadBinding binding)
 		{
 			if (binding == GamepadBinding.None)
@@ -1931,6 +3326,12 @@ namespace Utilities.Inputs
 
 			return usedInputs.ToArray();
 		}
+
+		/// <summary>
+		/// Converts a Unity KeyCode to the corresponding Key enum value used by the InputsManager.
+		/// </summary>
+		/// <param name="keyCode">The Unity KeyCode to convert.</param>
+		/// <returns>The corresponding Key enum value, or Key.None if no match is found.</returns>
 		public static Key KeyCodeToKey(KeyCode keyCode)
 		{
 			return keyCode switch
@@ -2045,6 +3446,13 @@ namespace Utilities.Inputs
 				_ => Key.None,
 			};
 		}
+
+		/// <summary>
+		/// Finds the index of an input by its name in the inputs collection.
+		/// </summary>
+		/// <param name="name">The name of the input to find.</param>
+		/// <returns>The index of the input if found, or -1 if not found.</returns>
+		/// <exception cref="ArgumentException">Thrown when the input name is null or empty.</exception>
 		public static int IndexOf(string name)
 		{
 			if (name.IsNullOrEmpty())
@@ -2052,11 +3460,17 @@ namespace Utilities.Inputs
 
 			Dictionary<string, int> indexes = GetInputsNamesAndIndexesAsDictionary();
 
-			if (indexes.ContainsKey(name))
+			if (indexes != null && indexes.ContainsKey(name))
 				return indexes[name];
 
 			return -1;
 		}
+
+		/// <summary>
+		/// Gets an array of all input names currently registered in the system.
+		/// Rebuilds the array if data has changed or if it hasn't been initialized yet.
+		/// </summary>
+		/// <returns>An array containing all input names.</returns>
 		public static string[] GetInputsNames()
 		{
 			if (dataChanged || inputNames == null || inputNames.Length != Count)
@@ -2075,9 +3489,15 @@ namespace Utilities.Inputs
 
 			return inputNames;
 		}
+
+		/// <summary>
+		/// Gets a dictionary mapping input names to their corresponding indices.
+		/// Rebuilds the dictionary if data has changed or if it hasn't been initialized yet.
+		/// </summary>
+		/// <returns>A dictionary with input names as keys and their indices as values.</returns>
 		public static Dictionary<string, int> GetInputsNamesAndIndexesAsDictionary()
 		{
-			if (dataChanged || inputNamesDictionary == null || inputNamesDictionary.Count != Count)
+			if (inputs != null && (dataChanged || inputNamesDictionary == null || inputNamesDictionary.Count != Count))
 			{
 				if (inputNamesDictionary == null || inputNamesDictionary.Count != inputs.Length)
 					inputNamesDictionary = new Dictionary<string, int>();
@@ -2095,14 +3515,37 @@ namespace Utilities.Inputs
 
 			return inputNamesDictionary;
 		}
+
+		/// <summary>
+		/// Gets an input by its index in the inputs collection.
+		/// </summary>
+		/// <param name="index">The index of the input to retrieve.</param>
+		/// <returns>The Input object at the specified index.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		public static Input GetInput(int index)
 		{
 			return Inputs[GetInputIndex(index)];
 		}
+
+		/// <summary>
+		/// Gets an input by its name.
+		/// </summary>
+		/// <param name="name">The name of the input to retrieve.</param>
+		/// <returns>The Input object with the specified name.</returns>
+		/// <exception cref="ArgumentException">Thrown when no input with the given name exists.</exception>
 		public static Input GetInput(string name)
 		{
 			return Inputs[GetInputIndex(name)];
 		}
+
+		/// <summary>
+		/// Sets an input at the specified index to a new value.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="index">The index of the input to modify.</param>
+		/// <param name="input">The new Input object to set.</param>
+		/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		public static void SetInput(int index, Input input)
 		{
 			if (Application.isPlaying)
@@ -2118,6 +3561,15 @@ namespace Utilities.Inputs
 			Inputs[GetInputIndex(index)] = input;
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Sets an input with the specified name to a new value.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="name">The name of the input to modify.</param>
+		/// <param name="input">The new Input object to set.</param>
+		/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
+		/// <exception cref="ArgumentException">Thrown when no input with the given name exists.</exception>
 		public static void SetInput(string name, Input input)
 		{
 			if (Application.isPlaying)
@@ -2133,6 +3585,15 @@ namespace Utilities.Inputs
 			Inputs[GetInputIndex(name)] = input;
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Adds a new input to the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="input">The Input object to add.</param>
+		/// <returns>The added Input object, or null if the operation failed.</returns>
+		/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
+		/// <exception cref="ArgumentException">Thrown when the input name is invalid or already exists.</exception>
 		public static Input AddInput(Input input)
 		{
 			if (Application.isPlaying)
@@ -2163,10 +3624,26 @@ namespace Utilities.Inputs
 
 			return input;
 		}
+
+		/// <summary>
+		/// Creates and adds a new input with the specified name to the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="name">The name for the new input.</param>
+		/// <returns>The newly created and added Input object.</returns>
+		/// <exception cref="ArgumentException">Thrown when the name is invalid or already exists.</exception>
 		public static Input AddInput(string name)
 		{
 			return AddInput(new Input(name));
 		}
+
+		/// <summary>
+		/// Creates a duplicate of an existing input and adds it to the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="input">The Input object to duplicate.</param>
+		/// <returns>The newly created duplicate Input object, or null if the operation failed.</returns>
+		/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
 		public static Input DuplicateInput(Input input)
 		{
 			if (!input)
@@ -2191,14 +3668,38 @@ namespace Utilities.Inputs
 
 			return newInput;
 		}
+
+		/// <summary>
+		/// Creates a duplicate of an existing input identified by name and adds it to the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="name">The name of the input to duplicate.</param>
+		/// <returns>The newly created duplicate Input object, or null if the operation failed.</returns>
+		/// <exception cref="ArgumentException">Thrown when no input with the given name exists.</exception>
 		public static Input DuplicateInput(string name)
 		{
 			return DuplicateInput(GetInput(name));
 		}
+
+		/// <summary>
+		/// Creates a duplicate of an existing input identified by index and adds it to the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="index">The index of the input to duplicate.</param>
+		/// <returns>The newly created duplicate Input object, or null if the operation failed.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		public static Input DuplicateInput(int index)
 		{
 			return DuplicateInput(GetInput(index));
 		}
+
+		/// <summary>
+		/// Inserts an input at the specified index in the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="index">The index at which to insert the input.</param>
+		/// <param name="input">The Input object to insert.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		public static void InsertInput(int index, Input input)
 		{
 			if (Application.isPlaying)
@@ -2218,6 +3719,13 @@ namespace Utilities.Inputs
 			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Removes an input with the specified name from the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="name">The name of the input to remove.</param>
+		/// <exception cref="ArgumentException">Thrown when no input with the given name exists.</exception>
 		public static void RemoveInput(string name)
 		{
 			if (Application.isPlaying)
@@ -2234,6 +3742,13 @@ namespace Utilities.Inputs
 			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Removes an input at the specified index from the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
+		/// <param name="index">The index of the input to remove.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		public static void RemoveInput(int index)
 		{
 			if (Application.isPlaying)
@@ -2250,6 +3765,11 @@ namespace Utilities.Inputs
 			inputs = inputsList.ToArray();
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Removes all inputs from the inputs collection.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
 		public static void RemoveAll()
 		{
 			if (Application.isPlaying)
@@ -2264,6 +3784,12 @@ namespace Utilities.Inputs
 			inputs = new Input[] { };
 			dataChanged = true;
 		}
+
+		/// <summary>
+		/// Loads input configuration data from an InputsManagerData asset.
+		/// </summary>
+		/// <param name="data">The InputsManagerData asset to load from.</param>
+		/// <returns>True if the data was successfully loaded, false otherwise.</returns>
 		public static bool LoadDataFromSheet(InputsManagerData data)
 		{
 			if (!data)
@@ -2293,6 +3819,11 @@ namespace Utilities.Inputs
 
 			return data;
 		}
+
+		/// <summary>
+		/// Loads input configuration data from the default data asset file.
+		/// </summary>
+		/// <returns>True if the data was successfully loaded, false if the data asset doesn't exist or couldn't be loaded.</returns>
 		public static bool LoadData()
 		{
 			if (!DataAssetExists)
@@ -2308,8 +3839,17 @@ namespace Utilities.Inputs
 
 			return dataLoaded;
 		}
+
+		/// <summary>
+		/// [Obsolete] Use InputsManager.ForceDataChange() instead.
+		/// </summary>
 		[Obsolete("Use InputsManager.ForceDataChange() instead.", true)]
 		public static void ForceLoadData() { }
+
+		/// <summary>
+		/// Forces the system to recognize that input data has changed, which will trigger a reload of the data.
+		/// Only works in Edit mode, not during Play mode.
+		/// </summary>
 		public static void ForceDataChange()
 		{
 			if (Application.isPlaying)
@@ -2318,12 +3858,23 @@ namespace Utilities.Inputs
 			dataLastWriteTime = DateTime.MinValue;
 			dataChanged = true;
 		}
+
 #if UNITY_EDITOR
+		/// <summary>
+		/// [Obsolete] Use EditorSaveData() instead.
+		/// </summary>
+		/// <returns>True if the data was successfully saved, false otherwise.</returns>
 		[Obsolete("Use `EditorSaveData` instead.")]
 		public static bool SaveData()
 		{
 			return EditorSaveData();
 		}
+
+		/// <summary>
+		/// Saves the current input configuration to the data asset file.
+		/// Only works in the Unity Editor and in Edit mode, not during Play mode.
+		/// </summary>
+		/// <returns>True if the data was successfully saved, false otherwise.</returns>
 		public static bool EditorSaveData()
 		{
 			if (Application.isPlaying || !Application.isEditor)
@@ -2346,6 +3897,13 @@ namespace Utilities.Inputs
 		}
 #endif
 
+		/// <summary>
+		/// Gets the index of an input in the inputs collection.
+		/// </summary>
+		/// <param name="input">The Input object to find.</param>
+		/// <returns>The index of the input.</returns>
+		/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
+		/// <exception cref="ArgumentException">Thrown when the input is not found in the collection.</exception>
 		private static int GetInputIndex(Input input)
 		{
 			if (!input)
@@ -2353,6 +3911,13 @@ namespace Utilities.Inputs
 
 			return GetInputIndex(input.Name);
 		}
+
+		/// <summary>
+		/// Validates and returns an input index, ensuring it's within the valid range.
+		/// </summary>
+		/// <param name="index">The index to validate.</param>
+		/// <returns>The validated index.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">Thrown when the index is out of range.</exception>
 		private static int GetInputIndex(int index)
 		{
 			if (index < 0 || index >= Count)
@@ -2360,6 +3925,13 @@ namespace Utilities.Inputs
 
 			return index;
 		}
+
+		/// <summary>
+		/// Gets the index of an input by its name.
+		/// </summary>
+		/// <param name="name">The name of the input to find.</param>
+		/// <returns>The index of the input.</returns>
+		/// <exception cref="ArgumentException">Thrown when the name is null or empty, or when no input with the given name exists.</exception>
 		private static int GetInputIndex(string name)
 		{
 			if (name.IsNullOrEmpty())

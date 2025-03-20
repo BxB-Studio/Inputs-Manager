@@ -1,8 +1,8 @@
 {
   "displayName": "Inputs Manager",
   "name": "dev.bxbstudio.inputs-manager",
-  "description": "A simple and customization input alternative for Unity based on the New Input System.",
-  "version": "1.1.13",
+  "description": "A simple and customizable input alternative for Unity based on the New Input System.",
+  "version": "1.1.14",
   "unity": "2020.3",
   "unityRelease": "17f1",
   "dependencies": {

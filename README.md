@@ -1,60 +1,71 @@
 # Inputs-Manager
-A new customizable and dynamic Input alternative for Unity based on the New Input System.
+A comprehensive, high-performance input management system for Unity built on the New Input System.
 
-**Version:** 1.1.13
+**Version:** 1.1.14
 
 ## Features
-- High-performant code (Using C# Jobs System & Burst)
-- Joysticks/Gamepad compatibility
-- Runtime double press and hold binding
-- Bind keys within the Unity Editor
-- Edit inputs at runtime
-- Easy input setup
-- Save and import presets
-- Editor-ready JSON presets
-- Fully customizable API
-- Dynamic editor window
-- Secured data saving
-- Wide range of settings
+- **High Performance**: Leverages C# Jobs System & Burst compilation for optimal speed
+- **Multi-Device Support**: Full compatibility with keyboards, mice, gamepads, and joysticks
+- **Advanced Input Detection**: Double press, hold, and release detection
+- **Flexible Configuration**:
+  - Editor-based key binding
+  - Runtime input editing
+  - Preset management (save/import)
+  - JSON-based configuration
+- **Developer-Friendly**:
+  - Intuitive API
+  - Dynamic editor window
+  - Extensive customization options
+- **Robust Architecture**:
+  - Secure data handling
+  - Configurable settings
+  - Optimized for performance
 
 ## Documentation
-Will be available soon...<br/>
-You can use this temporary [tutorial](https://youtu.be/oZlrqwAjiqQ) to help you. You can also use the editor **tooltips** whenever you need something to be explained.
+Comprehensive documentation is coming soon!<br/>
+In the meantime:
+- Watch our [video tutorial](https://youtu.be/oZlrqwAjiqQ) for a quick start guide
+- Refer to the editor **tooltips** for contextual help with specific features
 
-## Important Notes!
-**Importing the Inputs Manager manually to your Unity project requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to be added to your project for it to work without any** `MissingReferenceException`**.<br/>
-- Use the Automatic install method to avoid importing errors.<br/>
-- This package requires a few packages to be installed from the Package Manager. Check the Dependencies section below for more information<br/>
-- Please do not change the destination of the existing files under the** `Resources` **directory. Doing so may cause some internal errors!**
+## Important Notes
+**Dependencies**: The Inputs Manager requires the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library to function properly.<br/>
+- **Recommended**: Use the Automatic installation method to avoid dependency issues
+- **Required Packages**: See the Dependencies section below for required Unity packages
+- **File Structure**: Do not relocate files from the `Resources` directory as this may cause internal errors
 
-## How to Install
-There are multiple methods to install the Inputs Manager in your Unity project.<br/>
-1. **Automatically: Requires Git to be installed on your machine ([Learn more](https://docs.unity3d.com/Manual/upm-ui-giturl.html))**:
-	- Open Unity's Package Manager by going to `Window > Package Manager`.
-	- Click on the `+` button on the top left of the Package Manager window.
-	- Click on `Add package from git URL`.
-	- Enter the following Git URL: `https://github.com/BxB-Studio/Unity-CSharp-Utilities.git` to add the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library.
-	- Click the `Add` button.
-	- Repeat the same steps to add the Inputs Manager.
-	- Click on the `+` button on the top left of the Package Manager window.
-	- Click on `Add package from git URL`.
-	- Enter the following Git URL: `https://github.com/BxB-Studio/Inputs-Manager.git`.
-	- Click the `Add` button.
+## Installation Methods
 
-2. **Manually:**
-	- Clone the GitHub repository of the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) library.
-	- Extract the ZIP archive to a folder.
-	- Move the extracted folder to your project's `Assets` folder.
-	- Clone the GitHub repository of the [Inputs Manager](https://www.github.com/BxB-Studio/Inputs-Manager) repository.
-	- Extract the ZIP archive to a folder.
-	- Move the extracted folder to your project's `Assets` folder.
+### 1. Automatic Installation (Recommended)
+Requires Git on your machine ([Unity Documentation](https://docs.unity3d.com/Manual/upm-ui-giturl.html))
 
-## Start-up Tutorial
-The Inputs Manager is available under the `Tools > Utilities > Inputs Manager` menu.<br/>
-You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
+**Step 1: Install Unity CSharp Utilities**
+1. Open Unity's Package Manager (`Window > Package Manager`)
+2. Click the `+` button in the top-left corner
+3. Select `Add package from git URL`
+4. Enter: `https://github.com/BxB-Studio/Unity-CSharp-Utilities.git`
+5. Click `Add`
 
-## Compatibility
-- Unity 2020.3.17f1 or newer<br/>
+**Step 2: Install Inputs Manager**
+1. In Package Manager, click the `+` button again
+2. Select `Add package from git URL`
+3. Enter: `https://github.com/BxB-Studio/Inputs-Manager.git`
+4. Click `Add`
+
+### 2. Manual Installation
+1. Download the [Unity CSharp Utilities](https://www.github.com/BxB-Studio/Unity-CSharp-Utilities) repository
+2. Extract the ZIP archive
+3. Move the extracted folder to your project's `Assets` directory
+4. Download the [Inputs Manager](https://www.github.com/BxB-Studio/Inputs-Manager) repository
+5. Extract the ZIP archive
+6. Move the extracted folder to your project's `Assets` directory
+
+## Getting Started
+- Access the Inputs Manager through `Tools > Utilities > Inputs Manager`
+- Use the API via the `Utilities.Inputs` namespace
+- Configure inputs through the editor or at runtime via code
+
+## System Requirements
+- Unity 2020.3.17f1 or newer
 
 ## Dependencies
 - Utilities: 1.1.8 or newer
@@ -62,6 +73,10 @@ You can access the Inputs Manager API from the `Utilities.Inputs` namespace.
 - Input System: 1.7.0 or newer
 
 ## Release Notes
+- 1.1.14
+	- Added code summary documentation
+	- Fixed `InvalidOperationException`
+	- Fixed `IndexOutOfRangeException`
 - 1.1.13
 	- Fixed `IndexOutOfRangeException` for `DefaultGamepadIndexFallback`
 - 1.1.12

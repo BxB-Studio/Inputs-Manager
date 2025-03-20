@@ -11,38 +11,122 @@ using Utilities.Inputs.Components;
 
 namespace Utilities.Inputs.Jobs
 {
+	/// <summary>
+	/// A job that updates the input source access for a gamepad.
+	/// Processes gamepad input values, applies interpolation, and manages input states
+	/// including press, hold, and double-press detection in a thread-safe manner.
+	/// </summary>
 	[BurstCompile]
 	internal struct InputGamepadJob : IJobFor
 	{
 		#region Variables
 
+		/// <summary>
+		/// The array of input source access structures to be updated by this job.
+		/// Contains the current state of all input sources being processed.
+		/// </summary>
 		public NativeArray<InputSourceAccess> sourceAccess;
+		
+		/// <summary>
+		/// The input configuration data used to process the input values.
+		/// Contains binding information, input type, and value mapping settings.
+		/// </summary>
 		[ReadOnly]
 		public InputAccess input;
+		
+		/// <summary>
+		/// The time in seconds it takes for an input value to interpolate to its target value.
+		/// Used with Smooth and Jump interpolation methods to create gradual input transitions.
+		/// </summary>
 		[ReadOnly]
 		public float interpolationTime;
+		
+		/// <summary>
+		/// The time in seconds that an input must be held before triggering a "held" state.
+		/// Controls the sensitivity of hold detection for all inputs processed by this job.
+		/// </summary>
 		[ReadOnly]
 		public float holdTriggerTime;
+		
+		/// <summary>
+		/// The time in seconds to wait before allowing another hold event after a hold is triggered.
+		/// Creates a delay between consecutive hold events for better control.
+		/// </summary>
 		[ReadOnly]
 		public float holdWaitTime;
+		
+		/// <summary>
+		/// The maximum time in seconds between two presses to register as a double-press.
+		/// Defines the window during which two consecutive presses are considered a double-press.
+		/// </summary>
 		[ReadOnly]
 		public float doublePressTimeout;
+		
+		/// <summary>
+		/// The time in seconds since the last frame.
+		/// Used for time-based calculations like interpolation and timer updates.
+		/// </summary>
 		[ReadOnly]
 		public float deltaTime;
 
+		/// <summary>
+		/// The current positive input value from the gamepad.
+		/// Represents the strength of input in the positive direction (e.g., right, up).
+		/// </summary>
 		private float positiveValue;
+		
+		/// <summary>
+		/// The current negative input value from the gamepad.
+		/// Represents the strength of input in the negative direction (e.g., left, down).
+		/// </summary>
 		private float negativeValue;
+		
+		/// <summary>
+		/// The normalized factor used to interpolate between minimum and maximum values.
+		/// Calculated from the difference between positive and negative inputs.
+		/// </summary>
 		private float valueFactor;
+		
+		/// <summary>
+		/// The multiplier applied to positive input values based on the strong side configuration.
+		/// Used to prioritize one direction over another when both are active.
+		/// </summary>
 		private float positiveCoefficient;
+		
+		/// <summary>
+		/// The multiplier applied to negative input values based on the strong side configuration.
+		/// Used to prioritize one direction over another when both are active.
+		/// </summary>
 		private float negativeCoefficient;
+		
+		/// <summary>
+		/// The minimum value of the input's value range.
+		/// Represents the lower bound of the output value after mapping.
+		/// </summary>
 		private float intervalA;
+		
+		/// <summary>
+		/// The maximum value of the input's value range.
+		/// Represents the upper bound of the output value after mapping.
+		/// </summary>
 		private float intervalB;
+		
+		/// <summary>
+		/// The target value that the input is interpolating towards.
+		/// Calculated based on the current input state and value mapping.
+		/// </summary>
 		private float target;
 
 		#endregion
 
 		#region Methods
 
+		/// <summary>
+		/// Executes the job for a single input source.
+		/// Processes the gamepad input values, applies interpolation based on the configured settings,
+		/// and updates all input states including press, hold, and double-press detection.
+		/// </summary>
+		/// <param name="i">The index of the input source in the sourceAccess array to process.</param>
 		public void Execute(int i)
 		{
 			InputSourceAccess source = sourceAccess[i];
